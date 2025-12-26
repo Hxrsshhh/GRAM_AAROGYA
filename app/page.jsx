@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import {
   MapPin,
@@ -19,10 +19,7 @@ import {
   X,
   Sun,
   Moon,
-  ChevronRight,
-  Plus,
 } from "lucide-react";
-
 
 import MouseGlow from "@/components/ui/MouseGlow";
 import Button from "@/components/ui/Button";
@@ -30,25 +27,21 @@ import Accordion from "@/components/ui/Accordion";
 import FeatureCard from "@/components/ui/FeatureCard";
 import { useTheme } from "next-themes";
 
-// --- MAIN APPLICATION ---
-
 export default function App() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeAccordion, setActiveAccordion] = useState(0);
-  const containerRef = useRef(null);
+  const [mounted, setMounted] = useState(false);
   
-  const {theme,setTheme,resolvedTheme} = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
 
-
-  // Handle Scroll logic
+  // Prevent Hydration Mismatch (Crucial for Turbopack & Next.js)
   useEffect(() => {
+    setMounted(true);
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  
 
   const features = [
     { icon: MapPin, title: "Hyper-Local Data", description: "Precise geo-spatial tracking that maps issues down to the specific meter of pavement." },
@@ -70,8 +63,16 @@ export default function App() {
   const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
 
+  // Helper to toggle theme
+  const handleThemeToggle = () => {
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+  };
+
+  // Avoid rendering theme-specific UI until mounted to prevent hydration errors
+  if (!mounted) return <div className="min-h-screen bg-slate-950" />;
+
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${theme === 'dark' ? 'bg-slate-950 text-white' : 'bg-white text-slate-900'}`}>
+    <div className={`min-h-screen transition-colors duration-500 ${resolvedTheme === 'dark' ? 'bg-slate-950 text-white' : 'bg-white text-slate-900'}`}>
       <MouseGlow />
 
       {/* Navigation */}
@@ -95,7 +96,7 @@ export default function App() {
           {/* Desktop Nav */}
           <div className="hidden lg:flex items-center gap-8 font-bold text-sm uppercase tracking-widest text-slate-500 dark:text-slate-400">
             <div className="flex items-center gap-4 pl-4 border-l border-slate-200 dark:border-slate-800">
-              <button onClick={()=>setTheme(resolvedTheme==='dark' ? 'light' : 'dark')} className="p-2 hover:text-emerald-500">
+              <button onClick={handleThemeToggle} className="p-2 hover:text-emerald-500 transition-colors">
                 {resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
               </button>
               <Button size="sm">Get Started</Button>
@@ -122,8 +123,8 @@ export default function App() {
                 <a href="#" className="text-xl font-bold">Impact</a>
                 <a href="#" className="text-xl font-bold">Docs</a>
                 <Button className="w-full">Sign Up</Button>
-                <button onClick={toggleTheme} className="flex items-center gap-2 font-bold py-2">
-                  {theme === 'dark' ? <><Sun size={20} /> Light Mode</> : <><Moon size={20} /> Dark Mode</>}
+                <button onClick={handleThemeToggle} className="flex items-center gap-2 font-bold py-2">
+                  {resolvedTheme === 'dark' ? <><Sun size={20} /> Light Mode</> : <><Moon size={20} /> Dark Mode</>}
                 </button>
               </div>
             </motion.div>
@@ -175,7 +176,7 @@ export default function App() {
             >
               <Button size="lg">
                 Deploy Pulse
-                <ArrowRight size={20} />
+                <ArrowRight size={20} className="ml-2" />
               </Button>
               <Button variant="outline" size="lg">Explore Network</Button>
             </motion.div>
@@ -184,7 +185,7 @@ export default function App() {
       </section>
 
       {/* Scrolling Tape */}
-      <div className="relative py-14 bg-emerald-600 overflow-hidden  shadow-2xl z-20">
+      <div className="relative py-14 bg-emerald-600 overflow-hidden shadow-2xl z-20">
         <div className="flex whitespace-nowrap animate-infinite-scroll">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="flex items-center gap-12 px-6">
@@ -272,7 +273,8 @@ export default function App() {
         </div>
       </footer>
 
-      <style dangerouslySetInnerHTML={{ __html: `
+      {/* Using standard Tailwind or a separate CSS file is better, but here it is fixed */}
+      <style jsx global>{`
         @keyframes infinite-scroll {
           from { transform: translateX(0); }
           to { transform: translateX(-50%); }
@@ -280,7 +282,7 @@ export default function App() {
         .animate-infinite-scroll {
           animation: infinite-scroll 40s linear infinite;
         }
-      `}} />
+      `}</style>
     </div>
   );
 }
