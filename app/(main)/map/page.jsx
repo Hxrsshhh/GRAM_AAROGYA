@@ -141,7 +141,7 @@ const MapPage = () => {
       />
 
       {/* SEARCH INTERFACE - Integrated for fixed navbar projects */}
-      <div className="absolute top-20 left-1/2 -translate-x-1/2 w-full max-w-2xl px-4 pointer-events-none z-[50]">
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-full max-w-2xl px-4 pointer-events-none z-[50]">
         <div className="flex items-center gap-3 pointer-events-auto">
           <div className="flex-1 relative group">
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
@@ -158,7 +158,7 @@ const MapPage = () => {
               onClick={() => setShowFilters(!showFilters)}
               className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl transition-all ${
                 showFilters
-                  ? "bg-blue-600 text-white shadow-lg"
+                  ? "bg-emerald-600 text-white shadow-lg"
                   : "text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
               }`}
             >

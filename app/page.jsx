@@ -86,9 +86,7 @@ export default function App() {
       >
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
-              <Activity className="text-white w-5 h-5" />
-            </div>
+            <img src='/logo.png' className="h-12 w-12" />
             <span className="text-xl font-black tracking-tight">
               Civic<span className="text-emerald-600">Pulse</span>
             </span>
