@@ -17,6 +17,7 @@ import Button from "@/components/ui/Button";
 import MouseGlow from "@/components/ui/MouseGlow";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 export default function SignUp() {
   const [name, setName] = useState("");
@@ -29,15 +30,53 @@ export default function SignUp() {
 
   const router = useRouter();
 
-  const handleGoogleLogin = () => {
-    console.log("signup");
-    router.push("/dashboard");
+  const handleGoogleLogin = async () => {
+    await signIn("google", {
+      callbackUrl: "/dashboard",
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("signup");
-    router.push("/dashboard");
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Something went wrong during signup");
+      }
+
+      if (res.ok) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        const loginRes = await signIn("credentials", {
+          email,
+          password,
+          redirect: false,
+        });
+
+        if (loginRes?.error) {
+          setError(
+            "Account created, but login failed. Please try the login page."
+          );
+        } else {
+          router.push("/dashboard");
+        }
+      }
+    } catch (err) {
+      setError(err.message);
+      console.error("Auth Error:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

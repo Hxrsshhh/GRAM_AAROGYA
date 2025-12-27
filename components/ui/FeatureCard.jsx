@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-import { motion } from 'framer-motion';
-import { ArrowUpRight } from 'lucide-react';
+import { motion } from "framer-motion";
+import { ArrowUpRight } from "lucide-react";
 
 const FeatureCard = ({ icon: Icon, title, description, index }) => {
   return (
@@ -15,7 +15,7 @@ const FeatureCard = ({ icon: Icon, title, description, index }) => {
       <div className="absolute top-0 right-0 p-8 opacity-[0.03] dark:opacity-[0.05] group-hover:opacity-10 group-hover:scale-150 transition-all duration-700">
         <Icon className="w-32 h-32" />
       </div>
-      
+
       <div className="relative z-10">
         <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-xl border border-slate-100 dark:border-slate-700 mb-8 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-500 rotate-[-5deg] group-hover:rotate-0">
           <Icon className="w-8 h-8" />

@@ -1,11 +1,10 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect, createContext, useContext } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   MapPin,
   FileText,
-  Upload,
   X,
   ChevronRight,
   ChevronLeft,
@@ -16,26 +15,18 @@ import {
   AlertTriangle,
   Flame,
   Clock,
-  Navigation,
   Camera,
   Layers,
-  Sun,
-  Moon,
-  LocateFixed
-} from 'lucide-react';
+  LocateFixed,
+} from "lucide-react";
 
-import { StepIndicator } from '@/components/ui/StepIndicator';
-import { CustomInput } from '@/components/ui/CustomInput';
-import { useTheme } from 'next-themes';
-
-
-
+import { StepIndicator } from "@/components/ui/StepIndicator";
+import { CustomInput } from "@/components/ui/CustomInput";
 
 const ReportIssue = () => {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
-  const { theme, setTheme } = useTheme();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -57,10 +48,10 @@ const ReportIssue = () => {
   ];
 
   const priorities = [
-    { id: 'low', icon: Clock, label: 'Standard' },
-    { id: 'medium', icon: Activity, label: 'Urgent' },
-    { id: 'high', icon: AlertTriangle, label: 'Critical' },
-    { id: 'critical', icon: Flame, label: 'SOS' }
+    { id: "low", icon: Clock, label: "Standard" },
+    { id: "medium", icon: Activity, label: "Urgent" },
+    { id: "high", icon: AlertTriangle, label: "Critical" },
+    { id: "critical", icon: Flame, label: "SOS" },
   ];
 
   const handleImageUpload = (e) => {
@@ -90,9 +81,11 @@ const ReportIssue = () => {
         const { latitude, longitude } = position.coords;
         // Mocking a reverse geocode address for the UI demo
         setTimeout(() => {
-          setFormData(prev => ({ 
-            ...prev, 
-            location: `${latitude.toFixed(4)}, ${longitude.toFixed(4)} (Detected Address)` 
+          setFormData((prev) => ({
+            ...prev,
+            location: `${latitude.toFixed(4)}, ${longitude.toFixed(
+              4
+            )} (Detected Address)`,
           }));
           setIsLocating(false);
         }, 1200);
@@ -105,7 +98,10 @@ const ReportIssue = () => {
   };
 
   const removeImage = (index) => {
-    setFormData(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== index) }));
+    setFormData((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
   };
 
   const handleSubmit = async () => {
@@ -123,12 +119,14 @@ const ReportIssue = () => {
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-emerald-500/10 blur-[80px] rounded-full" />
       </div>
 
-
-
       <main className="relative  z-10 max-w-3xl mx-auto px-6 py-4">
         <div className="text-center mt-22 mb-8">
-          <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-2 italic">File <span className="text-emerald-500 not-italic">Report.</span></h1>
-          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-[0.2em]">Municipal Sync Protocol</p>
+          <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-2 italic">
+            File <span className="text-emerald-500 not-italic">Report.</span>
+          </h1>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-[0.2em]">
+            Municipal Sync Protocol
+          </p>
         </div>
 
         <div className="bg-white dark:bg-slate-900/50 backdrop-blur-2xl border border-slate-200/60 dark:border-slate-800 rounded-[2rem] p-6 md:p-8 shadow-xl">
@@ -136,10 +134,10 @@ const ReportIssue = () => {
 
           <AnimatePresence mode="wait">
             {step === 1 && (
-              <motion.div 
-                key="step1" 
-                initial={{ opacity: 0, y: 10 }} 
-                animate={{ opacity: 1, y: 0 }} 
+              <motion.div
+                key="step1"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-6"
               >
@@ -151,15 +149,21 @@ const ReportIssue = () => {
                     {categories.map((cat) => (
                       <button
                         key={cat.value}
-                        onClick={() => setFormData({ ...formData, category: cat.value })}
+                        onClick={() =>
+                          setFormData({ ...formData, category: cat.value })
+                        }
                         className={`group p-4 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center text-center gap-2 ${
                           formData.category === cat.value
                             ? "border-emerald-500 bg-emerald-500/10"
                             : "border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30"
                         }`}
                       >
-                        <span className="text-2xl group-hover:scale-110 transition-transform">{cat.icon}</span>
-                        <span className="text-[10px] font-black uppercase tracking-tight">{cat.label}</span>
+                        <span className="text-2xl group-hover:scale-110 transition-transform">
+                          {cat.icon}
+                        </span>
+                        <span className="text-[10px] font-black uppercase tracking-tight">
+                          {cat.label}
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -175,7 +179,9 @@ const ReportIssue = () => {
                       return (
                         <button
                           key={p.id}
-                          onClick={() => setFormData({ ...formData, priority: p.id })}
+                          onClick={() =>
+                            setFormData({ ...formData, priority: p.id })
+                          }
                           className={`py-3 rounded-xl border-2 transition-all flex flex-col items-center gap-1 ${
                             formData.priority === p.id
                               ? "border-emerald-500 bg-emerald-500 text-white"
@@ -183,7 +189,9 @@ const ReportIssue = () => {
                           }`}
                         >
                           <Icon size={16} />
-                          <span className="text-[9px] font-black uppercase tracking-widest">{p.label}</span>
+                          <span className="text-[9px] font-black uppercase tracking-widest">
+                            {p.label}
+                          </span>
                         </button>
                       );
                     })}
@@ -193,37 +201,45 @@ const ReportIssue = () => {
             )}
 
             {step === 2 && (
-              <motion.div 
-                key="step2" 
-                initial={{ opacity: 0, y: 10 }} 
-                animate={{ opacity: 1, y: 0 }} 
+              <motion.div
+                key="step2"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-4"
               >
-                <CustomInput 
+                <CustomInput
                   label="Headline"
                   placeholder="Summarize the issue..."
                   value={formData.title}
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
                   icon={FileText}
                 />
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 pl-1">Description</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 pl-1">
+                    Description
+                  </label>
                   <textarea
                     rows={4}
                     className="w-full bg-slate-50 dark:bg-slate-900/50 border-2 border-slate-200 dark:border-slate-800 rounded-xl p-4 text-slate-900 dark:text-white font-semibold outline-none focus:border-emerald-500 transition-all resize-none text-sm"
                     placeholder="Provide context..."
                     value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
                   />
                 </div>
 
-                <CustomInput 
+                <CustomInput
                   label="Address / Geo-Data"
                   placeholder="Street name or landmark"
                   value={formData.location}
-                  onChange={(e) => setFormData({...formData, location: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, location: e.target.value })
+                  }
                   icon={MapPin}
                   rightElement={
                     <button
@@ -232,7 +248,10 @@ const ReportIssue = () => {
                       className="p-2 text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-colors disabled:opacity-50"
                       title="Detect Live Location"
                     >
-                      <LocateFixed size={18} className={isLocating ? "animate-pulse" : ""} />
+                      <LocateFixed
+                        size={18}
+                        className={isLocating ? "animate-pulse" : ""}
+                      />
                     </button>
                   }
                 />
@@ -240,21 +259,33 @@ const ReportIssue = () => {
             )}
 
             {step === 3 && (
-              <motion.div 
-                key="step3" 
-                initial={{ opacity: 0, y: 10 }} 
-                animate={{ opacity: 1, y: 0 }} 
+              <motion.div
+                key="step3"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-6"
               >
                 <div className="text-center p-8 rounded-2xl border-4 border-dashed border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30 group hover:border-emerald-500/30 transition-colors">
-                  <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" id="upload" />
-                  <label htmlFor="upload" className="cursor-pointer flex flex-col items-center">
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="upload"
+                  />
+                  <label
+                    htmlFor="upload"
+                    className="cursor-pointer flex flex-col items-center"
+                  >
                     <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-600 mb-4 group-hover:scale-105 transition-transform">
                       <Camera size={28} />
                     </div>
                     <h4 className="text-xl font-black mb-1">Evidence</h4>
-                    <p className="text-slate-500 font-semibold text-xs mb-3">Upload up to 5 validation photos</p>
+                    <p className="text-slate-500 font-semibold text-xs mb-3">
+                      Upload up to 5 validation photos
+                    </p>
                     <div className="px-4 py-1.5 bg-white dark:bg-slate-800 rounded-lg text-[9px] font-black uppercase tracking-widest border border-slate-200 dark:border-slate-700">
                       {formData.images.length} / 5
                     </div>
@@ -265,8 +296,12 @@ const ReportIssue = () => {
                   <div className="flex flex-wrap gap-2">
                     {formData.images.map((img, idx) => (
                       <div key={idx} className="relative w-16 h-16 group">
-                        <img src={img} className="w-full h-full object-cover rounded-xl shadow-md" alt="Report preview" />
-                        <button 
+                        <img
+                          src={img}
+                          className="w-full h-full object-cover rounded-xl shadow-md"
+                          alt="Report preview"
+                        />
+                        <button
                           onClick={() => removeImage(idx)}
                           className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-lg flex items-center justify-center shadow-lg"
                         >
@@ -279,15 +314,18 @@ const ReportIssue = () => {
 
                 <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-900 text-white flex items-center gap-4">
                   <Shield className="w-8 h-8 text-emerald-500 shrink-0" />
-                  <p className="text-slate-400 text-[10px] leading-relaxed">Report will be cryptographically signed and added to the municipal ledger for verification.</p>
+                  <p className="text-slate-400 text-[10px] leading-relaxed">
+                    Report will be cryptographically signed and added to the
+                    municipal ledger for verification.
+                  </p>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
           <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <button 
-              onClick={() => setStep(s => Math.max(1, s - 1))}
+            <button
+              onClick={() => setStep((s) => Math.max(1, s - 1))}
               disabled={step === 1}
               className="flex items-center gap-1 font-black uppercase tracking-widest text-[10px] text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-0 transition-all"
             >
@@ -295,39 +333,46 @@ const ReportIssue = () => {
             </button>
 
             {step < 3 ? (
-              <button 
-                disabled={(step === 1 && !formData.category) || (step === 2 && (!formData.title || !formData.location))}
-                onClick={() => setStep(s => s + 1)}
+              <button
+                disabled={
+                  (step === 1 && !formData.category) ||
+                  (step === 2 && (!formData.title || !formData.location))
+                }
+                onClick={() => setStep((s) => s + 1)}
                 className="bg-emerald-600 text-white px-8 py-3.5 rounded-xl font-black uppercase tracking-widest text-xs flex items-center gap-2 hover:bg-emerald-500 disabled:grayscale disabled:opacity-50 transition-all"
               >
                 Next <ChevronRight size={16} />
               </button>
             ) : (
-              <button 
+              <button
                 onClick={handleSubmit}
                 disabled={isSubmitting || formData.images.length === 0}
                 className={`relative px-10 py-3.5 rounded-xl font-black uppercase tracking-widest text-xs flex items-center gap-2 shadow-xl transition-all ${
-                  isSubmitting ? 'bg-emerald-800 text-slate-100' : 'bg-emerald-600 text-white hover:bg-emerald-500'
+                  isSubmitting
+                    ? "bg-emerald-800 text-slate-100"
+                    : "bg-emerald-600 text-white hover:bg-emerald-500"
                 }`}
               >
-                {isSubmitting ? 'Transmitting...' : 'Finalize Report'}
+                {isSubmitting ? "Transmitting..." : "Finalize Report"}
                 {!isSubmitting && <CheckCircle2 size={16} />}
               </button>
             )}
           </div>
         </div>
       </main>
-      
-      <style dangerouslySetInnerHTML={{ __html: `
+
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
-      `}} />
+      `,
+        }}
+      />
     </div>
   );
 };
 
 export default function App() {
-  return (
-      <ReportIssue />
-  );
+  return <ReportIssue />;
 }

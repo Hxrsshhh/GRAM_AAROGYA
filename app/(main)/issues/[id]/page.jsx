@@ -23,7 +23,7 @@ import { Card } from "@/components/ui/Issue-detail-card";
 import Button from "@/components/ui/Button";
 
 import Link from "next/link";
-import { getIssueById,ISSUE_DETAILS } from "@/lib/mock-data";
+import { getIssueById, ISSUE_DETAILS } from "@/lib/mock-data";
 import { useParams } from "next/navigation";
 
 export default function App() {
@@ -37,7 +37,7 @@ export default function App() {
 
   const id = params.id;
 
-  const Issue = getIssueById(ISSUE_DETAILS,id);
+  const Issue = getIssueById(ISSUE_DETAILS, id);
 
   // Simulated Fetch
   useEffect(() => {

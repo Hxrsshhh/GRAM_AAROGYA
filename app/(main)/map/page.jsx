@@ -21,7 +21,7 @@ const COLORS = {
   sanitation: "#059669",
 };
 
-const MapPage = () => {
+export default function MapPage() {
   const [filter, setFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIssue, setSelectedIssue] = useState(null);
@@ -302,11 +302,11 @@ const MapPage = () => {
                 </p>
               </div>
               <div className="flex gap-3">
-               <Link href={`/issues/${selectedIssue._id}`}>
-                <button className="w-[200px] flex-1 py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-black uppercase tracking-widest rounded-2xl hover:opacity-90 transition-all flex items-center justify-center gap-2">
-                  View Timeline <ArrowRight size={14} />
-                </button>
-               </Link>
+                <Link href={`/issues/${selectedIssue._id}`}>
+                  <button className="w-[200px] flex-1 py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-black uppercase tracking-widest rounded-2xl hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                    View Timeline <ArrowRight size={14} />
+                  </button>
+                </Link>
                 <button className="p-3.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-white rounded-2xl hover:bg-slate-200 transition-all">
                   <AlertCircle size={20} />
                 </button>
@@ -357,6 +357,4 @@ const MapPage = () => {
       </div>
     </div>
   );
-};
-
-export default MapPage;
+}

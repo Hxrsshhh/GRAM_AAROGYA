@@ -1,19 +1,28 @@
-'use client'
+"use client";
 
-import React, { useState } from 'react';
-import { 
-  Bell, Lock, Shield, Palette, Globe, 
-  Smartphone, Info,
-  Moon, Sun, Eye, Key, Trash2,
-  AlertTriangle
-} from 'lucide-react';
+import React, { useState } from "react";
+import {
+  Bell,
+  Lock,
+  Shield,
+  Palette,
+  Globe,
+  Smartphone,
+  Info,
+  Moon,
+  Sun,
+  Eye,
+  Key,
+  Trash2,
+  AlertTriangle,
+} from "lucide-react";
 
-import { SettingsCard as Card } from '@/components/ui/Card';
-import { SectionHeader } from '@/components/ui/SectionHeader';
-import { Toggle } from '@/components/ui/Toggle';
-import { ActionButton } from '@/components/ui/ActionButton';
-import { useTheme } from 'next-themes';
-import Link from 'next/link';
+import { SettingsCard as Card } from "@/components/ui/Card";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { Toggle } from "@/components/ui/Toggle";
+import { ActionButton } from "@/components/ui/ActionButton";
+import { useTheme } from "next-themes";
+import Link from "next/link";
 
 export default function Settings() {
   const [notifications, setNotifications] = useState({
@@ -26,12 +35,11 @@ export default function Settings() {
   const { setTheme, resolvedTheme } = useTheme();
 
   const toggleTheme = () =>
-    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 py-12 selection:bg-blue-100">
       <div className="max-w-4xl mx-auto px-6">
-
         {/* Page Header */}
         <div className="mb-8 mt-14 flex justify-between items-end">
           <div>
@@ -39,7 +47,10 @@ export default function Settings() {
               <Globe size={14} /> Global Preferences
             </div>
             <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-              Control <span className="text-emerald-600 dark:text-emerald-500">Center</span>
+              Control{" "}
+              <span className="text-emerald-600 dark:text-emerald-500">
+                Center
+              </span>
             </h1>
             <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
               Configure your workspace and security protocols.
@@ -54,7 +65,6 @@ export default function Settings() {
         </div>
 
         <div className="space-y-8">
-
           {/* Appearance */}
           <Card className="p-8">
             <SectionHeader
@@ -74,34 +84,34 @@ export default function Settings() {
             <div className="mt-4 flex items-center gap-4 px-2">
               <div
                 className={`p-3 rounded-lg border transition-all ${
-                  resolvedTheme === 'light'
-                    ? 'border-emerald-600 bg-emerald-50'
-                    : 'border-slate-200'
+                  resolvedTheme === "light"
+                    ? "border-emerald-600 bg-emerald-50"
+                    : "border-slate-200"
                 }`}
               >
                 <Sun
                   size={20}
                   className={
-                    resolvedTheme === 'light'
-                      ? 'text-emerald-600'
-                      : 'text-slate-400'
+                    resolvedTheme === "light"
+                      ? "text-emerald-600"
+                      : "text-slate-400"
                   }
                 />
               </div>
 
               <div
                 className={`p-3 rounded-lg border transition-all ${
-                  resolvedTheme === 'dark'
-                    ? 'border-emerald-500 bg-emerald-900/20'
-                    : 'border-slate-200'
+                  resolvedTheme === "dark"
+                    ? "border-emerald-500 bg-emerald-900/20"
+                    : "border-slate-200"
                 }`}
               >
                 <Moon
                   size={20}
                   className={
-                    resolvedTheme === 'dark'
-                      ? 'text-emerald-400'
-                      : 'text-slate-400'
+                    resolvedTheme === "dark"
+                      ? "text-emerald-400"
+                      : "text-slate-400"
                   }
                 />
               </div>
@@ -126,7 +136,10 @@ export default function Settings() {
                 description="Official community reports and task updates"
                 enabled={notifications.email}
                 onChange={() =>
-                  setNotifications({ ...notifications, email: !notifications.email })
+                  setNotifications({
+                    ...notifications,
+                    email: !notifications.email,
+                  })
                 }
               />
               <Toggle
@@ -134,7 +147,10 @@ export default function Settings() {
                 description="Real-time browser and mobile notifications"
                 enabled={notifications.push}
                 onChange={() =>
-                  setNotifications({ ...notifications, push: !notifications.push })
+                  setNotifications({
+                    ...notifications,
+                    push: !notifications.push,
+                  })
                 }
               />
               <Toggle
@@ -142,7 +158,10 @@ export default function Settings() {
                 description="Critical urgent updates via mobile carrier"
                 enabled={notifications.sms}
                 onChange={() =>
-                  setNotifications({ ...notifications, sms: !notifications.sms })
+                  setNotifications({
+                    ...notifications,
+                    sms: !notifications.sms,
+                  })
                 }
               />
             </div>
@@ -185,10 +204,10 @@ export default function Settings() {
               Deleting your account will permanently remove all data.
             </p>
 
-            <Link href='/'>
-            <button className="w-full flex items-center justify-center gap-2 p-4 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 text-rose-600 font-black text-xs uppercase tracking-widest rounded-xl transition-all border border-rose-200 dark:border-rose-900/40">
-              <Trash2 size={16} /> Deactivate Account Terminal
-            </button>
+            <Link href="/">
+              <button className="w-full flex items-center justify-center gap-2 p-4 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 text-rose-600 font-black text-xs uppercase tracking-widest rounded-xl transition-all border border-rose-200 dark:border-rose-900/40">
+                <Trash2 size={16} /> Deactivate Account Terminal
+              </button>
             </Link>
           </Card>
 
@@ -197,7 +216,6 @@ export default function Settings() {
               CivicReport Console v2.4.0-Stable
             </p>
           </div>
-
         </div>
       </div>
     </div>

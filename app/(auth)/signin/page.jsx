@@ -4,10 +4,20 @@ import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, Activity, ArrowRight, Chrome } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  Activity,
+  ArrowRight,
+  Chrome,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import Button from "@/components/ui/Button";
 import MouseGlow from "@/components/ui/MouseGlow";
+
+import { signIn } from "next-auth/react";
 
 const SignInForm = () => {
   const [email, setEmail] = useState("");
@@ -15,18 +25,41 @@ const SignInForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  
+
   const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("signin");
-    router.push('/dashboard')
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const res = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (res?.error) {
+        setError("Invalid email or password");
+        setIsLoading(false);
+        return;
+      }
+
+      router.push("/dashboard");
+      router.refresh();
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
+      console.error("Sign-in error:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleGoogleLogin = () => {
-   console.log("signin")
-    router.push('/dashboard')
+  const handleGoogleLogin = async () => {
+    await signIn("google", {
+      callbackUrl: "/dashboard",
+    });
   };
 
   return (
@@ -38,14 +71,15 @@ const SignInForm = () => {
     >
       {/* Brand Identity */}
       <div className="flex flex-col items-center mb-10">
-        <motion.div 
+        <motion.div
           whileHover={{ rotate: 15, scale: 1.1 }}
           className="w-16 h-16 bg-slate-900 dark:bg-emerald-600 rounded-2xl flex items-center justify-center shadow-2xl mb-6 cursor-pointer"
         >
           <Activity className="text-white w-9 h-9" />
         </motion.div>
         <h1 className="text-4xl font-black tracking-tighter text-slate-900 dark:text-white mb-2 text-center">
-          Welcome <span className="text-emerald-600 dark:text-emerald-400">Back</span>
+          Welcome{" "}
+          <span className="text-emerald-600 dark:text-emerald-400">Back</span>
         </h1>
         <p className="text-slate-500 dark:text-slate-400 font-medium text-center">
           Access the DNA of your city.
@@ -83,18 +117,21 @@ const SignInForm = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 leftIcon={<Lock className="w-4 h-4 text-emerald-500" />}
                 rightIcon={
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-slate-400 hover:text-emerald-500 transition-colors">
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-slate-400 hover:text-emerald-500 transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
                   </button>
                 }
                 required
                 className="h-12 w-full bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-emerald-500"
               />
-              {/* <div className="flex justify-end">
-                <Link href="/forgot-password" size="sm" className="text-[11px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 transition-colors mr-2 mt-2">
-                  Lost Key?
-                </Link>
-              </div> */}
             </div>
           </div>
 
@@ -110,7 +147,9 @@ const SignInForm = () => {
 
         <div className="flex items-center my-10">
           <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
-          <span className="mx-4 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">O-Auth</span>
+          <span className="mx-4 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">
+            O-Auth
+          </span>
           <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
         </div>
 
@@ -126,7 +165,10 @@ const SignInForm = () => {
         <div className="mt-10 text-center">
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
             Outside the pulse?{" "}
-            <Link href="/signup" className="text-emerald-600 dark:text-emerald-400 font-black hover:text-emerald-500 transition-colors underline-offset-4 hover:underline">
+            <Link
+              href="/signup"
+              className="text-emerald-600 dark:text-emerald-400 font-black hover:text-emerald-500 transition-colors underline-offset-4 hover:underline"
+            >
               Join the Network
             </Link>
           </p>
@@ -146,11 +188,13 @@ export default function SignInPage() {
         <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 dark:bg-cyan-500/5 blur-[100px] rounded-full" />
       </div>
 
-      <Suspense fallback={
-        <div className="flex items-center gap-3 font-black text-emerald-500 animate-pulse">
-          <Activity className="animate-bounce" /> INITIALIZING...
-        </div>
-      }>
+      <Suspense
+        fallback={
+          <div className="flex items-center gap-3 font-black text-emerald-500 animate-pulse">
+            <Activity className="animate-bounce" /> INITIALIZING...
+          </div>
+        }
+      >
         <SignInForm />
       </Suspense>
     </main>

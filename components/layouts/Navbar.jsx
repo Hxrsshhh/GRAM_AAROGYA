@@ -21,6 +21,9 @@ import {
 import Button from "@/components/ui/Button";
 import Link from "next/link";
 
+import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
+
 const Navbar = ({ onNavigate = () => {} }) => {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -28,6 +31,7 @@ const Navbar = ({ onNavigate = () => {} }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const profileMenuRef = useRef(null);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -64,7 +68,7 @@ const Navbar = ({ onNavigate = () => {} }) => {
     { label: "Dashboard", icon: Zap, path: "/dashboard" },
     { label: "Issues", icon: Globe, path: "/issues" },
     { label: "Report New Issue", icon: Info, path: "/issues/report" },
-     { label: "Map", icon: Map, path: "/map" },
+    { label: "Map", icon: Map, path: "/map" },
   ];
 
   const userMenuItems = [
@@ -72,6 +76,14 @@ const Navbar = ({ onNavigate = () => {} }) => {
     { label: "Profile", icon: User, path: "/profile" },
     { label: "Settings", icon: Settings, path: "/settings" },
   ];
+
+  const handleLogout = async () => {
+    await signOut({
+      redirect: false, 
+    });
+
+    router.push("/"); 
+  };
 
   return (
     <>
@@ -84,9 +96,11 @@ const Navbar = ({ onNavigate = () => {} }) => {
       >
         <div className="max-w-[86rem] mx-auto px-6 lg:px-12 flex items-center justify-between">
           {/* Left: Logo */}
-          <div
-            className="flex items-center gap-3 cursor-pointer group shrink-0 relative z-110">
-           <Link href='/'> <img src='/logo.png' className="h-12 w-12" /></Link>
+          <div className="flex items-center gap-3 cursor-pointer group shrink-0 relative z-110">
+            <Link href="/">
+              {" "}
+              <img src="/logo.png" className="h-12 w-12" />
+            </Link>
             <span className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
               Civic
               <span className="text-emerald-600 dark:text-emerald-400">
@@ -132,20 +146,23 @@ const Navbar = ({ onNavigate = () => {} }) => {
                 {showProfileMenu && (
                   <div className="absolute right-0 mt-4 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl py-2 overflow-hidden">
                     {userMenuItems.map((item) => (
-                      <Link href={`${item.path}`} key={item.label} onClick={() => setShowProfileMenu(false)}>
-                        <button
-                          className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-medium text-slate-700 dark:text-slate-300 transition-colors"
-                        >
+                      <Link
+                        href={`${item.path}`}
+                        key={item.label}
+                        onClick={() => setShowProfileMenu(false)}
+                      >
+                        <button className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-medium text-slate-700 dark:text-slate-300 transition-colors">
                           <item.icon size={16} /> {item.label}
                         </button>
                       </Link>
                     ))}
                     <div className="border-t border-slate-100 dark:border-slate-800 mt-2 pt-2">
-                      <Link href="/" onClick={() => setShowProfileMenu(false)}>
-                        <button className="w-full flex items-center gap-3 px-4 py-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 text-sm font-medium">
-                          <LogOut size={16} /> Log Out
-                        </button>
-                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 text-sm font-medium"
+                      >
+                        <LogOut size={16} /> Log Out
+                      </button>
                     </div>
                   </div>
                 )}
@@ -177,8 +194,8 @@ const Navbar = ({ onNavigate = () => {} }) => {
               </p>
               <div className="grid grid-cols-1 gap-2">
                 {navLinks.map((link) => (
-                  <Link 
-                    href={`${link.path}`} 
+                  <Link
+                    href={`${link.path}`}
                     key={link.label}
                     onClick={() => setIsOpen(false)} // FIX: Closes menu on click
                   >
@@ -204,8 +221,8 @@ const Navbar = ({ onNavigate = () => {} }) => {
               </p>
               <div className="grid grid-cols-1 gap-2">
                 {userMenuItems.map((item) => (
-                  <Link 
-                    href={`${item.path}`} 
+                  <Link
+                    href={`${item.path}`}
                     key={item.label}
                     onClick={() => setIsOpen(false)} // FIX: Closes menu on click
                   >
@@ -239,14 +256,13 @@ const Navbar = ({ onNavigate = () => {} }) => {
               </div>
             </button>
 
-            <Link href="/" onClick={() => setIsOpen(false)}>
-              <Button
-                variant="danger"
-                className="w-full py-6 border-red-100 dark:border-red-900/30 text-red-500 bg-red-500/50 hover:bg-red-500/80 rounded-2xl font-bold"
-              >
-                <LogOut className="w-5 h-5 mr-3" /> Log Out
-              </Button>
-            </Link>
+            <Button
+              onClick={handleLogout}
+              variant="danger"
+              className="w-full py-6 border-red-100 dark:border-red-900/30 text-red-500 bg-red-500/50 hover:bg-red-500/80 rounded-2xl font-bold"
+            >
+              <LogOut className="w-5 h-5 mr-3" /> Log Out
+            </Button>
           </div>
         </div>
       </div>

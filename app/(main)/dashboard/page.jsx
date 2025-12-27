@@ -27,10 +27,14 @@ import { DashboardCard } from "@/components/ui/DashboardCard";
 // Mocking useAuth for standalone completeness
 const useAuth = () => ({ user: { name: "Harsh Singh" } });
 
-import { calculateIssueStats, generateIssuePreviewList, generateMonthlyChartData, ISSUE_DETAILS } from "@/lib/mock-data";
+import {
+  calculateIssueStats,
+  generateIssuePreviewList,
+  generateMonthlyChartData,
+  ISSUE_DETAILS,
+} from "@/lib/mock-data";
 
 const MOCK_ISSUES = generateIssuePreviewList(ISSUE_DETAILS);
-console.log(MOCK_ISSUES);
 
 const stats = calculateIssueStats(MOCK_ISSUES);
 
@@ -65,8 +69,6 @@ export default function Dashboard() {
       </div>
     );
   }
-
-  // console.log(issues);
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 pt-24 pb-12 px-6">
