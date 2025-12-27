@@ -135,3 +135,11 @@
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
+
+@import "leaflet/dist/leaflet.css";
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}

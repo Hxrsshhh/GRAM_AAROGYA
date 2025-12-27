@@ -28,7 +28,7 @@ import { Badge } from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 
 import { InputField } from "@/components/ui/input";
-import { userData } from "@/lib/mock-data3";
+import { userData } from "@/lib/mock-data";
 
 export default function Profile() {
   const [user, setUser] = useState(null);

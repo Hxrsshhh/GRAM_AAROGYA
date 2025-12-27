@@ -16,6 +16,7 @@ import {
   Globe,
   Info,
   Zap,
+  Map,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
@@ -63,6 +64,7 @@ const Navbar = ({ onNavigate = () => {} }) => {
     { label: "Dashboard", icon: Zap, path: "/dashboard" },
     { label: "Issues", icon: Globe, path: "/issues" },
     { label: "Report New Issue", icon: Info, path: "/issues/report" },
+     { label: "Map", icon: Map, path: "/map" },
   ];
 
   const userMenuItems = [
@@ -74,7 +76,7 @@ const Navbar = ({ onNavigate = () => {} }) => {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 right-0 z-500 transition-all duration-300 ease-in-out ${
           scrolled || isOpen
             ? "bg-white/90 dark:bg-slate-950/90 backdrop-blur-md py-3 border-b border-slate-200 dark:border-slate-800 shadow-sm"
             : "bg-transparent py-6"
