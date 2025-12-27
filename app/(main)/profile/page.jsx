@@ -9,65 +9,14 @@ import {
   Lock, Globe, Briefcase
 } from 'lucide-react';
 
-// --- Professional UI Library (Bundled) ---
+import { ProfileCard as Card } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import Button from '@/components/ui/Button';
 
-const Card = ({ children, className = "" }) => (
-  <div className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden ${className}`}>
-    {children}
-  </div>
-);
 
-const Badge = ({ children, variant = "default" }) => {
-  const styles = {
-    default: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
-    success: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-    blue: "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-  };
-  return (
-    <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${styles[variant]}`}>
-      {children}
-    </span>
-  );
-};
+import { InputField } from '@/components/ui/input';
+import { userData } from '@/lib/mock-data';
 
-const Button = ({ children, variant = "primary", isLoading, leftIcon, className = "", ...props }) => {
-  const variants = {
-    primary: "bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 dark:hover:bg-emerald-700 text-white shadow-lg shadow-slate-200 dark:shadow-emerald-900/20",
-    secondary: "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 hover:bg-slate-50",
-    outline: "border-2 border-slate-200 dark:border-slate-700 hover:border-slate-900 dark:hover:border-emerald-500 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white",
-  };
-
-  return (
-    <button 
-      disabled={isLoading}
-      className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all duration-200 active:scale-[0.98] disabled:opacity-70 ${variants[variant]} ${className}`}
-      {...props}
-    >
-      {isLoading ? <Loader2 size={18} className="animate-spin" /> : leftIcon}
-      {children}
-    </button>
-  );
-};
-
-const InputField = ({ label, leftIcon, disabled, ...props }) => (
-  <div className="w-full space-y-2">
-    {label && <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>}
-    <div className="relative group">
-      {leftIcon && (
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 dark:group-focus-within:text-emerald-500 transition-colors">
-          {React.cloneElement(leftIcon, { size: 18 })}
-        </div>
-      )}
-      <input 
-        disabled={disabled}
-        className={`w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 focus:border-slate-900 dark:focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-900 rounded-xl py-3 px-4 outline-none transition-all ${leftIcon ? 'pl-12' : ''} ${disabled ? 'cursor-not-allowed opacity-75' : ''}`}
-        {...props}
-      />
-    </div>
-  </div>
-);
-
-// --- Main Profile Page ---
 
 export default function Profile() {
   const [user, setUser] = useState(null);
@@ -75,14 +24,7 @@ export default function Profile() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const [formData, setFormData] = useState({
-    name: "Jonathan Sterling",
-    email: "j.sterling@community.org",
-    phone: "+1 (555) 234-5678",
-    address: "San Francisco, CA",
-    bio: "Dedicated community organizer with 5+ years of experience in local outreach and sustainable development projects.",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-  });
+  const [formData, setFormData] = useState(userData);
 
   useEffect(() => {
     // Simulate API fetch
@@ -120,11 +62,11 @@ export default function Profile() {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 mt-8 gap-6">
           <div className="space-y-1">
-            <div className="flex items-center gap-2 text-blue-600 dark:text-emerald-400 font-bold text-xs uppercase tracking-[0.2em] mb-2">
+            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs uppercase tracking-[0.2em] mb-2">
               <Activity size={14} /> System Console
             </div>
             <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-              Professional <span className="text-blue-600 dark:text-emerald-500">Identity</span>
+              Professional <span className="text-emerald-600 dark:text-emerald-500">Identity</span>
             </h1>
           </div>
           <div className="flex gap-3">
@@ -142,7 +84,7 @@ export default function Profile() {
           {/* LEFT COLUMN - Profile Card & Stats */}
           <div className="lg:col-span-4 space-y-6">
             <Card>
-              <div className="h-24 bg-slate-900 dark:bg-emerald-950 relative">
+              <div className="h-24 bg-emerald-600 dark:bg-emerald-700 relative">
                 <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
                   <div className="relative group">
                     <img
@@ -151,7 +93,7 @@ export default function Profile() {
                       alt="Profile"
                     />
                     {editing && (
-                      <button className="absolute -bottom-2 -right-2 p-2 bg-blue-600 text-white rounded-xl shadow-lg hover:scale-110 transition-transform">
+                      <button className="absolute -bottom-2 -right-2 p-2 bg-emerald-600 text-white rounded-xl shadow-lg hover:scale-110 transition-transform">
                         <Camera size={14} />
                       </button>
                     )}
@@ -185,18 +127,18 @@ export default function Profile() {
               </div>
             </Card>
 
-            <Card className="p-6 bg-slate-900 text-white dark:bg-slate-900">
+            <Card className="p-6 bg-slate-100 text-emerald-800 dark:text-white dark:bg-slate-900">
               <div className="flex items-center gap-4 mb-4">
-                <div className="p-3 bg-white/10 rounded-xl">
+                <div className="p-3  rounded-xl">
                   <Heart className="text-rose-400" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-white/50 uppercase">Community Karma</p>
-                  <p className="text-lg font-black text-white">Top 5% Contributor</p>
+                  <p className="text-xs font-bold text-slate-700 dark:text-white uppercase">Community Karma</p>
+                  <p className="text-lg font-black text-slate-700 dark:text-white">Top 5% Contributor</p>
                 </div>
               </div>
-              <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
-                <div className="bg-rose-400 h-full w-[85%]" />
+              <div className="w-full bg-slate-100 dark:bg-white/20  h-1.5 rounded-full overflow-hidden">
+                <div className="bg-rose-500 h-full w-[85%]" />
               </div>
             </Card>
           </div>
@@ -206,7 +148,7 @@ export default function Profile() {
             <Card>
               <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/20">
                 <div className="flex items-center gap-3">
-                   <div className="w-1.5 h-6 bg-blue-600 dark:bg-emerald-500 rounded-full" />
+                   <div className="w-1.5 h-6 bg-emerald-600 dark:bg-emerald-500 rounded-full" />
                    <h2 className="text-lg font-black text-slate-900 dark:text-white">Account Information</h2>
                 </div>
 

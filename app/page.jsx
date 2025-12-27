@@ -26,6 +26,7 @@ import Button from "@/components/ui/Button";
 import Accordion from "@/components/ui/Accordion";
 import FeatureCard from "@/components/ui/FeatureCard";
 import { useTheme } from "next-themes";
+import Link from "next/link";
 
 export default function App() {
   const [isOpen, setIsOpen] = useState(false);
@@ -33,7 +34,7 @@ export default function App() {
   const [activeAccordion, setActiveAccordion] = useState(0);
   const [mounted, setMounted] = useState(false);
   
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
 
   // Prevent Hydration Mismatch (Crucial for Turbopack & Next.js)
   useEffect(() => {
@@ -99,7 +100,7 @@ export default function App() {
               <button onClick={handleThemeToggle} className="p-2 hover:text-emerald-500 transition-colors">
                 {resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
               </button>
-              <Button size="sm">Get Started</Button>
+            <Link href='/signup'>  <Button size="sm">Get Started</Button></Link>
             </div>
           </div>
 
@@ -122,10 +123,10 @@ export default function App() {
                 <a href="#" className="text-xl font-bold">Features</a>
                 <a href="#" className="text-xl font-bold">Impact</a>
                 <a href="#" className="text-xl font-bold">Docs</a>
-                <Button className="w-full">Sign Up</Button>
-                <button onClick={handleThemeToggle} className="flex items-center gap-2 font-bold py-2">
+                 <Link href='/signup'>  <Button className="w-full">Get Started</Button></Link>
+                <Button variant="outline" onClick={handleThemeToggle} className="flex items-center gap-2 font-bold py-4">
                   {resolvedTheme === 'dark' ? <><Sun size={20} /> Light Mode</> : <><Moon size={20} /> Dark Mode</>}
-                </button>
+                </Button>
               </div>
             </motion.div>
           )}

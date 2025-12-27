@@ -24,62 +24,12 @@ import {
   LocateFixed
 } from 'lucide-react';
 
-// --- Theme Management ---
-const ThemeContext = createContext({ theme: 'dark', setTheme: () => {} });
-const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState('dark');
-  useEffect(() => {
-    document.documentElement.classList.remove('light', 'dark');
-    document.documentElement.classList.add(theme);
-  }, [theme]);
-  return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>;
-};
-const useTheme = () => useContext(ThemeContext);
+import { StepIndicator } from '@/components/ui/StepIndicator';
+import { CustomInput } from '@/components/ui/CustomInput';
+import { useTheme } from 'next-themes';
 
-// --- Enhanced UI Components ---
-const StepIndicator = ({ currentStep, totalSteps }) => {
-  return (
-    <div className="flex items-center justify-between mb-8">
-      {[1, 2, 3].map((s) => (
-        <div key={s} className="flex flex-col items-center flex-1 relative">
-          <div className={`z-10 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 border-2 ${
-            s < currentStep ? 'bg-emerald-600 border-emerald-600 text-white' : 
-            s === currentStep ? 'bg-white dark:bg-slate-900 border-emerald-500 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]' : 
-            'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400'
-          }`}>
-            {s < currentStep ? <CheckCircle2 className="w-5 h-5" /> : <span className="font-black text-sm">{s}</span>}
-          </div>
-          <span className={`mt-2 text-[10px] font-black uppercase tracking-widest ${s === currentStep ? 'text-emerald-500' : 'text-slate-400'}`}>
-            {s === 1 ? 'Category' : s === 2 ? 'Details' : 'Evidence'}
-          </span>
-          {s < totalSteps && (
-            <div className={`absolute top-5 left-[60%] w-[80%] h-0.5 transition-colors duration-500 ${s < currentStep ? 'bg-emerald-600' : 'bg-slate-200 dark:bg-slate-800'}`} />
-          )}
-        </div>
-      ))}
-    </div>
-  );
-};
 
-const CustomInput = ({ label, icon: Icon, rightElement, ...props }) => (
-  <div className="space-y-1.5">
-    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 pl-1">{label}</label>
-    <div className="relative group">
-      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors">
-        <Icon size={18} />
-      </div>
-      <input 
-        className="w-full bg-slate-50 dark:bg-slate-900/50 border-2 border-slate-200 dark:border-slate-800 rounded-xl py-3 pl-11 pr-12 text-slate-900 dark:text-white font-semibold outline-none focus:border-emerald-500 transition-all text-sm"
-        {...props}
-      />
-      {rightElement && (
-        <div className="absolute right-2 top-1/2 -translate-y-1/2">
-          {rightElement}
-        </div>
-      )}
-    </div>
-  </div>
-);
+
 
 const ReportIssue = () => {
   const [step, setStep] = useState(1);
@@ -327,7 +277,7 @@ const ReportIssue = () => {
                   </div>
                 )}
 
-                <div className="p-4 rounded-xl bg-slate-900 text-white flex items-center gap-4">
+                <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-900 text-white flex items-center gap-4">
                   <Shield className="w-8 h-8 text-emerald-500 shrink-0" />
                   <p className="text-slate-400 text-[10px] leading-relaxed">Report will be cryptographically signed and added to the municipal ledger for verification.</p>
                 </div>
@@ -357,7 +307,7 @@ const ReportIssue = () => {
                 onClick={handleSubmit}
                 disabled={isSubmitting || formData.images.length === 0}
                 className={`relative px-10 py-3.5 rounded-xl font-black uppercase tracking-widest text-xs flex items-center gap-2 shadow-xl transition-all ${
-                  isSubmitting ? 'bg-slate-200 text-slate-500' : 'bg-emerald-600 text-white hover:bg-emerald-500'
+                  isSubmitting ? 'bg-emerald-800 text-slate-100' : 'bg-emerald-600 text-white hover:bg-emerald-500'
                 }`}
               >
                 {isSubmitting ? 'Transmitting...' : 'Finalize Report'}
@@ -378,8 +328,6 @@ const ReportIssue = () => {
 
 export default function App() {
   return (
-    <ThemeProvider>
       <ReportIssue />
-    </ThemeProvider>
   );
 }

@@ -1,14 +1,22 @@
-
 "use client";
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { User, Mail, Lock, Eye, EyeOff, Activity, ArrowRight, Chrome } from "lucide-react";
+import {
+  User,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  Activity,
+  ArrowRight,
+  Chrome,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
-import Button from "@/components/ui/Button"; // Using your themed button
+import Button from "@/components/ui/Button";
 import MouseGlow from "@/components/ui/MouseGlow";
 import Link from "next/link";
-
+import { useRouter } from "next/navigation";
 
 export default function SignUp() {
   const [name, setName] = useState("");
@@ -19,15 +27,17 @@ export default function SignUp() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const router = useRouter();
 
   const handleGoogleLogin = () => {
-    console.log("signup")
+    console.log("signup");
+    router.push("/dashboard");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-   
-   console.log("signup")
+    console.log("signup");
+    router.push("/dashboard");
   };
 
   return (
@@ -50,7 +60,10 @@ export default function SignUp() {
             <Activity className="text-white w-8 h-8" />
           </div>
           <h1 className="text-4xl font-black tracking-tighter text-slate-900 dark:text-white mb-2 text-center">
-            Join the <span className="text-emerald-600 dark:text-emerald-400">Pulse</span>
+            Join the{" "}
+            <span className="text-emerald-600 dark:text-emerald-400">
+              Pulse
+            </span>
           </h1>
           <p className="text-slate-500 dark:text-slate-400 font-medium text-center">
             The infrastructure of an engaged society.
@@ -80,7 +93,7 @@ export default function SignUp() {
                 onChange={(e) => setName(e.target.value)}
                 leftIcon={<User className="w-4 h-4 text-emerald-500" />}
                 required
-                className= " h-12 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl"
+                className=" h-12 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl"
               />
               <Input
                 type="email"
@@ -90,7 +103,7 @@ export default function SignUp() {
                 onChange={(e) => setEmail(e.target.value)}
                 leftIcon={<Mail className="w-4 h-4 text-emerald-500" />}
                 required
-                className= "h-12 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl"
+                className="h-12 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl"
               />
             </div>
 
@@ -103,14 +116,21 @@ export default function SignUp() {
                 onChange={(e) => setPassword(e.target.value)}
                 leftIcon={<Lock className="w-4 h-4 text-emerald-500" />}
                 rightIcon={
-                  <button type="button" onClick={() => setShowPassword(!showPassword)}>
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
                   </button>
                 }
                 required
-                className= "h-12 w-[225px] bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl "
+                className="h-12 w-[225px] bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl "
               />
-             
+
               <Input
                 type={showPassword ? "text" : "password"}
                 label="Confirm"
@@ -119,7 +139,7 @@ export default function SignUp() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 leftIcon={<Lock className="w-4 h-4 text-emerald-500" />}
                 required
-                className= "h-12  bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl"
+                className="h-12  bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl"
               />
             </div>
 
@@ -167,15 +187,21 @@ export default function SignUp() {
         {/* Footer Links */}
         <p className="mt-8 text-center text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500">
           By joining, you agree to our{" "}
-          <Link href="/terms" className="text-slate-900 dark:text-slate-300 hover:text-emerald-500">
+          <Link
+            href="/terms"
+            className="text-slate-900 dark:text-slate-300 hover:text-emerald-500"
+          >
             Terms
           </Link>{" "}
           &{" "}
-          <Link href="/privacy" className="text-slate-900 dark:text-slate-300 hover:text-emerald-500">
+          <Link
+            href="/privacy"
+            className="text-slate-900 dark:text-slate-300 hover:text-emerald-500"
+          >
             Privacy Policy
           </Link>
         </p>
       </motion.div>
     </div>
   );
-};
+}

@@ -15,13 +15,18 @@ const SignInForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  const router = useRouter();
 
   const handleSubmit = async (e) => {
-    console.log("signin")
+    e.preventDefault();
+    console.log("signin");
+    router.push('/dashboard')
   };
 
   const handleGoogleLogin = () => {
    console.log("signin")
+    router.push('/dashboard')
   };
 
   return (

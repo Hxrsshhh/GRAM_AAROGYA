@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,35 +8,14 @@ import {
   MapPin,
   Calendar,
   ChevronRight,
-  AlertCircle,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  ArrowUpRight
+  ArrowUpRight,
 } from "lucide-react";
 
-/**
- * UI COMPONENTS
- */
-const Badge = ({ children, variant = "pending" }) => {
-  const styles = {
-    pending: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800",
-    "in-progress": "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800",
-    resolved: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800",
-    rejected: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800",
-  };
-  return (
-    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${styles[variant] || styles.pending}`}>
-      {children}
-    </span>
-  );
-};
+import { Badge } from "@/components/ui/Issue-badge";
+import { Card } from "@/components/ui/Issue-card";
 
-const Card = ({ children, className = "", hover = false }) => (
-  <div className={`bg-white  dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 transition-all duration-300 ${hover ? "hover:shadow-2xl hover:shadow-emerald-500/10 hover:-translate-y-1 cursor-pointer" : ""} ${className}`}>
-    {children}
-  </div>
-);
+import { Issues } from "@/lib/mock-data";
+import Link from "next/link";
 
 export default function App() {
   const [issues, setIssues] = useState([]);
@@ -47,82 +26,33 @@ export default function App() {
 
   useEffect(() => {
     const fetchIssues = async () => {
-      try {
-        const res = await fetch("http://localhost:5000/api/issues");
-        if (!res.ok) throw new Error("Failed to fetch");
-        const data = await res.json();
-        setIssues(Array.isArray(data) ? data : []);
-      } catch (err) {
-        setIssues([
-          {
-            _id: "1",
-            title: "Pothole on Main Street",
-            description: "Deep pothole causing traffic delays and potential vehicle damage near the intersection.",
-            status: "pending",
-            category: "infrastructure",
-            address: "123 Main St, Civic City",
-            createdAt: new Date().toISOString(),
-            images: ["https://images.unsplash.com/photo-1599388143920-565e317e089d?auto=format&fit=crop&w=300&q=80"]
-          },
-          {
-            _id: "2",
-            title: "Broken Streetlight",
-            description: "The street lighting in Sector 4 has been dark for three nights, creating safety concerns.",
-            status: "in-progress",
-            category: "utilities",
-            address: "Sector 4, North Park",
-            createdAt: new Date().toISOString(),
-            images: []
-          },
-          {
-            _id: "3",
-            title: "Illegal Dumping",
-            description: "Unauthorized waste disposal observed at the park entrance.",
-            status: "resolved",
-            category: "sanitation",
-            address: "North Park Gates",
-            createdAt: new Date().toISOString(),
-            images: []
-          },
-          {
-            _id: "4",
-            title: "Water Main Leak",
-            description: "Significant water leakage reported on the sidewalk of 5th Avenue.",
-            status: "pending",
-            category: "utilities",
-            address: "5th Avenue",
-            createdAt: new Date().toISOString(),
-            images: []
-          },
-          {
-            _id: "5",
-            title: "Graffiti Removal",
-            description: "Vandalism on the community center walls needs addressing.",
-            status: "in-progress",
-            category: "infrastructure",
-            address: "Community Hub",
-            createdAt: new Date().toISOString(),
-            images: []
-          }
-        ]);
-      } finally {
-        setLoading(false);
-      }
+      setIssues(Issues);
+      setLoading(false);
     };
     fetchIssues();
   }, []);
 
   const filteredIssues = issues.filter((issue) => {
     const matchesSearch =
-      (issue.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-       issue.description?.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesStatus = selectedStatus === "all" || issue.status === selectedStatus;
-    const matchesCategory = selectedCategory === "all" || issue.category === selectedCategory;
+      issue.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      issue.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      selectedStatus === "all" || issue.status === selectedStatus;
+    const matchesCategory =
+      selectedCategory === "all" || issue.category === selectedCategory;
     return matchesSearch && matchesStatus && matchesCategory;
   });
 
   const statuses = ["all", "pending", "in-progress", "resolved", "rejected"];
-  const categories = ["all", "infrastructure", "sanitation", "safety", "environment", "utilities", "traffic"];
+  const categories = [
+    "all",
+    "infrastructure",
+    "sanitation",
+    "safety",
+    "environment",
+    "utilities",
+    "traffic",
+  ];
 
   if (loading) {
     return (
@@ -133,8 +63,12 @@ export default function App() {
             <div className="absolute top-0 w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
           <div className="text-center">
-            <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Syncing Pulse</h2>
-            <p className="text-slate-500 text-sm font-bold uppercase tracking-widest mt-1">Accessing Community Data...</p>
+            <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">
+              Syncing Pulse
+            </h2>
+            <p className="text-slate-500 text-sm font-bold uppercase tracking-widest mt-1">
+              Accessing Community Data...
+            </p>
           </div>
         </div>
       </div>
@@ -150,22 +84,35 @@ export default function App() {
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">Live Community Feed</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
+                  Live Community Feed
+                </span>
               </div>
               <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-slate-900 dark:text-white">
-                Public <span className="text-emerald-500 underline decoration-emerald-500/30 underline-offset-8">Issues</span>
+                Public{" "}
+                <span className="text-emerald-500 underline decoration-emerald-500/30 underline-offset-8">
+                  Issues
+                </span>
               </h1>
             </div>
-            
+
             <div className="flex gap-3">
-               <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-5 py-2 text-center">
-                  <p className="text-xl font-black text-emerald-600">{issues.length}</p>
-                  <p className="text-[8px] font-black uppercase text-emerald-600/60 tracking-widest">Reports</p>
-               </div>
-               <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl px-5 py-2 text-center">
-                  <p className="text-xl font-black text-amber-600">{issues.filter(i => i.status === 'pending').length}</p>
-                  <p className="text-[8px] font-black uppercase text-amber-600/60 tracking-widest">Awaiting</p>
-               </div>
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-5 py-2 text-center">
+                <p className="text-xl font-black text-emerald-600">
+                  {issues.length}
+                </p>
+                <p className="text-[8px] font-black uppercase text-emerald-600/60 tracking-widest">
+                  Reports
+                </p>
+              </div>
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl px-5 py-2 text-center">
+                <p className="text-xl font-black text-amber-600">
+                  {issues.filter((i) => i.status === "pending").length}
+                </p>
+                <p className="text-[8px] font-black uppercase text-amber-600/60 tracking-widest">
+                  Awaiting
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -175,18 +122,21 @@ export default function App() {
       <div className="flex-1 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 h-full py-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
-            
             {/* LEFT: FILTERS - Static */}
             <div className="lg:col-span-4 hidden lg:block">
               <Card className="border-emerald-500/10 h-auto">
                 <div className="flex items-center gap-2 mb-6">
                   <Filter className="w-5 h-5 text-emerald-500" />
-                  <h3 className="font-black uppercase tracking-widest text-sm">Refine Feed</h3>
+                  <h3 className="font-black uppercase tracking-widest text-sm">
+                    Refine Feed
+                  </h3>
                 </div>
 
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">Search</label>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">
+                      Search
+                    </label>
                     <div className="relative">
                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <input
@@ -200,7 +150,9 @@ export default function App() {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">Category</label>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">
+                      Category
+                    </label>
                     <div className="relative group">
                       <select
                         value={selectedCategory}
@@ -208,7 +160,9 @@ export default function App() {
                         className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl appearance-none focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm font-bold capitalize cursor-pointer"
                       >
                         {categories.map((c) => (
-                          <option key={c} value={c}>{c}</option>
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
                         ))}
                       </select>
                       <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 rotate-90 pointer-events-none" />
@@ -216,7 +170,9 @@ export default function App() {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">Status</label>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">
+                      Status
+                    </label>
                     <div className="flex flex-wrap gap-2">
                       {statuses.map((status) => (
                         <button
@@ -251,57 +207,77 @@ export default function App() {
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ duration: 0.2, delay: index * 0.03 }}
                       >
-                        <Card hover className="group overflow-hidden border-l-4 border-l-transparent hover:border-l-emerald-500">
-                          <div className="flex flex-col sm:flex-row gap-6">
-                            <div className="relative w-full sm:w-28 h-28 flex-shrink-0">
-                              <img
-                                src={issue.images?.[0] || `https://ui-avatars.com/api/?name=${issue.category}&background=random&size=128`}
-                                alt=""
-                                className="w-full h-full rounded-2xl object-cover"
-                              />
-                            </div>
+                        <Link href={`/issues/${issue._id}`}>
+                          <Card
+                            hover
+                            className="group overflow-hidden border-l-4 border-l-transparent hover:border-l-emerald-500"
+                          >
+                            <div className="flex flex-col sm:flex-row gap-6">
+                              <div className="relative w-full sm:w-28 h-28 flex-shrink-0">
+                                <img
+                                  src={
+                                    issue.images?.[0] ||
+                                    `https://ui-avatars.com/api/?name=${issue.category}&background=random&size=128`
+                                  }
+                                  alt=""
+                                  className="w-full h-full rounded-2xl object-cover"
+                                />
+                              </div>
 
-                            <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
-                              <div>
-                                <div className="flex items-start justify-between gap-4 mb-2">
-                                  <h3 className="font-black text-base tracking-tight text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors line-clamp-1">
-                                    {issue.title}
-                                  </h3>
-                                  <Badge variant={issue.status}>{issue.status}</Badge>
+                              <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
+                                <div>
+                                  <div className="flex items-start justify-between gap-4 mb-2">
+                                    <h3 className="font-black text-base tracking-tight text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors line-clamp-1">
+                                      {issue.title}
+                                    </h3>
+                                    <Badge variant={issue.status}>
+                                      {issue.status}
+                                    </Badge>
+                                  </div>
+                                  <p className="text-slate-500 dark:text-slate-400 text-xs font-medium line-clamp-2 mb-4">
+                                    {issue.description}
+                                  </p>
                                 </div>
-                                <p className="text-slate-500 dark:text-slate-400 text-xs font-medium line-clamp-2 mb-4">
-                                  {issue.description}
-                                </p>
-                              </div>
 
-                              <div className="flex flex-wrap items-center gap-y-2 gap-x-5 text-[9px] font-black uppercase tracking-widest text-slate-400">
-                                <span className="flex items-center gap-1.5">
-                                  <MapPin className="w-3 h-3 text-emerald-500" />
-                                  {issue.address?.split(",")[0] || "Zone A"}
-                                </span>
-                                <span className="flex items-center gap-1.5">
-                                  <Calendar className="w-3 h-3 text-emerald-500" />
-                                  {new Date(issue.createdAt).toLocaleDateString()}
-                                </span>
-                                <span className="flex items-center gap-1.5 ml-auto text-emerald-600 font-black">
-                                  Details <ArrowUpRight className="w-2.5 h-2.5" />
-                                </span>
+                                <div className="flex flex-wrap items-center gap-y-2 gap-x-5 text-[9px] font-black uppercase tracking-widest text-slate-400">
+                                  <span className="flex items-center gap-1.5">
+                                    <MapPin className="w-3 h-3 text-emerald-500" />
+                                    {issue.address?.split(",")[0] || "Zone A"}
+                                  </span>
+                                  <span className="flex items-center gap-1.5">
+                                    <Calendar className="w-3 h-3 text-emerald-500" />
+                                    {new Date(
+                                      issue.createdAt
+                                    ).toLocaleDateString()}
+                                  </span>
+                                  <span className="flex items-center gap-1.5 ml-auto text-emerald-600 font-black">
+                                    Details{" "}
+                                    <ArrowUpRight className="w-2.5 h-2.5" />
+                                  </span>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </Card>
+                          </Card>
+                        </Link>
                       </motion.div>
                     ))}
                   </AnimatePresence>
 
                   {filteredIssues.length === 0 && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                    >
                       <Card className="text-center py-20 bg-slate-50/50 dark:bg-slate-900/50 border-dashed border-2">
                         <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6">
                           <Search className="w-8 h-8 text-slate-300" />
                         </div>
-                        <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Empty Feed</h3>
-                        <p className="text-slate-500 font-bold text-xs mt-2">Try changing your filters.</p>
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">
+                          Empty Feed
+                        </h3>
+                        <p className="text-slate-500 font-bold text-xs mt-2">
+                          Try changing your filters.
+                        </p>
                       </Card>
                     </motion.div>
                   )}
