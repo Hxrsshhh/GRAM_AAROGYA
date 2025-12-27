@@ -21,8 +21,10 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Issue-detail-card";
 
 import Button from "@/components/ui/Button";
-import { IssueDetail } from "@/lib/mock-data";
+
 import Link from "next/link";
+import { getIssueById,ISSUE_DETAILS } from "@/lib/mock-data";
+import { useParams } from "next/navigation";
 
 export default function App() {
   const [issue, setIssue] = useState(null);
@@ -31,10 +33,16 @@ export default function App() {
   const [comment, setComment] = useState("");
   const [hasUpvoted, setHasUpvoted] = useState(false);
 
+  const params = useParams();
+
+  const id = params.id;
+
+  const Issue = getIssueById(ISSUE_DETAILS,id);
+
   // Simulated Fetch
   useEffect(() => {
     const fetchIssue = async () => {
-      setIssue(IssueDetail);
+      setIssue(Issue);
       setLoading(false);
     };
     fetchIssue();
@@ -74,21 +82,21 @@ export default function App() {
       <main className="max-w-[83rem] mx-auto px-6 py-12">
         {/* BACK BUTTON / BREADCRUMB - Positioned below your fixed navbar */}
         <div className="mb-8 mt-6">
-         <Link href='/issues'>
-          <button className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-full border-2 border-slate-200 dark:border-slate-800 flex items-center justify-center group-hover:bg-emerald-500 group-hover:border-emerald-500 transition-all duration-300">
-              <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
-            </div>
-            <div className="flex flex-col items-start">
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-0.5">
-                Return to
-              </span>
-              <span className="text-[11px] font-black uppercase tracking-widest text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors">
-                Incident Feed
-              </span>
-            </div>
-          </button>
-         </Link>
+          <Link href="/issues">
+            <button className="flex items-center gap-3 group">
+              <div className="w-10 h-10 rounded-full border-2 border-slate-200 dark:border-slate-800 flex items-center justify-center group-hover:bg-emerald-500 group-hover:border-emerald-500 transition-all duration-300">
+                <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+              </div>
+              <div className="flex flex-col items-start">
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-0.5">
+                  Return to
+                </span>
+                <span className="text-[11px] font-black uppercase tracking-widest text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors">
+                  Incident Feed
+                </span>
+              </div>
+            </button>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">

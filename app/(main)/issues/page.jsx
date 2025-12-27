@@ -14,7 +14,7 @@ import {
 import { Badge } from "@/components/ui/Issue-badge";
 import { Card } from "@/components/ui/Issue-card";
 
-import { Issues } from "@/lib/mock-data";
+import { ISSUE_DETAILS as Issues } from "@/lib/mock-data";
 import Link from "next/link";
 
 export default function App() {

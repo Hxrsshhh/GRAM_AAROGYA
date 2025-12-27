@@ -27,9 +27,15 @@ import { DashboardCard } from "@/components/ui/DashboardCard";
 // Mocking useAuth for standalone completeness
 const useAuth = () => ({ user: { name: "Harsh Singh" } });
 
-import { MOCK_ISSUES } from "@/lib/mock-data";
-import { stats } from "@/lib/mock-data";
-import { chartData } from "@/lib/mock-data";
+import { calculateIssueStats, generateIssuePreviewList, generateMonthlyChartData, ISSUE_DETAILS } from "@/lib/mock-data";
+
+const MOCK_ISSUES = generateIssuePreviewList(ISSUE_DETAILS);
+console.log(MOCK_ISSUES);
+
+const stats = calculateIssueStats(MOCK_ISSUES);
+
+const chartData = generateMonthlyChartData(MOCK_ISSUES);
+
 import Button from "@/components/ui/Button";
 import Link from "next/link";
 
@@ -295,54 +301,50 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {issues.length > 0 ? (
               issues.slice(0, 4).map((issue) => (
-               <Link href={`/issues/${issue._id}`}
-                key={issue._id}
-               >
-                <motion.div
-                 
-                  whileHover={{ y: -4, scale: 1.01 }}
-                  onClick={() => navigate(`/issues/${issue._id}`)}
-                  className="cursor-pointer group relative flex items-center gap-4 p-4 rounded-[2rem] border border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-all duration-300"
-                >
-                  <div className="relative w-16 h-16 flex-shrink-0">
-                    <img
-                      src={
-                        issue.images?.[0] ||
-                        "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=100&q=80"
-                      }
-                      alt={issue.title}
-                      className="w-full h-full rounded-2xl object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-                    />
-                    <div
-                      className={`absolute -top-1 -right-1 px-2 py-0.5 text-[7px] font-black text-white rounded-full uppercase tracking-tighter ${
-                        issue.status === "resolved"
-                          ? "bg-emerald-500"
-                          : "bg-amber-500"
-                      }`}
-                    >
-                      {issue.status}
+                <Link href={`/issues/${issue._id}`} key={issue._id}>
+                  <motion.div
+                    whileHover={{ y: -4, scale: 1.01 }}
+                    className="cursor-pointer group relative flex items-center gap-4 p-4 rounded-[2rem] border border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-all duration-300"
+                  >
+                    <div className="relative w-16 h-16 flex-shrink-0">
+                      <img
+                        src={
+                          issue.images?.[0] ||
+                          "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=100&q=80"
+                        }
+                        alt={issue.title}
+                        className="w-full h-full rounded-2xl object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                      />
+                      <div
+                        className={`absolute -top-1 -right-1 px-2 py-0.5 text-[7px] font-black text-white rounded-full uppercase tracking-tighter ${
+                          issue.status === "resolved"
+                            ? "bg-emerald-500"
+                            : "bg-amber-500"
+                        }`}
+                      >
+                        {issue.status}
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex-grow">
-                    <h3 className="font-black text-slate-800 dark:text-slate-100 text-sm mb-1 group-hover:text-emerald-600 transition-colors">
-                      {issue.title}
-                    </h3>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1">
-                      <span className="flex items-center gap-1.5 text-[9px] font-bold text-slate-400">
-                        <MapPin className="w-3 h-3 text-emerald-500" />
-                        {issue.address?.split(",")[0] || "Global"}
-                      </span>
-                      <span className="flex items-center gap-1.5 text-[9px] font-bold text-slate-400">
-                        <Calendar className="w-3 h-3 text-emerald-500" />
-                        {new Date(issue.createdAt).toLocaleDateString()}
-                      </span>
+                    <div className="flex-grow">
+                      <h3 className="font-black text-slate-800 dark:text-slate-100 text-sm mb-1 group-hover:text-emerald-600 transition-colors">
+                        {issue.title}
+                      </h3>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1">
+                        <span className="flex items-center gap-1.5 text-[9px] font-bold text-slate-400">
+                          <MapPin className="w-3 h-3 text-emerald-500" />
+                          {issue.address?.split(",")[0] || "Global"}
+                        </span>
+                        <span className="flex items-center gap-1.5 text-[9px] font-bold text-slate-400">
+                          <Calendar className="w-3 h-3 text-emerald-500" />
+                          {new Date(issue.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:bg-emerald-500 group-hover:text-white transition-all">
-                    <ArrowRight className="w-3 h-3" />
-                  </div>
-                </motion.div>
-               </Link>
+                    <div className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                      <ArrowRight className="w-3 h-3" />
+                    </div>
+                  </motion.div>
+                </Link>
               ))
             ) : (
               <div className="col-span-full py-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
