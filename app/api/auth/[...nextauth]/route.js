@@ -3,8 +3,8 @@ import GoogleProvider from "next-auth/providers/google";
 import FacebookProvider from "next-auth/providers/facebook";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import connectToDB from "@/lib/db";
-import User from "@/models/user.model";
+import connectDB from "@/lib/db";
+import User from "@/models/User";
 
 export const authOptions = {
   session: {
@@ -46,7 +46,7 @@ export const authOptions = {
 
       // authOptions
       async authorize(credentials) {
-        await connectToDB();
+        await connectDB();
 
         const user = await User.findOne({ email: credentials.email }).select(
           "+password"
@@ -70,7 +70,7 @@ export const authOptions = {
 
   callbacks: {
     async signIn({ user, account }) {
-      await connectToDB();
+      await connectDB();
 
       if (account.provider === "credentials") {
         return true;

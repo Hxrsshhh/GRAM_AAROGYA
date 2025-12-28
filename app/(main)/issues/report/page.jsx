@@ -18,23 +18,42 @@ import {
   Camera,
   Layers,
   LocateFixed,
+  Map,
+  Mic,
 } from "lucide-react";
 
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { CustomInput } from "@/components/ui/CustomInput";
+import { useSession } from "next-auth/react";
+import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
+import { useRouter } from "next/navigation";
 
 const ReportIssue = () => {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+  const [error, setError] = useState("");
+
+  const [isListening, setIsListening] = useState(false);
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [voiceBlob, setVoiceBlob] = useState(null);
+
+  const router = useRouter();
+
+  const { data: session, status } = useSession();
 
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     category: "",
-    priority: "medium",
-    location: "",
-    images: [],
+    priority: "Medium",
+    location: {
+      address: "",
+      lat: null,
+      lng: null,
+      coordinates: "",
+    },
   });
 
   const categories = [
@@ -48,68 +67,166 @@ const ReportIssue = () => {
   ];
 
   const priorities = [
-    { id: "low", icon: Clock, label: "Standard" },
-    { id: "medium", icon: Activity, label: "Urgent" },
-    { id: "high", icon: AlertTriangle, label: "Critical" },
-    { id: "critical", icon: Flame, label: "SOS" },
+    { id: "Low", icon: Clock, label: "Standard" },
+    { id: "Medium", icon: Activity, label: "Urgent" },
+    { id: "High", icon: AlertTriangle, label: "Critical" },
+    { id: "Critical", icon: Flame, label: "SOS" },
   ];
 
   const handleImageUpload = (e) => {
-    const files = e.target.files;
-    if (!files) return;
-    Array.from(files).forEach((file) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    const limited = files.slice(0, 5 - imageFiles.length);
+
+    limited.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData((prev) => ({
-          ...prev,
-          images: [...prev.images, reader.result].slice(0, 5),
-        }));
+        setImagePreviews((prev) => [...prev, reader.result]);
       };
       reader.readAsDataURL(file);
     });
+
+    setImageFiles((prev) => [...prev, ...limited]);
   };
 
-  const handleGetLocation = () => {
+  const handleGetLocation = async () => {
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by your browser");
       return;
     }
 
     setIsLocating(true);
+
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        // Mocking a reverse geocode address for the UI demo
-        setTimeout(() => {
-          setFormData((prev) => ({
-            ...prev,
-            location: `${latitude.toFixed(4)}, ${longitude.toFixed(
-              4
-            )} (Detected Address)`,
-          }));
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        try {
+          const res = await fetch(`/api/geocoder?lat=${lat}&lon=${lng}`);
+          const data = await res.json();
+          console.log(data);
+
+          if (data && data.display_name) {
+            setFormData((prev) => ({
+              ...prev,
+              location: {
+                address: data.display_name,
+                lat: lat,
+                lng: lng,
+                coordinates: `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+              },
+            }));
+          } else {
+            setFormData((prev) => ({
+              ...prev,
+              location: {
+                address: `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`,
+                lat: lat,
+                lng: lng,
+              },
+            }));
+          }
+        } catch (error) {
+          console.error("Geocoding failed:", error);
+          setError("Address lookup failed, but coordinates were captured.");
+        } finally {
           setIsLocating(false);
-        }, 1200);
+        }
       },
-      () => {
+      (error) => {
         setIsLocating(false);
-        alert("Unable to retrieve your location");
-      }
+        setError("Error getting coordinates: " + error.message);
+      },
+      { enableHighAccuracy: true }
     );
   };
 
   const removeImage = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-    }));
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
-    setIsSubmitting(true);
-    setTimeout(() => {
+    try {
+      setIsSubmitting(true);
+
+      if (!session) {
+        alert("Login required");
+        setIsSubmitting(false);
+        return;
+      }
+
+      /* ---------- UPLOAD IMAGES ---------- */
+      const imageUrls = await Promise.all(
+        imageFiles.map((file) => uploadToCloudinary(file, "image"))
+      );
+
+      /* ---------- UPLOAD VOICE ---------- */
+      let voiceNote = "";
+      if (voiceBlob) {
+        voiceNote = await uploadToCloudinary(voiceBlob, "audio");
+      }
+
+      /* ---------- SEND ISSUE DATA ---------- */
+      const payload = {
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        priority: formData.priority,
+        location: formData.location,
+        images: imageUrls,
+        voiceNote,
+      };
+
+      const res = await fetch("/api/reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error("Submit failed");
+
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong");
+    } finally {
       setIsSubmitting(false);
-      alert("Report Submitted Successfully!");
-    }, 2000);
+      router.push('/issues');
+    }
+  };
+
+  const mediaRecorderRef = React.useRef(null);
+  const chunksRef = React.useRef([]);
+
+  const toggleListening = async () => {
+    if (isListening) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream
+        .getTracks()
+        .forEach((track) => track.stop());
+
+      setIsListening(false);
+      return;
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const recorder = new MediaRecorder(stream);
+
+    mediaRecorderRef.current = recorder;
+    chunksRef.current = [];
+
+    recorder.ondataavailable = (e) => chunksRef.current.push(e.data);
+
+    recorder.onstop = () => {
+      const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+      setVoiceBlob(blob);
+      chunksRef.current = [];
+    };
+
+    recorder.start();
+    setIsListening(true);
   };
 
   return (
@@ -222,23 +339,46 @@ const ReportIssue = () => {
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 pl-1">
                     Description
                   </label>
-                  <textarea
-                    rows={4}
-                    className="w-full bg-slate-50 dark:bg-slate-900/50 border-2 border-slate-200 dark:border-slate-800 rounded-xl p-4 text-slate-900 dark:text-white font-semibold outline-none focus:border-emerald-500 transition-all resize-none text-sm"
-                    placeholder="Provide context..."
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                  />
+
+                  {/* Relative wrapper to contain the absolute button */}
+                  <div className="relative group">
+                    <textarea
+                      rows={4}
+                      className="w-full bg-slate-50 dark:bg-slate-900/50 border-2 border-slate-200 dark:border-slate-800 rounded-xl p-4 pr-12 text-slate-900 dark:text-white font-semibold outline-none focus:border-emerald-500 transition-all resize-none text-sm"
+                      placeholder="Provide context..."
+                      value={formData.description}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          description: e.target.value,
+                        })
+                      }
+                    />
+
+                    {/* Voice Button UI */}
+                    <button
+                      type="button"
+                      onClick={toggleListening}
+                      className="absolute bottom-4 right-2 p-2.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-emerald-500 hover:border-emerald-500 dark:hover:text-emerald-400 transition-all shadow-sm active:scale-95"
+                      title="Voice Input"
+                    >
+                      <Mic className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <CustomInput
                   label="Address / Geo-Data"
                   placeholder="Street name or landmark"
-                  value={formData.location}
+                  value={formData.location.address || ""}
                   onChange={(e) =>
-                    setFormData({ ...formData, location: e.target.value })
+                    setFormData({
+                      ...formData,
+                      location: {
+                        ...formData.location,
+                        address: e.target.value,
+                      },
+                    })
                   }
                   icon={MapPin}
                   rightElement={
@@ -287,14 +427,14 @@ const ReportIssue = () => {
                       Upload up to 5 validation photos
                     </p>
                     <div className="px-4 py-1.5 bg-white dark:bg-slate-800 rounded-lg text-[9px] font-black uppercase tracking-widest border border-slate-200 dark:border-slate-700">
-                      {formData.images.length} / 5
+                      {imagePreviews.length} / 5
                     </div>
                   </label>
                 </div>
 
-                {formData.images.length > 0 && (
+                {imagePreviews.length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    {formData.images.map((img, idx) => (
+                    {imagePreviews.map((img, idx) => (
                       <div key={idx} className="relative w-16 h-16 group">
                         <img
                           src={img}
@@ -336,7 +476,8 @@ const ReportIssue = () => {
               <button
                 disabled={
                   (step === 1 && !formData.category) ||
-                  (step === 2 && (!formData.title || !formData.location))
+                  (step === 2 &&
+                    (!formData.title || !formData.location.address))
                 }
                 onClick={() => setStep((s) => s + 1)}
                 className="bg-emerald-600 text-white px-8 py-3.5 rounded-xl font-black uppercase tracking-widest text-xs flex items-center gap-2 hover:bg-emerald-500 disabled:grayscale disabled:opacity-50 transition-all"
@@ -346,7 +487,7 @@ const ReportIssue = () => {
             ) : (
               <button
                 onClick={handleSubmit}
-                disabled={isSubmitting || formData.images.length === 0}
+                disabled={isSubmitting || imagePreviews.length === 0}
                 className={`relative px-10 py-3.5 rounded-xl font-black uppercase tracking-widest text-xs flex items-center gap-2 shadow-xl transition-all ${
                   isSubmitting
                     ? "bg-emerald-800 text-slate-100"

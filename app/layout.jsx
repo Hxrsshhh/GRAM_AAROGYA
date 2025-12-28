@@ -18,7 +18,7 @@ export const metadata = {
   description:
     "CivicPulse is a modern civic engagement platform that enables citizens to report local issues and track them in real time through an interactive map interface.",
   icons: {
-    icon: "/logo.png",
+    icon: "/logo2.png",
   },
 };
 

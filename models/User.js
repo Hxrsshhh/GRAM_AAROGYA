@@ -17,12 +17,21 @@ const UserSchema = new mongoose.Schema(
     },
 
     avatar: {
-      type: String, 
+      type: String,
+      default:'/avatar.jpg',
     },
 
+    phone: {
+      type: String,
+      default: null,
+    },
+    bio: {
+      type: String,
+      default: null,
+    },
     password: {
       type: String,
-      select: false, 
+      select: false,
     },
 
     authProviders: [
@@ -35,7 +44,7 @@ const UserSchema = new mongoose.Schema(
     status: { type: String, default: "active" },
 
     providerId: {
-      type: String, 
+      type: String,
     },
 
     role: {
@@ -46,7 +55,7 @@ const UserSchema = new mongoose.Schema(
 
     reputation: {
       type: Number,
-      default: 0, 
+      default: 0,
     },
 
     reportsCount: {
@@ -81,7 +90,7 @@ const UserSchema = new mongoose.Schema(
     lastLoginAt: Date,
   },
   {
-    timestamps: true, 
+    timestamps: true,
   }
 );
 

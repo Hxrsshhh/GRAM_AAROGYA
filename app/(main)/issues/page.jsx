@@ -16,6 +16,7 @@ import { Card } from "@/components/ui/Issue-card";
 
 import { ISSUE_DETAILS as Issues } from "@/lib/mock-data";
 import Link from "next/link";
+import { getAllIssues } from "@/app/api/issues";
 
 export default function App() {
   const [issues, setIssues] = useState([]);
@@ -25,11 +26,20 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState("all");
 
   useEffect(() => {
-    const fetchIssues = async () => {
-      setIssues(Issues);
-      setLoading(false);
-    };
-    fetchIssues();
+    async function loadIssues() {
+      try {
+        setLoading(true);
+        const res = await getAllIssues();
+        setIssues(res.data);
+        console.log(res.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadIssues();
   }, []);
 
   const filteredIssues = issues.filter((issue) => {

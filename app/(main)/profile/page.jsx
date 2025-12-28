@@ -29,41 +29,81 @@ import Button from "@/components/ui/Button";
 
 import { InputField } from "@/components/ui/input";
 import { userData } from "@/lib/mock-data";
+import { useSession } from "next-auth/react";
 
 export default function Profile() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState(null);
 
-  const [formData, setFormData] = useState(userData);
+  const { data: session, status } = useSession();
 
   useEffect(() => {
-    // Simulate API fetch
-    setTimeout(() => {
-      setUser({
-        role: "admin",
-        createdAt: "2023-01-15T12:00:00Z",
-        verified: true,
-      });
-      setLoading(false);
-    }, 1000);
-  }, []);
+    if (status === "unauthenticated") {
+      // Redirect to login or show error
+      return;
+    }
+
+    if (status === "authenticated") {
+      const loadProfile = async () => {
+        try {
+          const res = await fetch("/api/user/profile");
+          const data = await res.json();
+          setFormData(data);
+          console.log(data);
+        } catch (error) {
+          console.error("Failed to fetch profile", error);
+        }
+      };
+      loadProfile();
+    }
+  }, [session, status]);
 
   const handleSave = async () => {
     setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
+    try {
+      const response = await fetch("/api/user/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        // Even if formData has an email, the API we built will ignore it
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update profile");
+      }
+
+      // 1. Get the updated user data back from the server
+      const updatedUser = await response.json();
+
+      // 2. Sync local state (ensures UI reflects exactly what is in the DB)
+      setFormData(updatedUser);
+
+      // 3. Exit edit mode
       setEditing(false);
-    }, 1200);
+
+      // Optional: Add a success toast/notification here
+      console.log("Profile updated successfully");
+    } catch (error) {
+      console.error("Save failed:", error.message);
+      // Optional: Show an error message to the user
+      alert(error.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  if (loading) {
+  if (status === "loading" || !formData) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-950">
-        <Loader2 className="w-12 h-12 text-slate-900 dark:text-emerald-500 animate-spin mb-4" />
-        <p className="text-slate-500 font-bold tracking-widest uppercase text-xs">
-          Authenticating Profile...
+      <div className="flex flex-col items-center justify-center h-screen gap-4 bg-white dark:bg-slate-950">
+        <div className="relative flex items-center justify-center">
+          <div className="w-16 h-16 border-4 border-emerald-500/20 rounded-full border-t-emerald-500 animate-spin"></div>
+          <Loader2 className="absolute w-6 h-6 text-emerald-500 animate-pulse" />
+        </div>
+        <p className="text-slate-500 font-black tracking-widest text-[10px] uppercase animate-pulse">
+         Authenticating Profile...
         </p>
       </div>
     );
@@ -103,7 +143,7 @@ export default function Profile() {
                 <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
                   <div className="relative group">
                     <img
-                      src={formData.avatar}
+                      src={formData?.avatar || "/avatar.jpg"}
                       className="w-28 h-28 rounded-2xl border-4 border-white dark:border-slate-900 shadow-2xl object-cover"
                       alt="Profile"
                     />
@@ -118,10 +158,10 @@ export default function Profile() {
 
               <div className="pt-16 pb-8 px-6 text-center">
                 <h2 className="text-xl font-black text-slate-900 dark:text-white">
-                  {formData.name}
+                  {formData?.name}
                 </h2>
                 <p className="text-slate-400 font-medium text-sm mb-6">
-                  {formData.email}
+                  {formData?.email}
                 </p>
 
                 <div className="flex justify-center gap-2 mb-8">
@@ -231,11 +271,8 @@ export default function Profile() {
                     label="Official Email"
                     value={formData.email}
                     type="email"
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
+                    disabled={true}
                     leftIcon={<Mail />}
-                    disabled={!editing}
                   />
 
                   <InputField
