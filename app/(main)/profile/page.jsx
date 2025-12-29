@@ -10,9 +10,7 @@ import {
   Camera,
   Save,
   ShieldCheck,
-  XCircle,
   ChevronRight,
-  ExternalLink,
   Settings,
   Loader2,
   Award,
@@ -28,8 +26,8 @@ import { Badge } from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 
 import { InputField } from "@/components/ui/input";
-import { userData } from "@/lib/mock-data";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function Profile() {
   const [loading, setLoading] = useState(false);
@@ -37,11 +35,12 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState(null);
 
+  const router = useRouter();
+
   const { data: session, status } = useSession();
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      // Redirect to login or show error
       return;
     }
 
@@ -51,7 +50,6 @@ export default function Profile() {
           const res = await fetch("/api/user/profile");
           const data = await res.json();
           setFormData(data);
-          console.log(data);
         } catch (error) {
           console.error("Failed to fetch profile", error);
         }
@@ -62,11 +60,11 @@ export default function Profile() {
 
   const handleSave = async () => {
     setSaving(true);
+    console.log(formData);
     try {
       const response = await fetch("/api/user/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        // Even if formData has an email, the API we built will ignore it
         body: JSON.stringify(formData),
       });
 
@@ -75,20 +73,11 @@ export default function Profile() {
         throw new Error(errorData.error || "Failed to update profile");
       }
 
-      // 1. Get the updated user data back from the server
       const updatedUser = await response.json();
-
-      // 2. Sync local state (ensures UI reflects exactly what is in the DB)
       setFormData(updatedUser);
-
-      // 3. Exit edit mode
       setEditing(false);
-
-      // Optional: Add a success toast/notification here
-      console.log("Profile updated successfully");
     } catch (error) {
       console.error("Save failed:", error.message);
-      // Optional: Show an error message to the user
       alert(error.message);
     } finally {
       setSaving(false);
@@ -103,7 +92,7 @@ export default function Profile() {
           <Loader2 className="absolute w-6 h-6 text-emerald-500 animate-pulse" />
         </div>
         <p className="text-slate-500 font-black tracking-widest text-[10px] uppercase animate-pulse">
-         Authenticating Profile...
+          Authenticating Profile...
         </p>
       </div>
     );
@@ -126,9 +115,15 @@ export default function Profile() {
             </h1>
           </div>
           <div className="flex gap-3">
-            <Button variant="outline" className="text-xs">
-              <Globe size={14} /> Public View
-            </Button>
+            {session?.user?.onboardingStatus !== "completed" && (
+              <Button
+                onClick={() => router.push("/onboarding")}
+                variant="secondary" className="text-xs"
+              >
+                Complete your profile
+              </Button>
+            )}
+
             <Button variant="secondary" className="text-xs">
               <Settings size={14} /> Preferences
             </Button>
@@ -287,7 +282,7 @@ export default function Profile() {
 
                   <InputField
                     label="Headquarters / Location"
-                    value={formData.address}
+                    value={formData.location?.city || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, address: e.target.value })
                     }

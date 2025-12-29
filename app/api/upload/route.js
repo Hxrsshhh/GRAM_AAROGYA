@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
-import cloudinary from "@/lib/cloudinary";
+import cloudinary from "@/lib/cloudinary/cloudinary";
 
 export async function POST(req) {
   const session = await getServerSession(authOptions);
@@ -20,16 +20,18 @@ export async function POST(req) {
   const buffer = Buffer.from(await file.arrayBuffer());
 
   const uploadResult = await new Promise((resolve, reject) => {
-    cloudinary.uploader.upload_stream(
-      {
-        folder: `reports/${session.user.id}`,
-        resource_type: type === "audio" ? "video" : "image",
-      },
-      (error, result) => {
-        if (error) reject(error);
-        else resolve(result);
-      }
-    ).end(buffer);
+    cloudinary.uploader
+      .upload_stream(
+        {
+          folder: `reports/${session.user.id}`,
+          resource_type: type === "audio" ? "video" : "image",
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      )
+      .end(buffer);
   });
 
   return NextResponse.json({

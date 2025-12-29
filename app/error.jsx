@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { AlertTriangle, RefreshCw, Activity, Home, ShieldAlert } from "lucide-react";
+import { RefreshCw, Activity, Home, ShieldAlert } from "lucide-react";
 
 const MouseGlow = () => {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -22,10 +22,17 @@ const MouseGlow = () => {
   );
 };
 
-const Button = ({ children, variant = "primary", className = "", ...props }) => {
+const Button = ({
+  children,
+  variant = "primary",
+  className = "",
+  ...props
+}) => {
   const variants = {
-    primary: "bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-600/20",
-    outline: "border border-slate-200 dark:border-slate-800 hover:border-emerald-500 text-slate-900 dark:text-white hover:bg-emerald-500/5",
+    primary:
+      "bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-600/20",
+    outline:
+      "border border-slate-200 dark:border-slate-800 hover:border-emerald-500 text-slate-900 dark:text-white hover:bg-emerald-500/5",
   };
 
   return (
@@ -78,12 +85,12 @@ const ErrorPage = () => {
             <div className="text-[clamp(6rem,20vh,15rem)] font-black leading-none tracking-tighter text-slate-100 dark:text-slate-900 select-none drop-shadow-sm uppercase">
               Error
             </div>
-            
+
             {/* Floating Icon Box */}
-            <motion.div 
-              animate={{ 
+            <motion.div
+              animate={{
                 y: [0, -10, 0],
-                rotate: [12, 10, 12]
+                rotate: [12, 10, 12],
               }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
               className="absolute inset-0 flex items-center justify-center"
@@ -105,16 +112,24 @@ const ErrorPage = () => {
             </h1>
 
             <p className="text-sm md:text-lg text-slate-500 dark:text-slate-400 mb-6 md:mb-8 font-medium leading-relaxed">
-              Our civic infrastructure encountered an unexpected glitch. 
-              The administration has been notified and is currently investigating the pulse.
+              Our civic infrastructure encountered an unexpected glitch. The
+              administration has been notified and is currently investigating
+              the pulse.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-              <Button className="w-full sm:w-auto text-sm md:text-base" onClick={handleReload}>
+              <Button
+                className="w-full sm:w-auto text-sm md:text-base"
+                onClick={handleReload}
+              >
                 <RefreshCw size={18} />
                 Retry Connection
               </Button>
-              <Button className="w-full sm:w-auto text-sm md:text-base" variant="outline" onClick={() => window.location.href = "/"}>
+              <Button
+                className="w-full sm:w-auto text-sm md:text-base"
+                variant="outline"
+                onClick={() => (window.location.href = "/")}
+              >
                 <Home size={18} />
                 Return to Base
               </Button>

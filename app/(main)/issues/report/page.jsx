@@ -25,7 +25,7 @@ import {
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { CustomInput } from "@/components/ui/CustomInput";
 import { useSession } from "next-auth/react";
-import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
+import { uploadToCloudinary } from "@/lib/cloudinary/cloudinaryUpload";
 import { useRouter } from "next/navigation";
 
 const ReportIssue = () => {
@@ -187,13 +187,12 @@ const ReportIssue = () => {
       });
 
       if (!res.ok) throw new Error("Submit failed");
-
     } catch (err) {
       console.error(err);
       alert("Something went wrong");
     } finally {
       setIsSubmitting(false);
-      router.push('/issues');
+      router.push("/issues");
     }
   };
 
@@ -359,10 +358,28 @@ const ReportIssue = () => {
                     <button
                       type="button"
                       onClick={toggleListening}
-                      className="absolute bottom-4 right-2 p-2.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-emerald-500 hover:border-emerald-500 dark:hover:text-emerald-400 transition-all shadow-sm active:scale-95"
-                      title="Voice Input"
+                      className={`absolute bottom-4 right-2 p-2.5 rounded-lg border transition-all shadow-sm active:scale-95
+                      ${
+                        isListening
+                          ? "bg-emerald-50 dark:bg-emerald-100/20 border-emerald-500 text-emerald-600 animate-pulse ring-4               ring-emerald-500/20"
+                          : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700               text-slate-500 dark:text-slate-400"
+                      } 
+                    hover:text-emerald-500 hover:border-emerald-500 transition-all`}
+                      title={isListening ? "Stop Listening" : "Voice Input"}
                     >
-                      <Mic className="h-4 w-4" />
+                      <Mic
+                        className={`h-4 w-4 ${
+                          isListening ? "fill-emerald-500" : ""
+                        }`}
+                      />
+
+                      {/* Optional: Add a small red dot indicator */}
+                      {isListening && (
+                        <span className="absolute top-1 right-1 flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                        </span>
+                      )}
                     </button>
                   </div>
                 </div>

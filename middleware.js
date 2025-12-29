@@ -23,7 +23,16 @@ export async function middleware(request) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
+  if (
+    token &&
+    token.onboardingStatus === "pending" &&
+    pathname !== "/onboarding"
+  ) {
+    return NextResponse.redirect(new URL("/onboarding", request.url));
+  }
+
   return NextResponse.next();
+
 }
 
 export const config = {

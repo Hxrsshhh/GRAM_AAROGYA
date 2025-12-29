@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Issues from "@/models/Issues";
-import { ISSUE_DETAILS } from "@/lib/issue-mock-data";
+// import { ISSUE_DETAILS } from "@/lib/issue-mock-data";
+import {data} from "@/lib/issue-mock-data";
 
 export async function POST() {
   try {
     await connectDB();
 
-    const inserted = await Issues.insertMany(ISSUE_DETAILS);
+    const inserted = await Issues.insertOne(data);
 
     return NextResponse.json({
       success: true,

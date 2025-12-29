@@ -1,360 +1,327 @@
 "use client";
-
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import {
+  MapPin,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
   Search,
-  Filter,
-  Navigation,
+  ChevronLeft,
   X,
-  ArrowRight,
-  Calendar,
-  AlertCircle,
+  Menu,
 } from "lucide-react";
-import { generateMapIssueList, ISSUE_DETAILS as ISSUES } from "@/lib/mock-data";
-import Link from "next/link";
 
-const ISSUE_DETAILS = generateMapIssueList(ISSUES);
-
-const COLORS = {
-  infrastructure: "#2563eb",
-  utilities: "#d97706",
-  sanitation: "#059669",
+// Configuration for the default view
+const INITIAL_VIEW = {
+  center: [-73.9857, 40.7484],
+  zoom: 12,
 };
 
-export default function MapPage() {
-  const [filter, setFilter] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
+const MOCK_ISSUES = [
+  {
+    id: 1,
+    title: "Water Main Leak",
+    category: "Utility",
+    status: "Urgent",
+    description:
+      "Major water leak reported near the intersection. Significant flooding on the sidewalk.",
+    lat: 40.7128,
+    lng: -74.006,
+    address: "Broadway & Wall St, NY",
+    reportedAt: "2 hours ago",
+  },
+  {
+    id: 2,
+    title: "Pothole Damage",
+    category: "Roads",
+    status: "Pending",
+    description: "Deep pothole causing tire damage to multiple vehicles.",
+    lat: 40.725,
+    lng: -73.995,
+    address: "Queens Blvd, NY",
+    reportedAt: "5 hours ago",
+  },
+  {
+    id: 3,
+    title: "Street Light Out",
+    category: "Lighting",
+    status: "In Progress",
+    description: "Dark stretch of road due to non-functioning lamps.",
+    lat: 40.715,
+    lng: -73.96,
+    address: "Bedford Ave, Brooklyn",
+    reportedAt: "1 day ago",
+  },
+];
+
+const App = () => {
+  const mapContainer = useRef(null);
+  const mapRef = useRef(null);
+
+  const [mapInstance, setMapInstance] = useState(null);
   const [selectedIssue, setSelectedIssue] = useState(null);
-  const [showFilters, setShowFilters] = useState(false);
-  const [mapLoaded, setMapLoaded] = useState(false); // New state to track if map is ready
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  const INDIA_CENTER = [22.9734, 78.6569];
-  const INITIAL_ZOOM = 5;
-
-  const mapContainerRef = useRef(null);
-  const mapInstanceRef = useRef(null);
-  const markersLayerRef = useRef(null);
-
-  const filteredIssues = useMemo(() => {
-    return ISSUE_DETAILS.filter((issue) => {
-      const matchesFilter = filter === "all" || issue.category === filter;
-      const matchesSearch =
-        issue.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        issue.address.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesFilter && matchesSearch;
-    });
-  }, [filter, searchQuery]);
-
-  // 1. Initialize Map and Load Scripts
+  // Initialize Map
   useEffect(() => {
-    const initMap = () => {
-      if (typeof window === "undefined" || !window.L || mapInstanceRef.current)
-        return;
+    if (mapRef.current) return;
 
-      const map = window.L.map(mapContainerRef.current, {
-        zoomControl: false,
-        attributionControl: false,
-      }).setView([22.9734, 78.6569], 5);
+    const map = new maplibregl.Map({
+      container: mapContainer.current,
+      style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_KEY}`,
+      center: INITIAL_VIEW.center,
+      zoom: INITIAL_VIEW.zoom,
+    });
 
-      window.L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-        {
-          maxZoom: 19,
-        }
-      ).addTo(map);
+    map.addControl(new maplibregl.NavigationControl(), "bottom-right");
 
-      mapInstanceRef.current = map;
-      markersLayerRef.current = window.L.layerGroup().addTo(map);
-      setMapLoaded(true); // Signal that map is ready for markers
-    };
+    map.on("load", () => {
+      mapRef.current = map;
+      setMapInstance(map);
+    });
 
-    // Load CSS
-    if (!document.getElementById("leaflet-css")) {
-      const link = document.createElement("link");
-      link.id = "leaflet-css";
-      link.rel = "stylesheet";
-      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-      document.head.appendChild(link);
-    }
-
-    // Load JS
-    if (!document.getElementById("leaflet-js")) {
-      const script = document.createElement("script");
-      script.id = "leaflet-js";
-      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-      script.async = true;
-      script.onload = initMap;
-      document.head.appendChild(script);
-    } else if (window.L) {
-      initMap();
-    }
-
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
-    };
+    return () => map.remove();
   }, []);
 
-  // 2. Sync Markers whenever filters OR the map readiness changes
-  useEffect(() => {
-    if (!mapLoaded || !markersLayerRef.current || !window.L) return;
-
-    // Clear old markers to prevent memory leaks and duplication
-    markersLayerRef.current.clearLayers();
-
-    filteredIssues.forEach((issue) => {
-      const isSelected = selectedIssue?._id === issue._id;
-
-      // Ensure Lat/Lng exist before trying to plot
-      if (issue.lat && issue.lng) {
-        const marker = window.L.circleMarker([issue.lat, issue.lng], {
-          radius: isSelected ? 14 : 10,
-          fillColor: COLORS[issue.category] || "#666",
-          fillOpacity: 0.9,
-          color: "#ffffff",
-          weight: 2,
-        });
-
-        marker.on("click", () => setSelectedIssue(issue));
-        marker.addTo(markersLayerRef.current);
-      }
-    });
-  }, [filteredIssues, selectedIssue, mapLoaded]); // Added mapLoaded as dependency
-
-  // 3. Pan to selected
-  useEffect(() => {
-    if (selectedIssue && mapInstanceRef.current) {
-      mapInstanceRef.current.flyTo([selectedIssue.lat, selectedIssue.lng], 16, {
-        duration: 1.5,
+  // Handle zooming into a specific issue
+  const handlePinSelection = (issue) => {
+    setSelectedIssue(issue);
+    if (mapRef.current) {
+      mapRef.current.flyTo({
+        center: [issue.lng, issue.lat],
+        zoom: 15,
+        essential: true,
+        duration: 2000,
+        curve: 1.5,
       });
     }
-  }, [selectedIssue]);
+  };
+
+  // Handle zooming out to original position
+  const handleCloseDetails = () => {
+    setSelectedIssue(null);
+    if (mapRef.current) {
+      mapRef.current.flyTo({
+        center: INITIAL_VIEW.center,
+        zoom: INITIAL_VIEW.zoom,
+        essential: true,
+        duration: 1800, // Smooth transition back
+        curve: 1.2,
+        speed: 0.8,
+      });
+    }
+  };
+
+  const filteredIssues = useMemo(() => {
+    return MOCK_ISSUES.filter((issue) =>
+      issue.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery]);
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Urgent":
+        return "bg-rose-500";
+      case "In Progress":
+        return "bg-blue-500";
+      case "Pending":
+        return "bg-amber-500";
+      default:
+        return "bg-slate-500";
+    }
+  };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden font-sans relative">
-      {/* MAP ENGINE - Ensure it fills the screen and captures gestures */}
-      <div
-        ref={mapContainerRef}
-        className="absolute inset-0 z-0 bg-slate-100 dark:bg-slate-900 cursor-grab active:cursor-grabbing"
-      />
+    <div className="relative h-screen w-full bg-slate-900 font-sans overflow-hidden text-slate-900">
+      {/* MAP VIEWPORT */}
+      <main className="absolute inset-0 z-0 bg-slate-800">
+        <div ref={mapContainer} className="h-full w-full" />
 
-      {/* SEARCH INTERFACE - Integrated for fixed navbar projects */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-full max-w-2xl px-4 pointer-events-none z-[50]">
-        <div className="flex items-center gap-3 pointer-events-auto">
-          <div className="flex-1 relative group">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
-              <Search size={18} />
-            </div>
-            <input
-              type="text"
-              placeholder="Search local reports..."
-              className="w-full pl-12 pr-12 py-3.5 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-2xl border border-slate-200 dark:border-slate-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+        {mapInstance &&
+          filteredIssues.map((issue) => (
+            <MarkerOverlay
+              key={issue.id}
+              map={mapInstance}
+              issue={issue}
+              isSelected={selectedIssue?.id === issue.id}
+              onClick={() => handlePinSelection(issue)}
             />
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl transition-all ${
-                showFilters
-                  ? "bg-emerald-600 text-white shadow-lg"
-                  : "text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              }`}
-            >
-              <Filter size={18} />
-            </button>
+          ))}
+      </main>
 
-            {/* Filter Dropdown */}
-            {showFilters && (
-              <div className="absolute top-full mt-3 left-0 right-0 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 animate-in slide-in-from-top-2 duration-200">
-                <p className="text-[10px] font-black uppercase text-slate-400 mb-3 tracking-widest px-1">
-                  Categories
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {["all", "infrastructure", "utilities", "sanitation"].map(
-                    (cat) => (
-                      <button
-                        key={cat}
-                        onClick={() => {
-                          setFilter(cat);
-                          setShowFilters(false);
-                        }}
-                        className={`px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider border transition-all ${
-                          filter === cat
-                            ? "bg-blue-600 border-blue-600 text-white shadow-md"
-                            : "bg-slate-50 dark:bg-slate-800 border-transparent text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    )
-                  )}
+      {/* Floating Sidebar */}
+      <div
+        className={`absolute top-6 left-6 bottom-6 z-50 transition-all duration-500 ${
+          isSidebarCollapsed ? "w-20" : "w-96"
+        }`}
+      >
+        <aside className="h-full bg-white/90 backdrop-blur-xl border border-white/40 rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden">
+          <div
+            className={`p-6 border-b flex items-center ${
+              isSidebarCollapsed ? "justify-center" : "justify-between"
+            }`}
+          >
+            {!isSidebarCollapsed && (
+              <h1 className="text-xl font-black text-slate-800 flex items-center gap-2">
+                <div className="bg-indigo-600 p-1.5 rounded-lg shadow-lg">
+                  <AlertTriangle className="text-white" size={16} />
+                </div>
+                CityPulse
+              </h1>
+            )}
+            <button
+              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              className="p-2 hover:bg-slate-200 rounded-xl transition-colors"
+            >
+              {isSidebarCollapsed ? <Menu /> : <ChevronLeft />}
+            </button>
+          </div>
+
+          {!isSidebarCollapsed && (
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="p-5">
+                <div className="relative">
+                  <Search
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                    size={18}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Search reports..."
+                    className="w-full pl-10 pr-4 py-3 bg-slate-100/50 rounded-2xl outline-none focus:ring-2 ring-indigo-500/20"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
                 </div>
               </div>
-            )}
-          </div>
-
-          <button className="h-12 px-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-xl shadow-blue-500/20 transition-all flex items-center gap-2 shrink-0 active:scale-95">
-            <Navigation size={18} />
-            <span className="hidden sm:inline text-xs font-black uppercase tracking-wider">
-              Report
-            </span>
-          </button>
-        </div>
-
-        {/* Dynamic Search Results Overlay */}
-        {searchQuery && !selectedIssue && (
-          <div className="mt-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[40vh] overflow-y-auto pointer-events-auto divide-y divide-slate-100 dark:divide-slate-800">
-            {filteredIssues.length > 0 ? (
-              filteredIssues.map((issue) => (
-                <button
-                  key={issue._id}
-                  onClick={() => {
-                    setSelectedIssue(issue);
-                    setSearchQuery("");
-                  }}
-                  className="w-full text-left p-4 flex items-center gap-4 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors"
-                >
-                  <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-slate-200">
-                    <img
-                      src={issue.images[0]}
-                      className="w-full h-full object-cover"
-                      alt=""
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
+              <div className="overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                {filteredIssues.map((issue) => (
+                  <div
+                    key={issue.id}
+                    onClick={() => handlePinSelection(issue)}
+                    className={`p-4 rounded-3xl cursor-pointer transition-all border-2 ${
+                      selectedIssue?.id === issue.id
+                        ? "border-indigo-500 bg-white shadow-lg translate-x-1"
+                        : "border-transparent bg-slate-50/50 hover:bg-white"
+                    }`}
+                  >
+                    <div className="flex justify-between items-center mb-1">
+                      <span
+                        className={`px-2 py-0.5 rounded-lg text-[9px] font-bold text-white ${getStatusColor(
+                          issue.status
+                        )}`}
+                      >
+                        {issue.status}
+                      </span>
+                      <span className="text-[9px] text-slate-400 flex items-center gap-1">
+                        <Clock size={10} />
+                        {issue.reportedAt}
+                      </span>
+                    </div>
+                    <h3 className="font-bold text-slate-800 text-sm leading-tight">
                       {issue.title}
-                    </p>
-                    <p className="text-[11px] text-slate-500 truncate">
-                      {issue.address}
-                    </p>
+                    </h3>
                   </div>
-                </button>
-              ))
-            ) : (
-              <div className="p-8 text-center text-slate-400 text-sm">
-                No reports found in this area
+                ))}
               </div>
-            )}
-          </div>
-        )}
+            </div>
+          )}
+        </aside>
       </div>
 
-      {/* DETAILED SELECTION CARD */}
+      {/* Details Overlay */}
       {selectedIssue && (
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-[94%] max-w-xl z-[60] animate-in fade-in slide-in-from-bottom-8 duration-500">
-          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.3)] border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col sm:flex-row">
-            <div className="w-full sm:w-64 h-44 sm:h-auto shrink-0 relative">
-              <img
-                src={selectedIssue.images[0]}
-                className="w-full h-full object-cover"
-                alt=""
-              />
-              <div className="absolute top-4 left-4 px-3 py-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-full text-[9px] font-black uppercase tracking-widest text-blue-600 border border-blue-100 dark:border-blue-900/30">
-                Verified Report
-              </div>
-            </div>
-            <div className="p-6 sm:p-8 flex-1 min-w-0 flex flex-col justify-between">
+        <div
+          className={`absolute bottom-10 right-6 z-40 transition-all duration-500 animate-in slide-in-from-bottom-5 ${
+            isSidebarCollapsed ? "left-28" : "left-[26rem]"
+          }`}
+        >
+          <div className="bg-slate-900/95 backdrop-blur-2xl rounded-[3rem] p-8 border border-white/10 text-white shadow-2xl">
+            <div className="flex justify-between items-start mb-4">
               <div>
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex gap-2">
-                    <span
-                      className={`text-[9px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider ${
-                        selectedIssue.priority === "Critical"
-                          ? "bg-red-500 text-white"
-                          : "bg-amber-500 text-white"
-                      }`}
-                    >
-                      {selectedIssue.priority}
-                    </span>
-                    <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1.5 ml-2">
-                      <Calendar size={12} /> Today
-                    </span>
-                  </div>
-                  {/* Inside the selection card component */}
-                  <button
-                    onClick={() => {
-                      setSelectedIssue(null); // Clear the selection
-                      if (mapInstanceRef.current) {
-                        mapInstanceRef.current.flyTo(
-                          INDIA_CENTER,
-                          INITIAL_ZOOM,
-                          {
-                            duration: 2.5,
-                            easeLinearity: 0.25,
-                          }
-                        );
-                      }
-                    }}
-                    className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-                <h3 className="text-xl font-black text-slate-900 dark:text-white leading-tight mb-2 truncate">
+                <h2 className="text-2xl font-black mb-1">
                   {selectedIssue.title}
-                </h3>
-                <p className="text-sm text-slate-500 mb-6 truncate flex items-center gap-1.5">
-                  <Navigation size={14} className="text-blue-500" />{" "}
+                </h2>
+                <p className="text-slate-400 text-sm flex items-center gap-1">
+                  <MapPin size={14} className="text-indigo-400" />{" "}
                   {selectedIssue.address}
                 </p>
               </div>
-              <div className="flex gap-3">
-                <Link href={`/issues/${selectedIssue._id}`}>
-                  <button className="w-[200px] flex-1 py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-black uppercase tracking-widest rounded-2xl hover:opacity-90 transition-all flex items-center justify-center gap-2">
-                    View Timeline <ArrowRight size={14} />
-                  </button>
-                </Link>
-                <button className="p-3.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-white rounded-2xl hover:bg-slate-200 transition-all">
-                  <AlertCircle size={20} />
-                </button>
-              </div>
+              {/* Updated Close Button */}
+              <button
+                onClick={handleCloseDetails}
+                className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <p className="text-slate-300 text-sm max-w-xl opacity-90">
+              {selectedIssue.description}
+            </p>
+            <div className="mt-6 flex gap-4">
+              <button className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-indigo-500/20 active:scale-95">
+                <CheckCircle2 size={18} /> Deploy Team
+              </button>
             </div>
           </div>
         </div>
       )}
+    </div>
+  );
+};
 
-      {/* ZOOM CONTROLS */}
-      <div className="absolute bottom-8 right-6 flex flex-col gap-2 z-[40]">
-        <div className="flex flex-col bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-          <button
-            onClick={() => mapInstanceRef.current?.zoomIn()}
-            className="w-10 h-10 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 border-b border-slate-100 dark:border-slate-800 transition-colors"
-          >
-            +
-          </button>
-          <button
-            onClick={() => mapInstanceRef.current?.zoomOut()}
-            className="w-10 h-10 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-          >
-            -
-          </button>
-        </div>
-      </div>
+// Sub-component to sync Pins with Map coordinates
+const MarkerOverlay = ({ map, issue, isSelected, onClick }) => {
+  const [pos, setPos] = useState({ x: -100, y: -100 });
 
-      {/* LEGEND / STATUS BAR */}
-      <div className="absolute bottom-6 left-6 hidden lg:flex flex-col gap-2 z-[40]">
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl">
-          <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-3">
-            Live Map Legend
-          </p>
-          <div className="space-y-3">
-            {Object.entries(COLORS).map(([key, color]) => (
-              <div key={key} className="flex items-center gap-3">
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: color }}
-                />
-                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-tighter">
-                  {key}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+  useEffect(() => {
+    if (!map) return;
+
+    const updatePosition = () => {
+      const canvasPos = map.project([issue.lng, issue.lat]);
+      setPos({ x: canvasPos.x, y: canvasPos.y });
+    };
+
+    map.on("move", updatePosition);
+    map.on("zoom", updatePosition);
+    updatePosition();
+
+    return () => {
+      map.off("move", updatePosition);
+      map.off("zoom", updatePosition);
+    };
+  }, [map, issue]);
+
+  if (pos.x < -50 || pos.y < -50) return null;
+
+  return (
+    <div
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      className="absolute top-0 left-0 transition-transform duration-75 cursor-pointer z-10"
+      style={{
+        transform: `translate(${pos.x}px, ${pos.y}px) translate(-50%, -100%)`,
+      }}
+    >
+      <div
+        className={`relative flex items-center justify-center w-10 h-10 rounded-full border-4 shadow-xl transition-all duration-300 ${
+          isSelected
+            ? "bg-indigo-600 border-white scale-125 ring-8 ring-indigo-500/20"
+            : "bg-white border-transparent hover:scale-110"
+        }`}
+      >
+        <MapPin
+          size={18}
+          className={isSelected ? "text-white" : "text-indigo-600"}
+        />
       </div>
     </div>
   );
-}
+};
+
+export default App;

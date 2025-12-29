@@ -14,7 +14,6 @@ import {
 import { Badge } from "@/components/ui/Issue-badge";
 import { Card } from "@/components/ui/Issue-card";
 
-import { ISSUE_DETAILS as Issues } from "@/lib/mock-data";
 import Link from "next/link";
 import { getAllIssues } from "@/app/api/issues";
 
@@ -31,7 +30,6 @@ export default function App() {
         setLoading(true);
         const res = await getAllIssues();
         setIssues(res.data);
-        console.log(res.data);
       } catch (err) {
         console.error(err);
       } finally {

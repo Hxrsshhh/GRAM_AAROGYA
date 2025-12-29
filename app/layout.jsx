@@ -27,10 +27,11 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning={true}
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="system" // ok to start from system
+          defaultTheme="system"
           enableSystem={true}
           disableTransitionOnChange
         >

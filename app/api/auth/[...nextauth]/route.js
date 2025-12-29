@@ -63,6 +63,7 @@ export const authOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
+          onboardingStatus: user.onboardingStatus,
         };
       },
     }),
@@ -125,18 +126,26 @@ export const authOptions = {
         token.id = user.id;
         token.role = user.role;
       }
+      // Always sync onboardingStatus from DB
+      if (token?.id) {
+        await connectDB();
+        const dbUser = await User.findById(token.id).select("onboardingStatus");
+        token.onboardingStatus = dbUser?.onboardingStatus || "pending";
+      }
       return token;
     },
 
     async session({ session, token }) {
       session.user.id = token.id;
       session.user.role = token.role;
+      session.user.onboardingStatus = token.onboardingStatus;
+
       return session;
     },
   },
 
   pages: {
-    signIn: "/login",
+    signIn: "/signin",
   },
 
   secret: process.env.NEXTAUTH_SECRET,
