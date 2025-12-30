@@ -158,18 +158,15 @@ const ReportIssue = () => {
         return;
       }
 
-      /* ---------- UPLOAD IMAGES ---------- */
       const imageUrls = await Promise.all(
         imageFiles.map((file) => uploadToCloudinary(file, "image"))
       );
 
-      /* ---------- UPLOAD VOICE ---------- */
       let voiceNote = "";
       if (voiceBlob) {
         voiceNote = await uploadToCloudinary(voiceBlob, "audio");
       }
 
-      /* ---------- SEND ISSUE DATA ---------- */
       const payload = {
         title: formData.title,
         description: formData.description,
@@ -245,7 +242,7 @@ const ReportIssue = () => {
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900/50 backdrop-blur-2xl border border-slate-200/60 dark:border-slate-800 rounded-[2rem] p-6 md:p-8 shadow-xl">
+        <div className="bg-white dark:bg-slate-800/50 backdrop-blur-2xl border border-slate-200/60 dark:border-slate-800 rounded-[2rem] p-6 md:p-8 shadow-xl">
           <StepIndicator currentStep={step} totalSteps={3} />
 
           <AnimatePresence mode="wait">

@@ -10,15 +10,11 @@ import {
   Camera,
   Save,
   ShieldCheck,
-  ChevronRight,
   Settings,
   Loader2,
-  Award,
   Heart,
   Activity,
   Lock,
-  Globe,
-  Briefcase,
 } from "lucide-react";
 
 import { ProfileCard as Card } from "@/components/ui/Card";
@@ -118,7 +114,8 @@ export default function Profile() {
             {session?.user?.onboardingStatus !== "completed" && (
               <Button
                 onClick={() => router.push("/onboarding")}
-                variant="secondary" className="text-xs"
+                variant="secondary"
+                className="text-xs"
               >
                 Complete your profile
               </Button>
@@ -131,7 +128,7 @@ export default function Profile() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* LEFT COLUMN - Profile Card & Stats */}
+
           <div className="lg:col-span-4 space-y-6">
             <Card>
               <div className="h-24 bg-emerald-600 dark:bg-emerald-700 relative">
@@ -160,11 +157,11 @@ export default function Profile() {
                 </p>
 
                 <div className="flex justify-center gap-2 mb-8">
-                 {session?.user.isverified &&  
-                 <Badge variant="success">
-                    <ShieldCheck size={12} className="mr-1.5" /> Verified
-                  </Badge>
-                  }
+                  {session?.user.isverified && (
+                    <Badge variant="success">
+                      <ShieldCheck size={12} className="mr-1.5" /> Verified
+                    </Badge>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 pt-6 border-t border-slate-100 dark:border-slate-800">
@@ -208,7 +205,6 @@ export default function Profile() {
             </Card>
           </div>
 
-          {/* RIGHT COLUMN - Edit Information */}
           <div className="lg:col-span-8 space-y-6">
             <Card>
               <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/20">
@@ -326,7 +322,6 @@ export default function Profile() {
               </div>
             </Card>
 
-            {/* Quick Actions / Integration Module */}
             {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card className="p-5 flex items-center justify-between group cursor-pointer hover:border-blue-200 transition-colors">
                 <div className="flex items-center gap-4">
@@ -366,6 +361,8 @@ export default function Profile() {
                 />
               </Card>
             </div> */}
+
+            
           </div>
         </div>
       </div>

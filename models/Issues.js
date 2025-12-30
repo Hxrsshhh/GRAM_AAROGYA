@@ -23,7 +23,6 @@ const CommentSchema = new mongoose.Schema(
 
 const IssueSchema = new mongoose.Schema(
   {
-    /* ---------- CORE DETAILS ---------- */
     title: {
       type: String,
       required: true,
@@ -58,7 +57,6 @@ const IssueSchema = new mongoose.Schema(
       index: true,
     },
 
-    /* ---------- STATUS LIFECYCLE ---------- */
     status: {
       type: String,
       enum: ["pending", "in-progress", "resolved"],
@@ -76,7 +74,6 @@ const IssueSchema = new mongoose.Schema(
       default: false,
     },
 
-    /* ---------- LOCATION ---------- */
     location: {
       address: {
         type: String,
@@ -91,22 +88,20 @@ const IssueSchema = new mongoose.Schema(
         required: true,
       },
       coordinates: {
-        type: String, // "12.9716, 77.5946" (optional but useful)
+        type: String, 
       },
     },
 
-    /* ---------- MEDIA ---------- */
     images: {
-      type: [String], // Firebase image URLs
+      type: [String], 
       default: [],
     },
 
     voiceNote: {
-      type: String, // Firebase audio URL
+      type: String, 
       default: "",
     },
 
-    /* ---------- ENGAGEMENT ---------- */
     upvotes: {
       type: Number,
       default: 0,
@@ -122,7 +117,6 @@ const IssueSchema = new mongoose.Schema(
       default: 0,
     },
 
-    /* ---------- AUDIT / OWNERSHIP ---------- */
     reportedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -145,11 +139,10 @@ const IssueSchema = new mongoose.Schema(
 
   },
   {
-    timestamps: true, // createdAt, updatedAt
+    timestamps: true, 
   }
 );
 
-/* ---------- COMPOUND INDEXES ---------- */
 IssueSchema.index({
   category: 1,
   status: 1,

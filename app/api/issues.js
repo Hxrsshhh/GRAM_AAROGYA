@@ -49,10 +49,6 @@ export async function getCommentsByIssueId(issueId) {
 }
 
 
-/**
- * Fetches issues from the API and transforms them into the 
- * format required by the CivicPulse UI.
- */
 export const fetchCivicIssues = async () => {
   try {
     const response = await fetch("/api/issues", {
@@ -63,32 +59,32 @@ export const fetchCivicIssues = async () => {
     if (!response.ok) throw new Error("Failed to fetch");
 
     const result = await response.json();
-    const rawIssues = Array.isArray(result) ? result : (result.data || []);
+    const rawIssues = Array.isArray(result) ? result : result.data || [];
 
     return rawIssues
       .map((issue) => {
-        // Ensure we are pulling the right fields from your DB
+
         const lat = parseFloat(issue.location.latitude || issue.location.lat);
         const lng = parseFloat(issue.location.longitude || issue.location.lng);
 
-        // Return null for invalid coordinates so we can filter them out
+  
         if (isNaN(lat) || isNaN(lng)) return null;
 
         return {
-          // Use a fallback ID if 'id' is missing to solve the "key" prop warning
-          id: issue._id ,
-          title: issue.title ,
-          category: issue.category ,
-          status: issue.status ,
+        
+          id: issue._id,
+          title: issue.title,
+          category: issue.category,
+          status: issue.status,
           description: issue.description || "",
           lat: lat,
           lng: lng,
-          address: issue.location.address ,
+          address: issue.location.address,
           reportedAt: formatRelativeTime(issue.created_at),
           imageUrl: issue.images || null,
         };
       })
-      .filter((issue) => issue !== null); // Remove the broken ones
+      .filter((issue) => issue !== null); 
   } catch (error) {
     console.error("Fetch Error:", error);
     return [];
@@ -97,11 +93,11 @@ export const fetchCivicIssues = async () => {
 
 const formatRelativeTime = (dateString) => {
   if (!dateString) return "Recently";
-  
+
   const now = new Date();
   const reported = new Date(dateString);
+
   
-  // Check for invalid date
   if (isNaN(reported.getTime())) return "Recently";
 
   const diffInMs = now - reported;
@@ -112,7 +108,7 @@ const formatRelativeTime = (dateString) => {
     return diffInMins <= 1 ? "Just now" : `${diffInMins} mins ago`;
   }
   if (diffInHours < 24) return `${diffInHours} hours ago`;
-  
+
   const diffInDays = Math.floor(diffInHours / 24);
   return diffInDays === 1 ? "Yesterday" : `${diffInDays} days ago`;
 };

@@ -139,7 +139,7 @@ export default function App() {
 
   const handleBack = () => {
     router.back();
-  }
+  };
 
   if (loading) {
     return (
@@ -181,27 +181,26 @@ export default function App() {
       `}</style>
 
       <main className="max-w-[83rem] mx-auto px-6 py-12">
-        {/* NAVIGATION */}
         <div className="mb-8 mt-6">
-            <button
+          <button
             onClick={handleBack}
-             className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-full border-2 border-slate-200 dark:border-slate-800 flex items-center justify-center group-hover:bg-emerald-500 group-hover:border-emerald-500 transition-all duration-300">
-                <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
-              </div>
-              <div className="flex flex-col items-start text-left">
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-0.5">
-                  Return to
-                </span>
-                <span className="text-[11px] font-black uppercase tracking-widest text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors">
-                  Incident Feed
-                </span>
-              </div>
-            </button>
+            className="flex items-center gap-3 group"
+          >
+            <div className="w-10 h-10 rounded-full border-2 border-slate-200 dark:border-slate-800 flex items-center justify-center group-hover:bg-emerald-500 group-hover:border-emerald-500 transition-all duration-300">
+              <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+            </div>
+            <div className="flex flex-col items-start text-left">
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-0.5">
+                Return to
+              </span>
+              <span className="text-[11px] font-black uppercase tracking-widest text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors">
+                Incident Feed
+              </span>
+            </div>
+          </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          {/* LEFT CONTENT */}
           <div className="lg:col-span-8 space-y-8">
             <header className="space-y-6">
               <div className="flex flex-wrap items-center gap-3">
@@ -300,17 +299,15 @@ export default function App() {
               </div>
             )}
 
-            {/* DESCRIPTION */}
             <section className="space-y-3">
               <h3 className="text-[9px] font-black uppercase tracking-[0.3em] text-emerald-500">
                 Official Complaint
               </h3>
               <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 font-semibold leading-relaxed pl-6 border-l-2 border-slate-200 dark:border-slate-800">
-                "{issue.description}"
+                {issue.description}
               </p>
             </section>
 
-            {/* COMMENT INPUT SECTION */}
             <div className="mt-12 pt-12 border-t-2 border-slate-100 dark:border-slate-900">
               <div className="flex items-center gap-2 mb-6">
                 <MessageSquare className="w-4 h-4 text-emerald-500" />
@@ -344,9 +341,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* RIGHT SIDEBAR */}
           <div className="lg:col-span-4 space-y-6">
-            {/* map part  */}
             <Card className="!p-6 border-emerald-500/10 overflow-hidden relative">
               <div className="absolute top-0 right-0 p-4">
                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></div>
@@ -363,7 +358,6 @@ export default function App() {
               </div>
             </Card>
 
-            {/* Official Response Stepper */}
             <Card className="!p-0 overflow-hidden bg-emerald-600 text-white border-none shadow-2xl shadow-emerald-600/30 rounded-[2.5rem]">
               <div className="p-6 sm:p-8 space-y-8">
                 <div className="flex items-center justify-between">
@@ -376,7 +370,6 @@ export default function App() {
                 <div className="space-y-8 relative">
                   <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-white/10" />
 
-                  {/* Logic to find where we are in the process */}
                   {(() => {
                     const currentIdx = STATUS_STEPS.findIndex(
                       (s) => s.id === issue.status
@@ -394,7 +387,6 @@ export default function App() {
                             isCompleted ? "opacity-100" : "opacity-30"
                           }`}
                         >
-                          {/* Step Circle */}
                           <div
                             className={`
                   w-6 h-6 rounded-full flex items-center justify-center z-10 ring-4 ring-emerald-600 transition-all duration-500
@@ -409,7 +401,6 @@ export default function App() {
                               }`}
                             />
 
-                            {/* Active Pulse */}
                             {isCurrent && issue.status !== "resolved" && (
                               <span className="absolute inset-0 rounded-full bg-white animate-ping opacity-40" />
                             )}
@@ -451,7 +442,6 @@ export default function App() {
               </div>
             </Card>
 
-            {/* ACTIVITY LOG */}
             <div className="space-y-4">
               <div className="flex items-center justify-between px-2">
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">
@@ -493,11 +483,9 @@ export default function App() {
               </div>
             </div>
 
-            {/* VOICE TESTIMONY */}
             {issue.voiceNote && (
               <Card className="border-l-4 border-l-emerald-500 !p-3 sm:!p-4 bg-gradient-to-r from-emerald-500/5 to-transparent overflow-hidden">
                 <div className="space-y-3 sm:space-y-4">
-                  {/* Header Section: Scaled text for mobile/desktop */}
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.15em] text-emerald-600 dark:text-emerald-500 flex items-center gap-1.5">
                       <Mic className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Voice
@@ -515,7 +503,6 @@ export default function App() {
                   />
 
                   <div className="flex items-center gap-3 sm:gap-5">
-                    {/* Play Button: Slightly larger on desktop for better UX */}
                     <button
                       onClick={toggleAudio}
                       className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all"
@@ -528,7 +515,6 @@ export default function App() {
                       )}
                     </button>
 
-                    {/* Dynamic Waveform: Uses a grid to control density across screen sizes */}
                     <div className="flex-1 h-8 sm:h-10 flex items-end gap-[2px] sm:gap-1 overflow-hidden">
                       {[...Array(40)].map((_, i) => (
                         <div
@@ -537,13 +523,11 @@ export default function App() {
                             isPlaying
                               ? "animate-pulse bg-emerald-500"
                               : "bg-slate-300 dark:bg-slate-700"
-                          } ${
-                            // Hide specific bars on very small screens to prevent crowding
-                            i > 20 ? "hidden xs:block" : ""
-                          } ${i > 30 ? "hidden md:block" : ""}`}
+                          } ${i > 20 ? "hidden xs:block" : ""} ${
+                            i > 30 ? "hidden md:block" : ""
+                          }`}
                           style={{
                             height: `${25 + (Math.sin(i * 1.5) * 20 + 20)}%`,
-                            // Adding a slight delay to pulses for a more natural look
                             animationDelay: isPlaying ? `${i * 0.05}s` : "0s",
                           }}
                         />
@@ -554,7 +538,6 @@ export default function App() {
               </Card>
             )}
 
-            {/* CITIZEN REPORTER */}
             <Card className="!p-6">
               <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">
                 Citizen Reporter

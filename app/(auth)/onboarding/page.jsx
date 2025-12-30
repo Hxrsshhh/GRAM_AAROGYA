@@ -24,7 +24,6 @@ import Button from "@/components/ui/Button";
 import { useSession } from "next-auth/react";
 
 const App = () => {
-
   const { data: session, status } = useSession();
   const router = useRouter();
 
@@ -55,9 +54,9 @@ const App = () => {
   }
 
   if (session.user.onboardingCompleted) {
-  router.replace("/dashboard");
-  return null;
-}
+    router.replace("/dashboard");
+    return null;
+  }
 
   const handleNext = () => {
     if (isStepValid()) setStep((s) => s + 1);
@@ -82,54 +81,51 @@ const App = () => {
   };
 
   const handleSkip = async () => {
-  setIsSkipping(true);
-  try {
-    const response = await fetch("/api/user/onboarding", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        status: "skipped",
-        skippedAt: new Date().toISOString(),
-      }),
-    });
+    setIsSkipping(true);
+    try {
+      const response = await fetch("/api/user/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "skipped",
+          skippedAt: new Date().toISOString(),
+        }),
+      });
 
-    if (!response.ok) throw new Error("Failed to update onboarding status");
+      if (!response.ok) throw new Error("Failed to update onboarding status");
 
-    // 🔥 Force NextAuth session refresh
-    await fetch("/api/auth/session");
+      // 🔥 Force NextAuth session refresh
+      await fetch("/api/auth/session");
 
-    // 🔥 Replace, do not push
-    router.replace("/dashboard");
-  } catch (err) {
-    console.error("Skip failed:", err);
-  } finally {
-    setIsSkipping(false);
-  }
-};
+      // 🔥 Replace, do not push
+      router.replace("/dashboard");
+    } catch (err) {
+      console.error("Skip failed:", err);
+    } finally {
+      setIsSkipping(false);
+    }
+  };
 
-const handleComplete = async () => {
-  setIsSubmitting(true);
-  try {
-    await fetch("/api/user/onboarding", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        status: "completed",
-        profile: formData,
-      }),
-    });
+  const handleComplete = async () => {
+    setIsSubmitting(true);
+    try {
+      await fetch("/api/user/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "completed",
+          profile: formData,
+        }),
+      });
+      await fetch("/api/auth/session");
 
-    // 🔥 Refresh session
-    await fetch("/api/auth/session");
-
-    router.replace("/dashboard");
-  } catch (err) {
-    console.error("Completion failed", err);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
-
+      router.replace("/dashboard");
+    } catch (err) {
+      console.error("Completion failed", err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files?.[0];

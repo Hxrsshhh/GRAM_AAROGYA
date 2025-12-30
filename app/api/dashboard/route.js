@@ -5,9 +5,6 @@ import Issues from "@/models/Issues";
 export async function GET(req) {
   try {
     await ConnectDB();
-
-    // 1. Get Current Stats & Status Counts
-    // We use $facet to run multiple aggregations in one pass
     const statsResult = await Issues.aggregate([
       {
         $facet: {
@@ -28,8 +25,6 @@ export async function GET(req) {
       }
     ]);
 
-    // 2. Generate Chart Data (Monthly Pulse)
-    // Groups by month and counts reports
     const monthlyData = await Issues.aggregate([
       {
         $match: {
@@ -45,8 +40,6 @@ export async function GET(req) {
       { $sort: { "_id": 1 } }
     ]);
 
-    // 3. Get Recent Transmissions
-    // Populates reporter name and limits to 4
     const recentIssues = await Issues.find({ isArchived: false })
       .sort({ createdAt: -1 })
       .limit(4)

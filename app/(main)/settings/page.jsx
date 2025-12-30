@@ -36,7 +36,7 @@ export default function Settings() {
     updates: true,
   });
 
-   const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const { setTheme, resolvedTheme } = useTheme();
@@ -60,7 +60,6 @@ export default function Settings() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 py-12 selection:bg-blue-100">
       <div className="max-w-4xl mx-auto px-6">
-        {/* Page Header */}
         <div className="mb-8 mt-14 flex justify-between items-end">
           <div>
             <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs uppercase tracking-[0.2em] mb-2">
@@ -85,7 +84,6 @@ export default function Settings() {
         </div>
 
         <div className="space-y-8">
-          {/* Appearance */}
           <Card className="p-8">
             <SectionHeader
               icon={Palette}
@@ -142,7 +140,6 @@ export default function Settings() {
             </div>
           </Card>
 
-          {/* Notifications */}
           <Card className="p-8">
             <SectionHeader
               icon={Bell}
@@ -187,7 +184,6 @@ export default function Settings() {
             </div>
           </Card>
 
-          {/* Security */}
           <Card className="p-8">
             <SectionHeader
               icon={Lock}
@@ -204,7 +200,6 @@ export default function Settings() {
             </div>
           </Card>
 
-          {/* Danger Zone */}
           <Card className="p-8 border-rose-100 dark:border-rose-900/30">
             <div className="flex items-center gap-4 mb-8">
               <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 text-rose-500">
@@ -224,21 +219,20 @@ export default function Settings() {
               Deleting your account will permanently remove all data.
             </p>
 
-            
-              <button
-              onClick={()=>setOpen(true)}
-               className="w-full flex items-center justify-center gap-2 p-4 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 text-rose-600 font-black text-xs uppercase tracking-widest rounded-xl transition-all border border-rose-200 dark:border-rose-900/40">
-                <Trash2 size={16} /> Deactivate Account Terminal
-              </button>
+            <button
+              onClick={() => setOpen(true)}
+              className="w-full flex items-center justify-center gap-2 p-4 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 text-rose-600 font-black text-xs uppercase tracking-widest rounded-xl transition-all border border-rose-200 dark:border-rose-900/40"
+            >
+              <Trash2 size={16} /> Deactivate Account Terminal
+            </button>
           </Card>
 
           <ConfirmDeleteModal
-        open={open}
-        onClose={() => setOpen(false)}
-        onConfirm={handleDelete}
-        loading={loading}
-      />
-
+            open={open}
+            onClose={() => setOpen(false)}
+            onConfirm={handleDelete}
+            loading={loading}
+          />
 
           <div className="text-center pb-12">
             <p className="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-[0.4em]">
