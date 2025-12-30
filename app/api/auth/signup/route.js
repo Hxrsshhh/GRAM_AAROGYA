@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
-import connectToDB from "@/lib/db";
-import User from "@/models/user.model";
+import connectDB from "@/lib/db";
+import User from "@/models/User";
 
 export async function POST(req) {
   const { name, email, password } = await req.json();
@@ -9,7 +9,7 @@ export async function POST(req) {
     return Response.json({ error: "All fields required" }, { status: 400 });
   }
 
-  await connectToDB();
+  await connectDB();
 
   const exists = await User.findOne({ email });
   if (exists) {

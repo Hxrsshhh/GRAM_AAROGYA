@@ -10,9 +10,7 @@ import {
   Camera,
   Save,
   ShieldCheck,
-  XCircle,
   ChevronRight,
-  ExternalLink,
   Settings,
   Loader2,
   Award,
@@ -28,41 +26,72 @@ import { Badge } from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 
 import { InputField } from "@/components/ui/input";
-import { userData } from "@/lib/mock-data";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function Profile() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState(null);
 
-  const [formData, setFormData] = useState(userData);
+  const router = useRouter();
+
+  const { data: session, status } = useSession();
 
   useEffect(() => {
-    // Simulate API fetch
-    setTimeout(() => {
-      setUser({
-        role: "admin",
-        createdAt: "2023-01-15T12:00:00Z",
-        verified: true,
-      });
-      setLoading(false);
-    }, 1000);
-  }, []);
+    if (status === "unauthenticated") {
+      return;
+    }
+
+    if (status === "authenticated") {
+      const loadProfile = async () => {
+        try {
+          const res = await fetch("/api/user/profile");
+          const data = await res.json();
+          setFormData(data);
+        } catch (error) {
+          console.error("Failed to fetch profile", error);
+        }
+      };
+      loadProfile();
+    }
+  }, [session, status]);
 
   const handleSave = async () => {
     setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
+    console.log(formData);
+    try {
+      const response = await fetch("/api/user/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update profile");
+      }
+
+      const updatedUser = await response.json();
+      setFormData(updatedUser);
       setEditing(false);
-    }, 1200);
+    } catch (error) {
+      console.error("Save failed:", error.message);
+      alert(error.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  if (loading) {
+  if (status === "loading" || !formData) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-950">
-        <Loader2 className="w-12 h-12 text-slate-900 dark:text-emerald-500 animate-spin mb-4" />
-        <p className="text-slate-500 font-bold tracking-widest uppercase text-xs">
+      <div className="flex flex-col items-center justify-center h-screen gap-4 bg-white dark:bg-slate-950">
+        <div className="relative flex items-center justify-center">
+          <div className="w-16 h-16 border-4 border-emerald-500/20 rounded-full border-t-emerald-500 animate-spin"></div>
+          <Loader2 className="absolute w-6 h-6 text-emerald-500 animate-pulse" />
+        </div>
+        <p className="text-slate-500 font-black tracking-widest text-[10px] uppercase animate-pulse">
           Authenticating Profile...
         </p>
       </div>
@@ -86,9 +115,15 @@ export default function Profile() {
             </h1>
           </div>
           <div className="flex gap-3">
-            <Button variant="outline" className="text-xs">
-              <Globe size={14} /> Public View
-            </Button>
+            {session?.user?.onboardingStatus !== "completed" && (
+              <Button
+                onClick={() => router.push("/onboarding")}
+                variant="secondary" className="text-xs"
+              >
+                Complete your profile
+              </Button>
+            )}
+
             <Button variant="secondary" className="text-xs">
               <Settings size={14} /> Preferences
             </Button>
@@ -103,7 +138,7 @@ export default function Profile() {
                 <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
                   <div className="relative group">
                     <img
-                      src={formData.avatar}
+                      src={formData?.avatar || "/avatar.jpg"}
                       className="w-28 h-28 rounded-2xl border-4 border-white dark:border-slate-900 shadow-2xl object-cover"
                       alt="Profile"
                     />
@@ -118,19 +153,18 @@ export default function Profile() {
 
               <div className="pt-16 pb-8 px-6 text-center">
                 <h2 className="text-xl font-black text-slate-900 dark:text-white">
-                  {formData.name}
+                  {formData?.name}
                 </h2>
                 <p className="text-slate-400 font-medium text-sm mb-6">
-                  {formData.email}
+                  {formData?.email}
                 </p>
 
                 <div className="flex justify-center gap-2 mb-8">
-                  <Badge variant="success">
+                 {session?.user.isverified &&  
+                 <Badge variant="success">
                     <ShieldCheck size={12} className="mr-1.5" /> Verified
                   </Badge>
-                  <Badge variant="blue">
-                    <Award size={12} className="mr-1.5" /> Lead
-                  </Badge>
+                  }
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 pt-6 border-t border-slate-100 dark:border-slate-800">
@@ -144,10 +178,10 @@ export default function Profile() {
                   </div>
                   <div className="text-left">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                      Projects
+                      issue repoted
                     </p>
                     <p className="text-lg font-black text-slate-900 dark:text-white">
-                      14 Active
+                      {session?.user.reportsCount}
                     </p>
                   </div>
                 </div>
@@ -231,11 +265,8 @@ export default function Profile() {
                     label="Official Email"
                     value={formData.email}
                     type="email"
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
+                    disabled={true}
                     leftIcon={<Mail />}
-                    disabled={!editing}
                   />
 
                   <InputField
@@ -250,7 +281,7 @@ export default function Profile() {
 
                   <InputField
                     label="Headquarters / Location"
-                    value={formData.address}
+                    value={formData.location?.city || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, address: e.target.value })
                     }
@@ -296,7 +327,7 @@ export default function Profile() {
             </Card>
 
             {/* Quick Actions / Integration Module */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card className="p-5 flex items-center justify-between group cursor-pointer hover:border-blue-200 transition-colors">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-xl">
@@ -334,7 +365,7 @@ export default function Profile() {
                   className="text-slate-300 group-hover:translate-x-1 transition-transform"
                 />
               </Card>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

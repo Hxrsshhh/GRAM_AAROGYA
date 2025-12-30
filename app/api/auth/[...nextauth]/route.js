@@ -3,8 +3,8 @@ import GoogleProvider from "next-auth/providers/google";
 import FacebookProvider from "next-auth/providers/facebook";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import connectToDB from "@/lib/db";
-import User from "@/models/user.model";
+import connectDB from "@/lib/db";
+import User from "@/models/User";
 
 export const authOptions = {
   session: {
@@ -46,7 +46,7 @@ export const authOptions = {
 
       // authOptions
       async authorize(credentials) {
-        await connectToDB();
+        await connectDB();
 
         const user = await User.findOne({ email: credentials.email }).select(
           "+password"
@@ -63,6 +63,7 @@ export const authOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
+          onboardingStatus: user.onboardingStatus,
         };
       },
     }),
@@ -70,7 +71,7 @@ export const authOptions = {
 
   callbacks: {
     async signIn({ user, account }) {
-      await connectToDB();
+      await connectDB();
 
       if (account.provider === "credentials") {
         return true;
@@ -125,18 +126,26 @@ export const authOptions = {
         token.id = user.id;
         token.role = user.role;
       }
+      // Always sync onboardingStatus from DB
+      if (token?.id) {
+        await connectDB();
+        const dbUser = await User.findById(token.id).select("onboardingStatus");
+        token.onboardingStatus = dbUser?.onboardingStatus || "pending";
+      }
       return token;
     },
 
     async session({ session, token }) {
       session.user.id = token.id;
       session.user.role = token.role;
+      session.user.onboardingStatus = token.onboardingStatus;
+
       return session;
     },
   },
 
   pages: {
-    signIn: "/login",
+    signIn: "/signin",
   },
 
   secret: process.env.NEXTAUTH_SECRET,

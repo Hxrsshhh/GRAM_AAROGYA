@@ -9,44 +9,137 @@ import {
   MessageSquare,
   Clock,
   CheckCircle2,
-  Send,
   Share2,
   User,
   ShieldCheck,
   AlertTriangle,
   ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Play,
+  Pause,
+  Mic,
+  Loader2,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/Badge";
-import { Card } from "@/components/ui/Issue-detail-card";
-
-import Button from "@/components/ui/Button";
-
 import Link from "next/link";
-import { getIssueById, ISSUE_DETAILS } from "@/lib/mock-data";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { createComment, getIssueById } from "@/app/api/issues";
+import { IssueMap } from "@/components/layouts/MapComponent";
+import { Badge } from "@/components/ui/Issue-badge";
+import { Card } from "@/components/ui/Issue-card";
+import Button from "@/components/ui/Button";
 
 export default function App() {
   const [issue, setIssue] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [comment, setComment] = useState("");
+  const [currentImgIndex, setCurrentImgIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [hasUpvoted, setHasUpvoted] = useState(false);
+  const [comment, setComment] = useState("");
+  const [localComments, setLocalComments] = useState([]);
+  const audioRef = React.useRef(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const router = useRouter();
+
+  const STATUS_STEPS = [
+    {
+      id: "pending",
+      label: "Case Acknowledged",
+      sub: "Verified by authorities",
+      icon: CheckCircle2,
+    },
+    {
+      id: "in-progress",
+      label: "Operational Phase",
+      sub: "Work in progress",
+      icon: Clock,
+    },
+    {
+      id: "resolved",
+      label: "Issue Resolved",
+      sub: "Case successfully closed",
+      icon: CheckCircle2,
+    },
+  ];
 
   const params = useParams();
+  const id = params?.id;
 
-  const id = params.id;
+  const syncIssueData = async () => {
+    if (!id) return;
+    try {
+      const data = await getIssueById(id);
+      setIssue(data);
 
-  const Issue = getIssueById(ISSUE_DETAILS, id);
+      const formattedComments = (data.comments || []).map((c) => ({
+        id: c._id,
+        name: c.createdBy?.name || "Anonymous Citizen",
+        text: c.text,
+        time: new Date(c.createdAt).toLocaleDateString(),
+        image: c.createdBy?.image,
+      }));
 
-  // Simulated Fetch
+      setLocalComments(formattedComments);
+    } catch (err) {
+      console.error("Sync Error:", err);
+    }
+  };
+
   useEffect(() => {
-    const fetchIssue = async () => {
-      setIssue(Issue);
-      setLoading(false);
-    };
-    fetchIssue();
-  }, []);
+    setLoading(true);
+    syncIssueData().finally(() => setLoading(false));
+  }, [id]);
+
+  const handlePostComment = async () => {
+    if (!comment.trim()) return;
+
+    setIsSubmitting(true);
+    try {
+      await createComment(issue._id, comment);
+
+      setComment("");
+
+      await syncIssueData();
+    } catch (err) {
+      console.error("Post Comment Error:", err);
+      alert("Failed to post: " + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const nextImage = () => {
+    if (issue?.images?.length) {
+      setCurrentImgIndex((prev) => (prev + 1) % issue.images.length);
+    }
+  };
+
+  const prevImage = () => {
+    if (issue?.images?.length) {
+      setCurrentImgIndex(
+        (prev) => (prev - 1 + issue.images.length) % issue.images.length
+      );
+    }
+  };
+
+  const toggleAudio = () => {
+    if (!audioRef.current) return;
+
+    if (audioRef.current.paused) {
+      audioRef.current.play();
+      setIsPlaying(true);
+    } else {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  const handleBack = () => {
+    router.back();
+  }
 
   if (loading) {
     return (
@@ -68,26 +161,35 @@ export default function App() {
             Report Not Found
           </h2>
           <p className="text-slate-500 text-sm font-medium mb-8 leading-relaxed">
-            {error ||
-              "The requested issue ID does not exist in our public database."}
+            {error}
           </p>
-          <Button variant="primary">Return to Feed</Button>
+          <Link href="/issues">
+            <Button variant="primary">Return to Feed</Button>
+          </Link>
         </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-emerald-500/30 pt-4">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-emerald-500/30 pt-4 pb-20">
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.2); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(16, 185, 129, 0.4); }
+      `}</style>
+
       <main className="max-w-[83rem] mx-auto px-6 py-12">
-        {/* BACK BUTTON / BREADCRUMB - Positioned below your fixed navbar */}
+        {/* NAVIGATION */}
         <div className="mb-8 mt-6">
-          <Link href="/issues">
-            <button className="flex items-center gap-3 group">
+            <button
+            onClick={handleBack}
+             className="flex items-center gap-3 group">
               <div className="w-10 h-10 rounded-full border-2 border-slate-200 dark:border-slate-800 flex items-center justify-center group-hover:bg-emerald-500 group-hover:border-emerald-500 transition-all duration-300">
                 <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
               </div>
-              <div className="flex flex-col items-start">
+              <div className="flex flex-col items-start text-left">
                 <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-0.5">
                   Return to
                 </span>
@@ -96,11 +198,10 @@ export default function App() {
                 </span>
               </div>
             </button>
-          </Link>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          {/* LEFT: PRIMARY CONTENT */}
+          {/* LEFT CONTENT */}
           <div className="lg:col-span-8 space-y-8">
             <header className="space-y-6">
               <div className="flex flex-wrap items-center gap-3">
@@ -113,7 +214,7 @@ export default function App() {
                 {issue.title}
               </h1>
 
-              <div className="flex flex-wrap items-center gap-8 py-6 border-y border-slate-200 dark:border-slate-800">
+              <div className="flex flex-wrap items-center gap-x-8 gap-y-4 py-6 border-y border-slate-200 dark:border-slate-800">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-emerald-500" />
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
@@ -127,205 +228,349 @@ export default function App() {
                 <div className="flex items-center gap-2">
                   <Eye className="w-4 h-4 text-emerald-500" />
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                    {issue.viewCount} Engagements
+                    {issue.viewCount || 0} Views
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <ThumbsUp className="w-4 h-4 text-emerald-500" />
+                <button
+                  onClick={() => setHasUpvoted(!hasUpvoted)}
+                  className="flex items-center gap-2 hover:opacity-70 transition-opacity"
+                >
+                  <ThumbsUp
+                    className={`w-4 h-4 ${
+                      hasUpvoted
+                        ? "text-emerald-500 fill-emerald-500"
+                        : "text-emerald-500"
+                    }`}
+                  />
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                    {issue.upvotes} Citizens Supported
+                    {(issue.upvotes || 0) + (hasUpvoted ? 1 : 0)} UpVotes
                   </span>
-                </div>
+                </button>
+                <button className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500 hover:text-white transition-all text-slate-400">
+                  <Share2 className="w-3 h-3" />
+                  <span className="text-[9px] font-black uppercase tracking-widest">
+                    Share Case
+                  </span>
+                </button>
               </div>
             </header>
 
-            {/* GALLERY */}
+            {/* IMAGE SLIDER */}
             {issue.images?.length > 0 && (
-              <div className="group relative overflow-hidden rounded-[3rem] shadow-2xl shadow-emerald-900/10">
+              <div className="relative group overflow-hidden rounded-[3rem] shadow-2xl shadow-emerald-900/10 bg-slate-200 dark:bg-slate-900 aspect-[16/9]">
                 <img
-                  src={issue.images[0]}
-                  className="w-full aspect-[16/9] object-cover transition-transform duration-700 group-hover:scale-105"
-                  alt="Issue visual evidence"
+                  src={issue.images[currentImgIndex]}
+                  className="w-full h-full object-cover transition-transform duration-700"
+                  alt={`Evidence ${currentImgIndex + 1}`}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+
+                {issue.images.length > 1 && (
+                  <div className="absolute inset-0 flex items-center justify-between px-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={prevImage}
+                      className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/40 transition-all"
+                    >
+                      <ChevronLeft className="text-white" />
+                    </button>
+                    <button
+                      onClick={nextImage}
+                      className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/40 transition-all"
+                    >
+                      <ChevronRight className="text-white" />
+                    </button>
+                  </div>
+                )}
+
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+                  {issue.images.map((_, i) => (
+                    <div
+                      key={i}
+                      className={`h-1.5 rounded-full transition-all ${
+                        i === currentImgIndex
+                          ? "w-8 bg-emerald-500"
+                          : "w-2 bg-white/50"
+                      }`}
+                    />
+                  ))}
+                </div>
+
+                <div className="absolute top-6 right-6 bg-black/40 backdrop-blur-md text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+                  IMG {currentImgIndex + 1} / {issue.images.length}
+                </div>
               </div>
             )}
 
             {/* DESCRIPTION */}
-            <section className="space-y-4">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500">
+            <section className="space-y-3">
+              <h3 className="text-[9px] font-black uppercase tracking-[0.3em] text-emerald-500">
                 Official Complaint
               </h3>
-              <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                {issue.description}
+              <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 font-semibold leading-relaxed pl-6 border-l-2 border-slate-200 dark:border-slate-800">
+                "{issue.description}"
               </p>
             </section>
 
-            {/* ACTION FOOTER */}
-            <div className="flex flex-wrap items-center gap-4 pt-8 border-t border-slate-200 dark:border-slate-800">
-              <Button
-                variant={hasUpvoted ? "primary" : "outline"}
-                onClick={() => setHasUpvoted(!hasUpvoted)}
-                leftIcon={<ThumbsUp className="w-5 h-5" />}
-              >
-                {hasUpvoted ? "Upvoted" : "Support this Case"}
-              </Button>
-              <Button
-                variant="outline"
-                leftIcon={<Share2 className="w-5 h-5" />}
-              >
-                Share Data
-              </Button>
-            </div>
-
-            {/* COMMENTS SECTION */}
-            <Card className="mt-16 bg-slate-50/50 dark:bg-slate-900/50 border-dashed border-2">
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-sm font-black uppercase tracking-[0.2em] flex items-center gap-3">
-                  <MessageSquare className="w-5 h-5 text-emerald-500" />{" "}
-                  Community Discussion
+            {/* COMMENT INPUT SECTION */}
+            <div className="mt-12 pt-12 border-t-2 border-slate-100 dark:border-slate-900">
+              <div className="flex items-center gap-2 mb-6">
+                <MessageSquare className="w-4 h-4 text-emerald-500" />
+                <h2 className="text-xs font-black uppercase tracking-[0.2em]">
+                  Contribute Context
                 </h2>
-                <span className="text-[10px] font-black uppercase text-slate-400 bg-white dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">
-                  0 Comments
-                </span>
               </div>
-
-              <div className="space-y-4">
-                <textarea
-                  placeholder="Share your experience or offer additional context..."
-                  className="w-full min-h-[120px] p-6 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-3xl text-sm font-bold focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all placeholder:text-slate-300"
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                />
-                <div className="flex justify-end">
-                  <Button
-                    variant="primary"
-                    leftIcon={<Send className="w-4 h-4" />}
-                  >
-                    Post Comment
-                  </Button>
+              <Card className="bg-slate-50/50 dark:bg-slate-900/50 border-dashed border-2 !p-6">
+                <div className="space-y-4">
+                  <textarea
+                    placeholder="Share evidence, updates, or personal experience regarding this incident..."
+                    className="w-full min-h-[120px] p-5 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-3xl text-sm font-bold focus:ring-8 focus:ring-emerald-500/5 focus:border-emerald-500 outline-none transition-all placeholder:text-slate-300"
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                  />
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={handlePostComment}
+                      disabled={isSubmitting || !comment.trim()}
+                      className=" h-12 w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSubmitting ? (
+                        <Loader2 className="w-4 h-4 animate-spin" /> // Assuming Lucide-react
+                      ) : (
+                        "Post Comment"
+                      )}
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
           </div>
 
-          {/* RIGHT: SIDEBAR DATA */}
+          {/* RIGHT SIDEBAR */}
           <div className="lg:col-span-4 space-y-6">
-            {/* LOCATION CARD */}
-            <Card className="!p-6 border-emerald-500/10">
+            {/* map part  */}
+            <Card className="!p-6 border-emerald-500/10 overflow-hidden relative">
+              <div className="absolute top-0 right-0 p-4">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></div>
+              </div>
               <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-emerald-500" /> Precise Location
               </h3>
               <p className="text-sm font-black uppercase tracking-tighter mb-4">
                 {issue.address}
               </p>
-              <div className="relative h-56 w-full rounded-[2rem] bg-slate-100 dark:bg-slate-800 overflow-hidden group border border-slate-200 dark:border-slate-700">
-                <div className="absolute inset-0 bg-emerald-500/5"></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-12 h-12 bg-white dark:bg-slate-900 rounded-full shadow-2xl flex items-center justify-center animate-bounce">
-                    <MapPin className="w-6 h-6 text-emerald-500" />
-                  </div>
-                </div>
+
+              <div className="h-56 w-full rounded-[2rem] overflow-hidden">
+                <IssueMap lat={issue.location?.lat} lng={issue.location?.lng} />
               </div>
             </Card>
 
-            {/* REPORTER INFO */}
+            {/* Official Response Stepper */}
+            <Card className="!p-0 overflow-hidden bg-emerald-600 text-white border-none shadow-2xl shadow-emerald-600/30 rounded-[2.5rem]">
+              <div className="p-6 sm:p-8 space-y-8">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-300/80">
+                    Official Response
+                  </h3>
+                  <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400 opacity-50" />
+                </div>
+
+                <div className="space-y-8 relative">
+                  <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-white/10" />
+
+                  {/* Logic to find where we are in the process */}
+                  {(() => {
+                    const currentIdx = STATUS_STEPS.findIndex(
+                      (s) => s.id === issue.status
+                    );
+
+                    return STATUS_STEPS.map((step, index) => {
+                      const isCompleted = index <= currentIdx;
+                      const isCurrent = index === currentIdx;
+                      const Icon = step.icon;
+
+                      return (
+                        <div
+                          key={step.id}
+                          className={`relative flex gap-4 sm:gap-6 transition-all duration-500 ${
+                            isCompleted ? "opacity-100" : "opacity-30"
+                          }`}
+                        >
+                          {/* Step Circle */}
+                          <div
+                            className={`
+                  w-6 h-6 rounded-full flex items-center justify-center z-10 ring-4 ring-emerald-600 transition-all duration-500
+                  ${isCompleted ? "bg-white scale-110" : "bg-emerald-700"}
+                `}
+                          >
+                            <Icon
+                              className={`w-3.5 h-3.5 ${
+                                isCompleted
+                                  ? "text-emerald-600"
+                                  : "text-emerald-400"
+                              }`}
+                            />
+
+                            {/* Active Pulse */}
+                            {isCurrent && issue.status !== "resolved" && (
+                              <span className="absolute inset-0 rounded-full bg-white animate-ping opacity-40" />
+                            )}
+                          </div>
+
+                          <div className="flex-1 pt-0.5">
+                            <p
+                              className={`text-xs font-black uppercase tracking-tight ${
+                                isCompleted
+                                  ? "text-white"
+                                  : "text-emerald-300/50"
+                              }`}
+                            >
+                              {step.label}
+                            </p>
+                            <p
+                              className={`text-[10px] font-bold ${
+                                isCompleted
+                                  ? "text-emerald-300"
+                                  : "text-emerald-500"
+                              }`}
+                            >
+                              {step.sub}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+
+              <div className="bg-emerald-700/50 p-3 sm:p-4 text-center">
+                <p className="text-[8px] font-black uppercase tracking-[0.2em] text-emerald-200/60 flex items-center justify-center gap-2">
+                  <span className="w-1 h-1 rounded-full bg-emerald-400" />
+                  Case ID: {issue._id}
+                  <span className="w-1 h-1 rounded-full bg-emerald-400" />
+                </p>
+              </div>
+            </Card>
+
+            {/* ACTIVITY LOG */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between px-2">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  Activity Log
+                </h3>
+                <span className="text-[9px] font-black text-emerald-500">
+                  {localComments.length} Records
+                </span>
+              </div>
+              <div className="space-y-3 max-h-[360px] overflow-y-auto pr-2 custom-scrollbar transition-all">
+                {localComments.map((c) => (
+                  <div
+                    key={c.id}
+                    className="p-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[1.5rem] shadow-sm mb-3"
+                  >
+                    <div className="flex justify-between items-start mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                          <User className="w-2.5 h-2.5 text-slate-400" />
+                        </div>
+                        <span className="text-[9px] font-black uppercase tracking-tight">
+                          {c.name}
+                        </span>
+                      </div>
+                      <span className="text-[7px] font-black uppercase text-slate-400 tracking-widest">
+                        {c.time}
+                      </span>
+                    </div>
+                    <p className="text-slate-600 dark:text-slate-400 text-[11px] font-medium leading-snug pl-7">
+                      {c.text}
+                    </p>
+                  </div>
+                ))}
+                {localComments.length === 0 && (
+                  <p className="text-[10px] text-center py-8 text-slate-400 font-black uppercase tracking-widest italic">
+                    No records yet
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* VOICE TESTIMONY */}
+            {issue.voiceNote && (
+              <Card className="border-l-4 border-l-emerald-500 !p-3 sm:!p-4 bg-gradient-to-r from-emerald-500/5 to-transparent overflow-hidden">
+                <div className="space-y-3 sm:space-y-4">
+                  {/* Header Section: Scaled text for mobile/desktop */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.15em] text-emerald-600 dark:text-emerald-500 flex items-center gap-1.5">
+                      <Mic className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Voice
+                      Testimony
+                    </span>
+                    <span className="text-[10px] sm:text-xs font-bold text-slate-400">
+                      Citizen Audio
+                    </span>
+                  </div>
+
+                  <audio
+                    ref={audioRef}
+                    src={issue.voiceNote}
+                    onEnded={() => setIsPlaying(false)}
+                  />
+
+                  <div className="flex items-center gap-3 sm:gap-5">
+                    {/* Play Button: Slightly larger on desktop for better UX */}
+                    <button
+                      onClick={toggleAudio}
+                      className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all"
+                      aria-label={isPlaying ? "Pause audio" : "Play audio"}
+                    >
+                      {isPlaying ? (
+                        <Pause className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                      ) : (
+                        <Play className="w-4 h-4 sm:w-5 sm:h-5 text-white ml-0.5" />
+                      )}
+                    </button>
+
+                    {/* Dynamic Waveform: Uses a grid to control density across screen sizes */}
+                    <div className="flex-1 h-8 sm:h-10 flex items-end gap-[2px] sm:gap-1 overflow-hidden">
+                      {[...Array(40)].map((_, i) => (
+                        <div
+                          key={i}
+                          className={`flex-1 min-w-[2px] rounded-full transition-all duration-300 ${
+                            isPlaying
+                              ? "animate-pulse bg-emerald-500"
+                              : "bg-slate-300 dark:bg-slate-700"
+                          } ${
+                            // Hide specific bars on very small screens to prevent crowding
+                            i > 20 ? "hidden xs:block" : ""
+                          } ${i > 30 ? "hidden md:block" : ""}`}
+                          style={{
+                            height: `${25 + (Math.sin(i * 1.5) * 20 + 20)}%`,
+                            // Adding a slight delay to pulses for a more natural look
+                            animationDelay: isPlaying ? `${i * 0.05}s` : "0s",
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            {/* CITIZEN REPORTER */}
             <Card className="!p-6">
               <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">
                 Citizen Reporter
               </h3>
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center border-2 border-white dark:border-slate-700 shadow-lg">
-                  <User className="w-7 h-7 text-slate-400" />
+                <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center border-2 border-white dark:border-slate-700 shadow-lg">
+                  <User className="w-6 h-6 text-slate-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-black uppercase tracking-tighter text-slate-900 dark:text-white">
-                    {issue.user.name}
+                  <p className="text-xs font-black uppercase tracking-tighter text-slate-900 dark:text-white">
+                    {issue.reportedBy?.name || "Anonymous Citizen"}
                   </p>
-                  <p className="text-[9px] font-black uppercase text-emerald-500 tracking-widest">
-                    Trust Rating: 98%
+                  <p className="text-[8px] font-black uppercase text-emerald-500 tracking-widest">
+                    Trust Rating: {issue.reportedBy?.trustRating || 0}%
                   </p>
                 </div>
-              </div>
-            </Card>
-
-            {/* OFFICIAL TIMELINE */}
-            <Card className="!p-0 overflow-hidden bg-emerald-600 text-white border-none shadow-2xl shadow-emerald-600/30">
-              <div className="p-8 space-y-8">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
-                    Official Response
-                  </h3>
-                  <ShieldCheck className="w-6 h-6 text-emerald-400 opacity-50" />
-                </div>
-
-                <div className="space-y-8 relative">
-                  <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-white/20"></div>
-
-                  <div className="relative flex gap-6">
-                    <div className="w-6 h-6 rounded-full bg-emerald-600/40 flex items-center justify-center ring-4 ring-emerald-600 z-10">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-xs font-black uppercase tracking-tight">
-                        Case Acknowledged
-                      </p>
-                      <p className="text-[10px] text-emerald-400 font-bold">
-                        24 Dec, 09:12 AM
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="relative flex gap-6">
-                    <div
-                      className={`w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-emerald-600 z-10 ${
-                        issue.status === "in-progress"
-                          ? "bg-white"
-                          : "bg-white/20"
-                      }`}
-                    >
-                      <Clock
-                        className={`w-3.5 h-3.5 ${
-                          issue.status === "in-progress"
-                            ? "text-emerald-600"
-                            : "text-white"
-                        }`}
-                      />
-                    </div>
-                    <div
-                      className={`flex-1 ${
-                        issue.status !== "in-progress" && "opacity-50"
-                      }`}
-                    >
-                      <p className="text-xs font-black uppercase tracking-tight">
-                        Crew Assigned
-                      </p>
-                      <p className="text-[10px] text-emerald-400 font-bold">
-                        24 Dec, 02:45 PM
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="relative flex gap-6 opacity-30">
-                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center ring-4 ring-emerald-600 z-10">
-                      <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-xs font-black uppercase tracking-tight">
-                        Field Verification
-                      </p>
-                      <p className="text-[10px] text-emerald-400 font-bold italic">
-                        Estimated: 26 Dec
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-emerald-700/50 p-6 text-center">
-                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-200">
-                  Official Tracking ID: CP-0842-OAK
-                </p>
               </div>
             </Card>
           </div>

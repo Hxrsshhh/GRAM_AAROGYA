@@ -24,6 +24,10 @@ import { ActionButton } from "@/components/ui/ActionButton";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 
+import ConfirmDeleteModal from "@/components/modals/confirmDeleteModal";
+import { deleteUserAccount } from "@/lib/api/user";
+import { signOut } from "next-auth/react";
+
 export default function Settings() {
   const [notifications, setNotifications] = useState({
     email: true,
@@ -32,10 +36,26 @@ export default function Settings() {
     updates: true,
   });
 
+   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
   const { setTheme, resolvedTheme } = useTheme();
 
   const toggleTheme = () =>
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
+
+  const handleDelete = async () => {
+    try {
+      setLoading(true);
+      await deleteUserAccount();
+      await signOut({ callbackUrl: "/" });
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setLoading(false);
+      setOpen(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 py-12 selection:bg-blue-100">
@@ -204,12 +224,21 @@ export default function Settings() {
               Deleting your account will permanently remove all data.
             </p>
 
-            <Link href="/">
-              <button className="w-full flex items-center justify-center gap-2 p-4 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 text-rose-600 font-black text-xs uppercase tracking-widest rounded-xl transition-all border border-rose-200 dark:border-rose-900/40">
+            
+              <button
+              onClick={()=>setOpen(true)}
+               className="w-full flex items-center justify-center gap-2 p-4 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 text-rose-600 font-black text-xs uppercase tracking-widest rounded-xl transition-all border border-rose-200 dark:border-rose-900/40">
                 <Trash2 size={16} /> Deactivate Account Terminal
               </button>
-            </Link>
           </Card>
+
+          <ConfirmDeleteModal
+        open={open}
+        onClose={() => setOpen(false)}
+        onConfirm={handleDelete}
+        loading={loading}
+      />
+
 
           <div className="text-center pb-12">
             <p className="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-[0.4em]">

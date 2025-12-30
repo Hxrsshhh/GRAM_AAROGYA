@@ -2,16 +2,16 @@
 
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 const Button = ({
   children,
-  variant = "primary",
-  size = "md",
+  variant = "primary", // Destructured: won't go into ...props
+  size = "md",        // Destructured: won't go into ...props
   className = "",
   isLoading = false,
   disabled,
-  ...props // ✅ safe props only
+  ...props // ✅ Now contains only standard attributes like onClick, type, etc.
 }) => {
   const variants = {
     primary:
@@ -23,7 +23,7 @@ const Button = ({
     glass:
       "bg-white/10 dark:bg-slate-900/40 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 text-slate-900 dark:text-white hover:bg-white/20 dark:hover:bg-slate-800/60",
     danger:
-      "bg-red dark:bg-red-500/40 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 text-slate-900 dark:text-white hover:bg-red/20 dark:hover:bg-red-800/60",
+      "bg-red-600 text-white border border-red-500/50 hover:bg-red-700", // Fixed the 'bg-red' typo
   };
 
   const sizes = {
@@ -34,9 +34,11 @@ const Button = ({
 
   return (
     <motion.button
-      type="button"
-      whileHover={!isLoading ? { scale: 1.02 } : undefined}
-      whileTap={!isLoading ? { scale: 0.98 } : undefined}
+      // We pass standard props first, but ensure type is "button" by default
+      type="button" 
+      {...props} 
+      whileHover={!isLoading && !disabled ? { scale: 1.02 } : undefined}
+      whileTap={!isLoading && !disabled ? { scale: 0.98 } : undefined}
       disabled={isLoading || disabled}
       className={cn(
         "relative inline-flex items-center justify-center font-black tracking-tight transition-all duration-300 rounded-[1.25rem] focus:outline-none overflow-hidden group",
@@ -45,14 +47,13 @@ const Button = ({
         (isLoading || disabled) && "opacity-60 cursor-not-allowed",
         className
       )}
-      {...props}
     >
       <span className="relative z-10 flex items-center gap-2">
         {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
         {children}
       </span>
 
-      {!isLoading && (
+      {!isLoading && !disabled && (
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
       )}
     </motion.button>

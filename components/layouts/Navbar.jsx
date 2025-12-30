@@ -21,8 +21,25 @@ import {
 import Button from "@/components/ui/Button";
 import Link from "next/link";
 
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+
+function getInitials(name) {
+  if (!name) return "";
+
+  const parts = name.trim().split(/\s+/);
+
+  // Single name → first letter
+  if (parts.length === 1) {
+    return parts[0][0].toUpperCase();
+  }
+
+  // First + Last
+  return (
+    parts[0][0] + parts[parts.length - 1][0]
+  ).toUpperCase();
+}
+
 
 const Navbar = ({ onNavigate = () => {} }) => {
   const { resolvedTheme, setTheme } = useTheme();
@@ -32,6 +49,8 @@ const Navbar = ({ onNavigate = () => {} }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const profileMenuRef = useRef(null);
   const router = useRouter();
+
+  const {data : session} = useSession();
 
   useEffect(() => {
     setMounted(true);
@@ -99,7 +118,9 @@ const Navbar = ({ onNavigate = () => {} }) => {
           <div className="flex items-center gap-3 cursor-pointer group shrink-0 relative z-110">
             <Link href="/">
               {" "}
-              <img src="/logo.png" className="h-12 w-12" />
+                <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-600/20">
+                            <Activity className="text-white w-5 h-5" />
+                </div>
             </Link>
             <span className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
               Civic
@@ -135,11 +156,11 @@ const Navbar = ({ onNavigate = () => {} }) => {
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
                   className="flex items-center gap-2 p-1.5 pr-4 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-all active:scale-95"
                 >
-                  <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold text-xs">
-                    HS
+                  <div className="w-8 h-8 rounded-full  flex bg-emerald-500 items-center justify-center text-white font-bold text-xs">
+                     {getInitials( `${session?.user.name}`)}
                   </div>
                   <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                    Account
+                  Account
                   </span>
                 </button>
 

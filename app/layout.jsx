@@ -18,7 +18,7 @@ export const metadata = {
   description:
     "CivicPulse is a modern civic engagement platform that enables citizens to report local issues and track them in real time through an interactive map interface.",
   icons: {
-    icon: "/logo.png",
+    icon: "/logo2.png",
   },
 };
 
@@ -27,10 +27,11 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning={true}
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="system" // ok to start from system
+          defaultTheme="system"
           enableSystem={true}
           disableTransitionOnChange
         >
