@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { createComment, getIssueById } from "@/app/api/issues";
 import { IssueMap } from "@/components/layouts/MapComponent";
 import { Badge } from "@/components/ui/Issue-badge";
@@ -41,6 +41,8 @@ export default function App() {
   const [localComments, setLocalComments] = useState([]);
   const audioRef = React.useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const router = useRouter();
 
   const STATUS_STEPS = [
     {
@@ -135,6 +137,10 @@ export default function App() {
     }
   };
 
+  const handleBack = () => {
+    router.back();
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950">
@@ -177,8 +183,9 @@ export default function App() {
       <main className="max-w-[83rem] mx-auto px-6 py-12">
         {/* NAVIGATION */}
         <div className="mb-8 mt-6">
-          <Link href="/issues">
-            <button className="flex items-center gap-3 group">
+            <button
+            onClick={handleBack}
+             className="flex items-center gap-3 group">
               <div className="w-10 h-10 rounded-full border-2 border-slate-200 dark:border-slate-800 flex items-center justify-center group-hover:bg-emerald-500 group-hover:border-emerald-500 transition-all duration-300">
                 <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
               </div>
@@ -191,7 +198,6 @@ export default function App() {
                 </span>
               </div>
             </button>
-          </Link>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">

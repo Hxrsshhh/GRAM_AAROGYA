@@ -160,12 +160,11 @@ export default function Profile() {
                 </p>
 
                 <div className="flex justify-center gap-2 mb-8">
-                  <Badge variant="success">
+                 {session?.user.isverified &&  
+                 <Badge variant="success">
                     <ShieldCheck size={12} className="mr-1.5" /> Verified
                   </Badge>
-                  <Badge variant="blue">
-                    <Award size={12} className="mr-1.5" /> Lead
-                  </Badge>
+                  }
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 pt-6 border-t border-slate-100 dark:border-slate-800">
@@ -179,10 +178,10 @@ export default function Profile() {
                   </div>
                   <div className="text-left">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                      Projects
+                      issue repoted
                     </p>
                     <p className="text-lg font-black text-slate-900 dark:text-white">
-                      14 Active
+                      {session?.user.reportsCount}
                     </p>
                   </div>
                 </div>
@@ -328,7 +327,7 @@ export default function Profile() {
             </Card>
 
             {/* Quick Actions / Integration Module */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card className="p-5 flex items-center justify-between group cursor-pointer hover:border-blue-200 transition-colors">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-xl">
@@ -366,7 +365,7 @@ export default function Profile() {
                   className="text-slate-300 group-hover:translate-x-1 transition-transform"
                 />
               </Card>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

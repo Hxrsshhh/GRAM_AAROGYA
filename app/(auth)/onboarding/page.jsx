@@ -21,9 +21,13 @@ import { InputGroup } from "@/components/ui/InputGroup";
 import { useRouter } from "next/navigation";
 import { uploadToCloudinary } from "@/lib/cloudinary/cloudinaryUpload";
 import Button from "@/components/ui/Button";
+import { useSession } from "next-auth/react";
 
 const App = () => {
+
+  const { data: session, status } = useSession();
   const router = useRouter();
+
   const [step, setStep] = useState(1);
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,6 +40,24 @@ const App = () => {
     phone: "",
     bio: "",
   });
+
+  if (status === "loading") {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!session?.user) {
+    router.replace("/login");
+    return null;
+  }
+
+  if (session.user.onboardingCompleted) {
+  router.replace("/dashboard");
+  return null;
+}
 
   const handleNext = () => {
     if (isStepValid()) setStep((s) => s + 1);
@@ -60,48 +82,54 @@ const App = () => {
   };
 
   const handleSkip = async () => {
-    setIsSkipping(true);
-    try {
-      const response = await fetch("/api/user/onboarding", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: "skipped",
-          skippedAt: new Date().toISOString(), // Good for audit logs
-        }),
-      });
+  setIsSkipping(true);
+  try {
+    const response = await fetch("/api/user/onboarding", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        status: "skipped",
+        skippedAt: new Date().toISOString(),
+      }),
+    });
 
-      if (!response.ok) throw new Error("Failed to update onboarding status");
+    if (!response.ok) throw new Error("Failed to update onboarding status");
 
-      router.push("/dashboard");
-    } catch (err) {
-      console.error("Skip failed:", err);
-      // You might want to show a small toast notification here
-    } finally {
-      setIsSkipping(false); // Reset loading
-    }
-  };
+    // 🔥 Force NextAuth session refresh
+    await fetch("/api/auth/session");
 
-  const handleComplete = async () => {
-    setIsSubmitting(true);
-    try {
-      const payload = {
+    // 🔥 Replace, do not push
+    router.replace("/dashboard");
+  } catch (err) {
+    console.error("Skip failed:", err);
+  } finally {
+    setIsSkipping(false);
+  }
+};
+
+const handleComplete = async () => {
+  setIsSubmitting(true);
+  try {
+    await fetch("/api/user/onboarding", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         status: "completed",
         profile: formData,
-      };
+      }),
+    });
 
-      await fetch("/api/user/onboarding", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      router.push("/dashboard");
-    } catch (err) {
-      console.error("Completion failed", err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    // 🔥 Refresh session
+    await fetch("/api/auth/session");
+
+    router.replace("/dashboard");
+  } catch (err) {
+    console.error("Completion failed", err);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files?.[0];
