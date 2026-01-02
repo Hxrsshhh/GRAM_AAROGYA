@@ -27,7 +27,7 @@ import { useRouter } from "next/navigation";
 
 import { InputWrapper } from "@/components/ui/InputWrapper";
 
-const App = () => {
+const AiScan = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingAI, setLoadingAI] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
@@ -254,18 +254,18 @@ const App = () => {
   };
 
   return (
-    <div className="h-screen w-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 font-['Plus_Jakarta_Sans'] flex flex-col overflow-hidden transition-colors duration-300">
+    <div className=" max-h-screen py-4 lg:py-0 max-w-screen bg-slate-50/10 dark:bg-transparent text-slate-900 dark:text-slate-200 font-['Plus_Jakarta_Sans'] flex flex-col overflow-y-auto lg:overflow-hidden transition-colors duration-300">
       {/* Background Decor */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/10 dark:bg-emerald-500/5 blur-[120px]" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-500/10 dark:bg-emerald-500/5 blur-[120px]" />
       </div>
 
-      <main className="lg:mt-22 relative z-10 flex-1 w-full max-w-7xl mx-auto px-6 lg:px-12 py-18 overflow-hidden flex flex-col">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full overflow-hidden">
+      <main className=" mt-0 relative z-10 flex-1 w-full max-w-7xl px-6 lg:py-12 mb-10 lg:mb-60 lg:overflow-hidden flex flex-col">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full lg:overflow-hidden">
           {/* Left Panel */}
-          <div className="lg:col-span-5 flex flex-col gap-6 overflow-hidden">
-            <div className="flex-1 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-[2.5rem] overflow-hidden relative group min-h-30 ring-1 ring-black/5 dark:ring-white/5 shadow-xl dark:shadow-inner">
+          <div className="lg:col-span-5   flex flex-col gap-6 lg:overflow-hidden">
+            <div className="flex-1 bg-white/50 md:h-[60vh]  dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-[2.5rem] overflow-hidden relative group min-h-50 max-h-75 lg:max-h-[65vh] lg:min-h-30 ring-1 ring-black/5 dark:ring-white/5 shadow-xl dark:shadow-inner">
               {imagePreviews.length === 0 ? (
                 <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer transition-all duration-500 hover:bg-emerald-500/[0.02]">
                   <input
@@ -400,7 +400,7 @@ const App = () => {
           </div>
 
           {/* Right Panel */}
-          <div className="lg:col-span-7 bg-white/50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] flex flex-col overflow-hidden backdrop-blur-sm min-h-0 shadow-xl">
+          <div className="lg:col-span-7 md:h-[62vh]  bg-white/50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] flex flex-col lg:overflow-hidden backdrop-blur-sm min-h-0 shadow-xl">
             <div className="px-8 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white/80 dark:bg-slate-900/50 shrink-0">
               <div className="flex items-center gap-3">
                 <Layers
@@ -426,9 +426,9 @@ const App = () => {
               )}
             </div>
 
-            <div className="flex-1 overflow-y-auto p-8 space-y-8 no-scrollbar min-h-0">
+            <div className="flex-1 overflow-y-auto lg:p-8 p-2 lg:space-y-8 space-y-4 no-scrollbar min-h-0">
               {loadingAI ? (
-                <div className="h-full flex flex-col items-center justify-center space-y-8">
+                <div className="h-full flex flex-col items-center justify-center space-y-8 min-h-[400px]">
                   <Loader2
                     size={40}
                     className="animate-spin text-emerald-500"
@@ -438,14 +438,14 @@ const App = () => {
                   </p>
                 </div>
               ) : formData.confidence === null ? (
-                <div className="h-full flex flex-col items-center justify-center opacity-40 dark:opacity-20 text-center space-y-6">
+                <div className="h-full flex flex-col items-center justify-center opacity-40 dark:opacity-20 text-center space-y-6 min-h-[200px]">
                   <div className="p-8 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-[3rem]">
                     <Radar
                       size={64}
                       className="animate-pulse text-emerald-500"
                     />
                   </div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.3em] max-w-[200px] text-slate-600 dark:text-slate-400">
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] max-w-50 text-slate-600 dark:text-slate-400">
                     System standby. Upload multiple angles.
                   </p>
                 </div>
@@ -661,7 +661,17 @@ const App = () => {
         dangerouslySetInnerHTML={{
           __html: `
             @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&display=swap');
-            html, body { margin: 0; height: 100%; overflow: hidden; }
+            
+            /* DESKTOP: Keep original rigid layout */
+            @media (min-width: 1024px) {
+              html, body { margin: 0; height: 100%; overflow: hidden !important; }
+            }
+
+            /* MOBILE: Allow natural scrolling */
+            @media (max-width: 1023px) {
+              html, body { margin: 0; height: auto; overflow: visible !important; }
+            }
+
             .no-scrollbar::-webkit-scrollbar { display: none; }
             .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
             select option { background-color: #ffffff; color: #0f172a; }
@@ -674,4 +684,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default AiScan;

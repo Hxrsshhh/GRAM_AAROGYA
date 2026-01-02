@@ -1,5 +1,11 @@
-
-export const InputGroup = ({ label, icon: Icon, placeholder, value, onChange, type = "text" }) => (
+export const InputGroup = ({
+  label,
+  icon: Icon,
+  placeholder,
+  value,
+  onChange,
+  type = "text",
+}) => (
   <div className="mb-6">
     <label className="block text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-2 ml-1">
       {label}

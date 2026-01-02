@@ -22,7 +22,6 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Toggle } from "@/components/ui/Toggle";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { useTheme } from "next-themes";
-import Link from "next/link";
 
 import ConfirmDeleteModal from "@/components/modals/confirmDeleteModal";
 import { deleteUserAccount } from "@/lib/api/user";

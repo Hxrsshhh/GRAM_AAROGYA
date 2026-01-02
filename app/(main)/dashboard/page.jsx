@@ -30,6 +30,7 @@ import Button from "@/components/ui/Button";
 import Link from "next/link";
 import { getDashboardData } from "@/lib/api/dashboard";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 
 export default function Dashboard() {
   const [stats, setStats] = useState([]);
@@ -44,6 +45,7 @@ export default function Dashboard() {
     async function loadDashboard() {
       try {
         const data = await getDashboardData();
+        console.log(data);
 
         const formattedStats = [
           {
@@ -191,7 +193,7 @@ export default function Dashboard() {
                 </span>
               </div>
             </div>
-            <div className="h-[300px] w-full min-h-[300px] relative">
+            <div className="h-75 w-full min-h-75 relative">
               <ResponsiveContainer width="99%" height="100%">
                 <AreaChart
                   data={chartData}
@@ -340,15 +342,17 @@ export default function Dashboard() {
                     whileHover={{ y: -4, scale: 1.01 }}
                     className="cursor-pointer group relative flex items-center gap-4 p-4 rounded-[2rem] border border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-all duration-300"
                   >
-                    <div className="relative w-16 h-16 flex-shrink-0">
-                      <img
-                        src={
-                          issue.images?.[0] ||
-                          "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=100&q=80"
-                        }
-                        alt={issue.title}
-                        className="w-full h-full rounded-2xl object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-                      />
+                    <div className="relative w-16 h-16 shrink-0">
+                      <div className="relative w-full h-full">
+                        <Image
+                          src={issue.images?.[0]}
+                          alt={issue.title}
+                          fill
+                          className="rounded-2xl object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                          sizes="(max-width: 768px) 100vw, 33vw"
+                        />
+                      </div>
+
                       <div
                         className={`absolute -top-1 -right-1 px-2 py-0.5 text-[7px] font-black text-white rounded-full uppercase tracking-tighter ${
                           issue.status === "resolved"
@@ -359,7 +363,7 @@ export default function Dashboard() {
                         {issue.status}
                       </div>
                     </div>
-                    <div className="flex-grow">
+                    <div className="grow">
                       <h3 className="font-black text-slate-800 dark:text-slate-100 text-sm mb-1 group-hover:text-emerald-600 transition-colors">
                         {issue.title}
                       </h3>

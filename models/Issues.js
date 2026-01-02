@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 
-
 const CommentSchema = new mongoose.Schema(
   {
     text: {
@@ -88,17 +87,17 @@ const IssueSchema = new mongoose.Schema(
         required: true,
       },
       coordinates: {
-        type: String, 
+        type: String,
       },
     },
 
     images: {
-      type: [String], 
+      type: [String],
       default: [],
     },
 
     voiceNote: {
-      type: String, 
+      type: String,
       default: "",
     },
 
@@ -111,7 +110,7 @@ const IssueSchema = new mongoose.Schema(
       ref: "User",
       index: true,
     },
-    
+
     viewCount: {
       type: Number,
       default: 0,
@@ -136,10 +135,9 @@ const IssueSchema = new mongoose.Schema(
       type: [CommentSchema],
       default: [],
     },
-
   },
   {
-    timestamps: true, 
+    timestamps: true,
   }
 );
 
@@ -154,5 +152,4 @@ IssueSchema.index({
   "location.lng": 1,
 });
 
-export default mongoose.models.Issue ||
-  mongoose.model("Issue", IssueSchema);
+export default mongoose.models.Issue || mongoose.model("Issue", IssueSchema);

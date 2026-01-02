@@ -1,3 +1,5 @@
+
+
 export async function getAllIssues() {
   const res = await fetch("/api/issues", {
     method: "GET",
@@ -48,7 +50,6 @@ export async function getCommentsByIssueId(issueId) {
   return data.comments;
 }
 
-
 export const fetchCivicIssues = async () => {
   try {
     const response = await fetch("/api/issues", {
@@ -63,15 +64,12 @@ export const fetchCivicIssues = async () => {
 
     return rawIssues
       .map((issue) => {
-
         const lat = parseFloat(issue.location.latitude || issue.location.lat);
         const lng = parseFloat(issue.location.longitude || issue.location.lng);
 
-  
         if (isNaN(lat) || isNaN(lng)) return null;
 
         return {
-        
           id: issue._id,
           title: issue.title,
           category: issue.category,
@@ -84,7 +82,7 @@ export const fetchCivicIssues = async () => {
           imageUrl: issue.images || null,
         };
       })
-      .filter((issue) => issue !== null); 
+      .filter((issue) => issue !== null);
   } catch (error) {
     console.error("Fetch Error:", error);
     return [];
@@ -97,7 +95,6 @@ const formatRelativeTime = (dateString) => {
   const now = new Date();
   const reported = new Date(dateString);
 
-  
   if (isNaN(reported.getTime())) return "Recently";
 
   const diffInMs = now - reported;

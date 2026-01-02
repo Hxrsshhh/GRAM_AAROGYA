@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, createContext, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -8,84 +8,28 @@ import {
   ShieldCheck,
   ShieldAlert,
   Archive,
-  MessageSquare,
   MapPin,
   Clock,
   User,
-  AlertTriangle,
   Send,
   ThumbsUp,
   Eye,
   Trash2,
-  Mic,
-  Image as ImageIcon,
   ExternalLink,
-  History,
   Lock,
+  ChevronRight,
+  Activity,
 } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
-// --- Theme Management ---
-const ThemeContext = createContext({ theme: "dark", setTheme: () => {} });
-const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState("dark");
-  useEffect(() => {
-    document.documentElement.classList.remove("light", "dark");
-    document.documentElement.classList.add(theme);
-  }, [theme]);
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-};
-const useTheme = () => useContext(ThemeContext);
+import { InfoCard } from "@/components/ui/InfoCard";
+import { Stat } from "@/components/ui/Stat";
+import { ToggleButton } from "@/components/ui/ToggleButton";
+import { SelectField } from "@/components/ui/Selectefield";
 
-// --- Mock Data representing a Mongoose Document ---
-const INITIAL_ISSUE = {
-  _id: "64a2f1b2c9e4b30012345678",
-  title: "Critical Water Main Rupture - Sector 7",
-  description:
-    "A major water line has burst near the central intersection, causing significant flooding and loss of pressure to approximately 200 residential units. Immediate excavation required.",
-  category: "infrastructure",
-  priority: "High",
-  status: "in-progress", // enum: ["pending", "in-progress", "resolved"]
-  isVerified: false,
-  isArchived: false,
-  location: {
-    address: "123 North Sector Blvd, Metro City",
-    lat: 12.9716,
-    lng: 77.5946,
-    coordinates: "12.9716, 77.5946",
-  },
-  images: [
-    "https://images.unsplash.com/photo-1584464431734-601962383c27?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1542044896530-05d85be9b11a?auto=format&fit=crop&q=80&w=800",
-  ],
-  voiceNote: "https://example.com/audio/voice_note_01.mp3",
-  upvotes: 42,
-  viewCount: 158,
-  reportedBy: {
-    _id: "u123",
-    name: "Alex Rivera",
-    email: "arivera@city.gov",
-  },
-  comments: [
-    {
-      _id: "c1",
-      text: "Excavation team dispatched at 0800 hrs.",
-      createdBy: { name: "John Foreman" },
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-    },
-    {
-      _id: "c2",
-      text: "Traffic police notified to redirect vehicles.",
-      createdBy: { name: "Sarah Traffic" },
-      createdAt: new Date(Date.now() - 43200000).toISOString(),
-    },
-  ],
-  createdAt: new Date(Date.now() - 172800000).toISOString(),
-  updatedAt: new Date().toISOString(),
-};
+import ConfirmIssueDeleteModal from "@/components/modals/confirmdeletIssueModal";
+import Image from "next/image";
 
 const CATEGORIES = [
   "infrastructure",
@@ -99,406 +43,424 @@ const CATEGORIES = [
 const STATUSES = ["pending", "in-progress", "resolved"];
 const PRIORITIES = ["Low", "Medium", "High", "Critical"];
 
-export const IssueDetail = () => {
-  const { theme } = useTheme();
-  const [issue, setIssue] = useState(INITIAL_ISSUE);
+export default function IssueDetail() {
+  const [issue, setIssue] = useState(null);
   const [commentText, setCommentText] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const handleUpdate = (field, value) => {
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const { id } = useParams();
+  const router = useRouter();
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    const fetchIssue = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/admin/issues/${id}`);
+        if (!res.ok) throw new Error("Failed to fetch");
+        const data = await res.json();
+        setIssue(data);
+      } catch (err) {
+        console.error("Fetch Error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (id) fetchIssue();
+  }, [id]);
+
+  const handleUpdateLocal = (field, value) => {
     setIssue((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
-    setIsSaving(true);
-    // Simulate API call to backend Mongoose endpoint
-    setTimeout(() => {
-      setIsSaving(false);
-    }, 1200);
+  const addComment = async () => {
+    if (!commentText.trim() || !issue) return;
+    const adminId = session?.user?.id;
+    try {
+      const res = await fetch(`/api/admin/issues/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          comment: {
+            text: commentText,
+            createdBy: adminId,
+            createdAt: new Date(),
+          },
+        }),
+      });
+      if (res.ok) {
+        const updatedData = await res.json();
+        setIssue(updatedData);
+        setCommentText("");
+      }
+    } catch (err) {
+      console.error("Comment Error:", err);
+    }
   };
 
-  const addComment = () => {
-    if (!commentText.trim()) return;
-    const newComment = {
-      _id: Math.random().toString(),
-      text: commentText,
-      createdBy: { name: "Admin Manager" },
-      createdAt: new Date().toISOString(),
-    };
-    setIssue((prev) => ({ ...prev, comments: [...prev.comments, newComment] }));
-    setCommentText("");
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      const res = await fetch(`/api/admin/issues/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: issue.status,
+          priority: issue.priority,
+          category: issue.category,
+          isVerified: issue.isVerified,
+          isArchived: issue.isArchived,
+        }),
+      });
+      if (!res.ok) throw new Error("Update failed");
+      alert("Database synced successfully");
+    } catch (err) {
+      alert("Error updating record");
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  const handleConfirmDelete = async () => {
+    if (!confirm("CRITICAL: Permanently delete this record?")) return;
+    try {
+      const res = await fetch(`/api/admin/issues/${id}`, { method: "DELETE" });
+      if (res.ok) router.push("/admin/issues");
+      setDeleteModalOpen(false);
+    } catch (err) {
+      console.error("Delete Error:", err);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  if (loading)
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 rounded-full border-4 border-emerald-500/10 border-t-emerald-500 animate-spin" />
+          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">
+            Loading Intelligence
+          </p>
+        </div>
+      </div>
+    );
+
+  if (!issue)
+    return (
+      <div className="h-screen flex items-center justify-center font-bold">
+        Record Missing.
+      </div>
+    );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500 font-['Plus_Jakarta_Sans',sans-serif]">
-      {/* Header Navigation */}
-      <nav className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 p-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+    <div className="h-screen w-full flex flex-col bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 overflow-hidden font-['Plus_Jakarta_Sans',sans-serif]">
+      {/* --- HEADER / MOBILE BOTTOM DOCK --- */}
+      {/* Fixed to bottom on mobile, stays at top on desktop */}
+      <header className="fixed bottom-0 left-0 right-0 lg:relative lg:bottom-auto h-16 lg:h-14 flex-shrink-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t lg:border-t-0 lg:border-b border-slate-200 dark:border-slate-800 z-50 shadow-[0_-10px_25px_rgba(0,0,0,0.1)] lg:shadow-none">
+        <div className="max-w-7xl mx-auto h-full px-4 md:px-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+            <button
+              onClick={() => router.back()}
+              className="p-2.5 bg-slate-100 dark:bg-slate-800 lg:bg-transparent hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-all active:scale-90"
+            >
               <ArrowLeft size={20} />
             </button>
-            <div>
+            <div className="hidden md:block">
               <div className="flex items-center gap-2">
-                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500">
-                  Admin Oversight
+                <p className="text-[8px] font-black uppercase tracking-widest text-emerald-500">
+                  Node Cluster
                 </p>
-                {issue.isArchived && (
-                  <span className="bg-amber-500/10 text-amber-500 text-[8px] font-black uppercase px-2 py-0.5 rounded border border-amber-500/20">
-                    Archived
-                  </span>
-                )}
+                <ChevronRight size={8} className="text-slate-400" />
+                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                  ID: {issue._id}
+                </p>
               </div>
-              <h2 className="text-sm font-bold truncate max-w-[200px] md:max-w-md">
-                ID: {issue._id}
+              <h2 className="text-xs font-black truncate leading-none mt-1">
+                Issue Management Console
               </h2>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-600/20"
-            >
-              {isSaving ? (
-                "Syncing..."
-              ) : (
-                <>
-                  <Save size={14} /> Update Record
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      </nav>
 
-      <main className="max-w-6xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Editor & Logs */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* TOP ADMIN BAR: Status, Verify, Archive */}
-          <section className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="flex flex-col md:flex-row gap-8 items-center justify-between">
-              {/* Status Switcher (Maps to Mongoose enum) */}
-              <div className="w-full md:w-auto flex-1">
-                <label className="text-[9px] font-black uppercase text-slate-400 mb-2 block tracking-widest flex items-center gap-2">
-                  <History size={10} /> Lifecycle Status
-                </label>
-                <div className="flex bg-slate-100 dark:bg-slate-950 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-                  {STATUSES.map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => handleUpdate("status", s)}
-                      className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all ${
-                        issue.status === s
-                          ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
-                          : "text-slate-500 hover:text-slate-700"
-                      }`}
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white px-5 lg:px-4 py-2.5 lg:py-2 rounded-xl lg:rounded-lg text-[10px] lg:text-[9px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-600/20 active:scale-95"
+          >
+            {isSaving ? (
+              "Syncing..."
+            ) : (
+              <>
+                <Save size={14} />{" "}
+                <span className="hidden xs:inline">Sync Database</span>
+                <span className="xs:hidden">Sync</span>
+              </>
+            )}
+          </button>
+        </div>
+      </header>
+
+      {/* --- DASHBOARD VIEWPORT --- */}
+      <div className="flex-1 overflow-y-auto lg:overflow-hidden pb-24 lg:pb-0">
+        <main className="max-w-7xl mx-auto h-full flex flex-col lg:flex-row p-4 md:p-6 gap-6">
+          <div className="w-full lg:flex-2 flex flex-col gap-6 lg:overflow-y-auto lg:pr-2 custom-scrollbar">
+            <section className="bg-white mt-16 dark:bg-slate-900/50 rounded-2xl p-2 md:p-3 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0 shadow-sm">
+              <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-xl w-full sm:w-auto overflow-x-auto scrollbar-hide">
+                {STATUSES.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => handleUpdateLocal("status", s)}
+                    className={`flex-1 sm:flex-none px-4 md:px-6 py-2 rounded-lg text-[9px] font-black uppercase transition-all whitespace-nowrap ${
+                      issue.status === s
+                        ? "bg-white dark:bg-slate-800 text-emerald-500 shadow-sm"
+                        : "text-slate-400 hover:text-slate-600"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-3 w-full sm:w-auto justify-center">
+                <ToggleButton
+                  label="Verified"
+                  active={issue.isVerified}
+                  onClick={() =>
+                    handleUpdateLocal("isVerified", !issue.isVerified)
+                  }
+                  ActiveIcon={ShieldCheck}
+                  InactiveIcon={ShieldAlert}
+                  activeClass="bg-blue-500/10 border-blue-500/30 text-blue-500"
+                />
+                <ToggleButton
+                  label="Archive"
+                  active={issue.isArchived}
+                  onClick={() =>
+                    handleUpdateLocal("isArchived", !issue.isArchived)
+                  }
+                  ActiveIcon={Archive}
+                  InactiveIcon={Archive}
+                  activeClass="bg-amber-500/10 border-amber-500/30 text-amber-500"
+                />
+              </div>
+            </section>
+
+            {/* DETAIL CARD */}
+            <section className="bg-white dark:bg-slate-900 rounded-[1.5rem] lg:rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden shrink-0">
+              {issue.isArchived && (
+                <div className="absolute inset-0 bg-slate-950/20 backdrop-blur-[2px] z-10 flex items-center justify-center pointer-events-none">
+                  <div className="bg-amber-500 text-white px-6 py-2 rounded-full font-black uppercase tracking-[0.2em] text-[9px] shadow-2xl flex items-center gap-2">
+                    <Lock size={14} /> Locked Record
+                  </div>
+                </div>
+              )}
+
+              <div className="p-6 lg:p-8">
+                <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                  <SelectField
+                    label="Priority"
+                    value={issue.priority}
+                    options={PRIORITIES}
+                    onChange={(v) => handleUpdateLocal("priority", v)}
+                  />
+                  <SelectField
+                    label="Category"
+                    value={issue.category}
+                    options={CATEGORIES}
+                    onChange={(v) => handleUpdateLocal("category", v)}
+                  />
+                </div>
+                <h1 className="text-2xl lg:text-3xl font-black mb-4 tracking-tight leading-tight">
+                  {issue.title}
+                </h1>
+                <div className="p-4 lg:p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800/50 mb-6">
+                  <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-xs lg:text-sm">
+                    {issue.description}
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <InfoCard
+                    icon={<MapPin size={14} />}
+                    label="Location"
+                    value={issue.location?.address}
+                    color="text-emerald-500"
+                  />
+                  <InfoCard
+                    icon={<Clock size={14} />}
+                    label="Timestamp"
+                    value={new Date(issue.createdAt).toLocaleString()}
+                    color="text-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* IMAGES */}
+              <div className="px-6 lg:px-8 pb-8">
+                <p className="text-[9px] font-black uppercase text-slate-400 mb-4 tracking-widest">
+                  Attachments
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {issue.images?.map((img, i) => (
+                    <div
+                      key={i}
+                      className="aspect-square rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800 group relative"
                     >
-                      {s}
-                    </button>
+                      <div className="relative w-full h-full overflow-hidden">
+                        <Image
+                          src={img}
+                          alt="Evidence"
+                          fill
+                          className="object-cover transition-transform group-hover:scale-105"
+                          sizes="(max-width: 768px) 100vw, 400px"
+                        />
+                      </div>
+
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <ExternalLink className="text-white" size={16} />
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
+            </section>
+          </div>
 
-              {/* Boolean Toggles: Verify and Archive */}
-              <div className="flex items-center gap-6">
-                <div className="flex flex-col items-center gap-2">
+          {/* RIGHT ACTIVITY COLUMN */}
+          <aside className="w-full lg:w-[380px] flex flex-col gap-6 lg:overflow-hidden">
+            <section className="bg-emerald-600 rounded-[1.5rem] p-5 text-white grid grid-cols-2 gap-2 shadow-xl shadow-emerald-600/20 flex-shrink-0">
+              <Stat
+                icon={<ThumbsUp size={14} />}
+                label="Upvotes"
+                value={issue.upvotes}
+              />
+              <Stat
+                icon={<Eye size={14} />}
+                label="Views"
+                value={issue.viewCount}
+              />
+            </section>
+
+            {/* CHAT/LOGS - Constrained height on mobile for 3-4 comments visibility */}
+            <section className="h-105 lg:h-auto lg:flex-1 bg-white dark:bg-slate-900 rounded-[1.5rem] lg:rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col overflow-hidden">
+              <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm shrink-0">
+                <div className="flex items-center gap-2">
+                  <Activity size={16} className="text-emerald-500" />
+                  <h3 className="text-[9px] font-black uppercase tracking-widest">
+                    Internal Activity
+                  </h3>
+                </div>
+                <span className="text-[8px] font-bold bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
+                  {issue.comments?.length || 0} LOGS
+                </span>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar">
+                <AnimatePresence mode="popLayout">
+                  {issue.comments?.map((comment, idx) => (
+                    <motion.div
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      key={idx}
+                      className="flex gap-3"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 border border-slate-200 dark:border-slate-700">
+                        <User size={12} className="text-slate-400" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-[11px] leading-relaxed p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                          {comment.text}
+                        </p>
+                        <div className="flex justify-between items-center mt-1.5 px-1">
+                          <span className="text-[8px] font-black text-emerald-500 uppercase">
+                            {comment.createdBy?.name || "System"}
+                          </span>
+                          <span className="text-[8px] font-bold text-slate-400">
+                            {new Date(comment.createdAt).toLocaleTimeString(
+                              [],
+                              { hour: "2-digit", minute: "2-digit" }
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+
+              <div className="p-4 bg-slate-50 dark:bg-slate-950/50 border-t border-slate-100 dark:border-slate-800 flex-shrink-0">
+                <div className="relative">
+                  <textarea
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    placeholder="Write a log entry..."
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 pr-10 text-[11px] font-bold outline-none focus:ring-4 ring-emerald-500/10 transition-all resize-none h-[50px]"
+                  />
                   <button
-                    onClick={() =>
-                      handleUpdate("isVerified", !issue.isVerified)
-                    }
-                    className={`p-4 rounded-2xl border-2 transition-all ${
-                      issue.isVerified
-                        ? "bg-blue-500/10 border-blue-500 text-blue-500"
-                        : "border-slate-200 dark:border-slate-800 text-slate-300 hover:border-blue-500/50"
-                    }`}
+                    onClick={addComment}
+                    disabled={!commentText.trim()}
+                    className="absolute right-1 bottom-3 p-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 dark:disabled:bg-slate-800 text-white rounded-lg transition-all"
                   >
-                    {issue.isVerified ? (
-                      <ShieldCheck size={24} />
-                    ) : (
-                      <ShieldAlert size={24} />
-                    )}
+                    <Send size={14} />
                   </button>
-                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                    Verify
-                  </span>
-                </div>
-
-                <div className="flex flex-col items-center gap-2">
-                  <button
-                    onClick={() =>
-                      handleUpdate("isArchived", !issue.isArchived)
-                    }
-                    className={`p-4 rounded-2xl border-2 transition-all ${
-                      issue.isArchived
-                        ? "bg-amber-500/10 border-amber-500 text-amber-500"
-                        : "border-slate-200 dark:border-slate-800 text-slate-300 hover:border-amber-500/50"
-                    }`}
-                  >
-                    <Archive size={24} />
-                  </button>
-                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                    Archive
-                  </span>
                 </div>
               </div>
-            </div>
-          </section>
+            </section>
 
-          {/* Issue Content Detail */}
-          <section className="bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm relative">
-            {issue.isArchived && (
-              <div className="absolute inset-0 bg-slate-950/10 backdrop-blur-[1px] z-10 pointer-events-none flex items-center justify-center">
-                <div className="bg-amber-500 text-white px-6 py-2 rounded-full font-black uppercase tracking-[0.2em] text-xs flex items-center gap-2 shadow-2xl">
-                  <Lock size={14} /> Read Only Mode (Archived)
+            {/* ACTION FOOTER */}
+            <section className="bg-white mb-20 dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 flex-shrink-0">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-8 h-8 bg-emerald-500/10 text-emerald-500 rounded-lg flex items-center justify-center">
+                  <User size={16} />
                 </div>
-              </div>
-            )}
-
-            <div className="p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[8px] font-black uppercase text-slate-400 tracking-widest">
-                    Priority Tier
-                  </label>
-                  <select
-                    value={issue.priority}
-                    onChange={(e) => handleUpdate("priority", e.target.value)}
-                    className="bg-slate-50 dark:bg-slate-800 border-none rounded-lg text-xs font-bold px-3 py-1 outline-none"
-                  >
-                    {PRIORITIES.map((p) => (
-                      <option key={p} value={p}>
-                        {p}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[8px] font-black uppercase text-slate-400 tracking-widest">
-                    Category
-                  </label>
-                  <select
-                    value={issue.category}
-                    onChange={(e) => handleUpdate("category", e.target.value)}
-                    className="bg-slate-50 dark:bg-slate-800 border-none rounded-lg text-xs font-bold px-3 py-1 outline-none"
-                  >
-                    {CATEGORIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <h1 className="text-3xl font-black mb-4 leading-tight">
-                {issue.title}
-              </h1>
-              <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm mb-8 bg-slate-50 dark:bg-slate-950/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
-                {issue.description}
-              </p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center gap-2 text-emerald-500 mb-1">
-                    <MapPin size={14} />
-                    <span className="text-[10px] font-black uppercase">
-                      Address
-                    </span>
-                  </div>
-                  <p className="text-xs font-bold">{issue.location.address}</p>
-                </div>
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center gap-2 text-blue-500 mb-1">
-                    <Clock size={14} />
-                    <span className="text-[10px] font-black uppercase">
-                      Reported
-                    </span>
-                  </div>
-                  <p className="text-xs font-bold">
-                    {new Date(issue.createdAt).toLocaleString()}
+                <div>
+                  <p className="text-[9px] font-black">
+                    {issue.reportedBy?.name || "Reporter"}
+                  </p>
+                  <p className="text-[8px] font-bold text-slate-400">
+                    {issue.reportedBy?.email || "No email"}
                   </p>
                 </div>
               </div>
-            </div>
-
-            {/* Evidence Gallery */}
-            <div className="px-8 pb-8">
-              <label className="text-[9px] font-black uppercase text-slate-400 mb-4 block tracking-widest">
-                Attached Evidence
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {issue.images.map((img, i) => (
-                  <div
-                    key={i}
-                    className="aspect-square rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 group relative"
-                  >
-                    <img
-                      src={img}
-                      className="w-full h-full object-cover"
-                      alt="Evidence"
-                    />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <ExternalLink className="text-white" size={20} />
-                    </div>
-                  </div>
-                ))}
-                <button className="aspect-square rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-slate-400 hover:border-emerald-500 hover:text-emerald-500 transition-all">
-                  <ImageIcon size={24} />
-                  <span className="text-[9px] font-black uppercase mt-2">
-                    Upload
-                  </span>
-                </button>
-              </div>
-            </div>
-          </section>
-
-          {/* Activity / Comments Feed */}
-          <section className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-3">
-                <MessageSquare className="text-emerald-500" />
-                <h3 className="text-lg font-black tracking-tight">
-                  Case Activity
-                </h3>
-              </div>
-              <span className="text-xs font-bold text-slate-400">
-                {issue.comments.length} Comments
-              </span>
-            </div>
-
-            <div className="space-y-6 mb-8">
-              <AnimatePresence mode="popLayout">
-                {issue.comments.map((comment) => (
-                  <motion.div
-                    key={comment._id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="flex gap-4"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0">
-                      <User size={18} className="text-slate-400" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[11px] font-black uppercase">
-                          {comment.createdBy.name}
-                        </span>
-                        <span className="text-[9px] font-bold text-slate-400">
-                          {new Date(comment.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 text-sm border border-slate-100 dark:border-slate-800">
-                        {comment.text}
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-
-            <div className="relative">
-              <textarea
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                placeholder="Log internal update or citizen response..."
-                className="w-full bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 pr-16 text-sm font-semibold outline-none focus:ring-2 ring-emerald-500/20 focus:border-emerald-500 min-h-[120px] transition-all"
-              />
               <button
-                onClick={addComment}
-                className="absolute right-4 bottom-4 p-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-lg shadow-emerald-600/20 transition-all"
+                onClick={() => setDeleteModalOpen(true)}
+                className="w-full py-2.5 rounded-xl bg-rose-500/10 text-rose-500 text-[9px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center gap-2"
               >
-                <Send size={18} />
+                <Trash2 size={12} /> Purge
               </button>
-            </div>
-          </section>
-        </div>
 
-        {/* Right Sidebar: Analytics & User Context */}
-        <div className="space-y-8">
-          {/* Engagement Card */}
-          <div className="bg-emerald-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-emerald-600/20 relative overflow-hidden">
-            <div className="grid grid-cols-2 gap-8 relative z-10">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <ThumbsUp size={16} />
-                  <span className="text-2xl font-black">{issue.upvotes}</span>
-                </div>
-                <p className="text-[9px] font-black uppercase opacity-70">
-                  Upvotes
-                </p>
-              </div>
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Eye size={16} />
-                  <span className="text-2xl font-black">{issue.viewCount}</span>
-                </div>
-                <p className="text-[9px] font-black uppercase opacity-70">
-                  Total Views
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Reporter Info */}
-          <section className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
-            <h4 className="text-[10px] font-black uppercase text-slate-400 mb-6 tracking-[0.2em]">
-              Reporter Identity
-            </h4>
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-14 h-14 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center">
-                <User size={28} />
-              </div>
-              <div>
-                <p className="text-sm font-black">{issue.reportedBy.name}</p>
-                <p className="text-[10px] font-bold text-slate-400">
-                  {issue.reportedBy.email}
-                </p>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <button className="w-full py-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all">
-                Internal Message
-              </button>
-              <button className="w-full py-3 border border-slate-200 dark:border-slate-800 rounded-xl text-[9px] font-black uppercase tracking-widest hover:border-emerald-500 transition-all">
-                View User Profile
-              </button>
-            </div>
-          </section>
-
-          {/* Risk Actions */}
-          <section className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="p-4 bg-rose-500/5 border border-rose-500/10 rounded-2xl mb-4 flex items-center gap-3">
-              <AlertTriangle className="text-rose-500" size={18} />
-              <span className="text-[10px] font-black uppercase text-rose-500">
-                Hazardous Operations
-              </span>
-            </div>
-            <button className="w-full py-3 rounded-xl bg-rose-500/10 text-rose-500 text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center gap-2">
-              <Trash2 size={14} /> Purge This Record
-            </button>
-          </section>
-        </div>
-      </main>
+              <ConfirmIssueDeleteModal
+                open={deleteModalOpen}
+                onClose={() => setDeleteModalOpen(false)}
+                onConfirm={handleConfirmDelete}
+                loading={isDeleting}
+                issueTitle={issue?.title}
+              />
+            </section>
+          </aside>
+        </main>
+      </div>
 
       <style
         dangerouslySetInnerHTML={{
           __html: `
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&display=swap');
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
         
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
+        @media (min-width: 1024px) {
+          body { overflow: hidden; }
+        }
+
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `,
         }}
       />
     </div>
-  );
-};
-
-export default function App() {
-  return (
-    <ThemeProvider>
-      <IssueDetail />
-    </ThemeProvider>
   );
 }

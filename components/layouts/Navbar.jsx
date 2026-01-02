@@ -36,7 +36,7 @@ function getInitials(name) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-const Navbar = ( ) => {
+const Navbar = () => {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -102,17 +102,12 @@ const Navbar = ( ) => {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-500 transition-all duration-300 ease-in-out ${
-          scrolled || isOpen
-            ? "bg-white/90 dark:bg-slate-950/90 backdrop-blur-md py-3 border-b border-slate-200 dark:border-slate-800 shadow-sm"
-            : "bg-transparent py-6"
-        }`}
+        className={`fixed top-0 left-0 right-0 z-500 transition-all duration-300 ease-in-out bg-white/90 dark:bg-slate-950/90 backdrop-blur-md py-3 border-b border-slate-200 dark:border-slate-800 shadow-sm`}
       >
-        <div className="max-w-[86rem] mx-auto px-6 lg:px-12 flex items-center justify-between">
-          {/* Left: Logo */}
+        <div className="max-w-344 mx-auto px-6 lg:px-12 flex items-center justify-between">
+         
           <div className="flex items-center gap-3 cursor-pointer group shrink-0 relative z-110">
             <Link href="/">
-              {" "}
               <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-600/20">
                 <Activity className="text-white w-5 h-5" />
               </div>
@@ -151,7 +146,7 @@ const Navbar = ( ) => {
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
                   className="flex items-center gap-2 p-1.5 pr-4 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-all active:scale-95"
                 >
-                  <div className="w-8 h-8 rounded-full  flex bg-emerald-500 items-center justify-center text-white font-bold text-xs">
+                  <div className="w-8 h-8 rounded-full flex bg-emerald-500 items-center justify-center text-white font-bold text-xs">
                     {getInitials(`${session?.user.name}`)}
                   </div>
                   <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
@@ -213,7 +208,7 @@ const Navbar = ( ) => {
                   <Link
                     href={`${link.path}`}
                     key={link.label}
-                    onClick={() => setIsOpen(false)} // FIX: Closes menu on click
+                    onClick={() => setIsOpen(false)}
                   >
                     <button className="w-full flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
                       <div className="flex items-center gap-4">
@@ -240,7 +235,7 @@ const Navbar = ( ) => {
                   <Link
                     href={`${item.path}`}
                     key={item.label}
-                    onClick={() => setIsOpen(false)} // FIX: Closes menu on click
+                    onClick={() => setIsOpen(false)}
                   >
                     <button className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
                       <item.icon size={20} className="text-slate-400" />
@@ -258,7 +253,7 @@ const Navbar = ( ) => {
             <button
               onClick={() => {
                 setTheme(isDark ? "light" : "dark");
-                setIsOpen(false); // Optional: Close menu after theme change
+                setIsOpen(false);
               }}
               className="w-full flex items-center justify-between p-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800"
             >
@@ -275,7 +270,7 @@ const Navbar = ( ) => {
             <Button
               onClick={handleLogout}
               variant="danger"
-              className="w-full py-6 border-red-100 dark:border-red-900/30 text-red-500 bg-red-500/50 hover:bg-red-500/80 rounded-2xl font-bold"
+              className="w-full py-6 border-red-100 dark:border-red-900/30 text-red-500 bg-red-500/5 hover:bg-red-500/10 rounded-2xl font-bold"
             >
               <LogOut className="w-5 h-5 mr-3" /> Log Out
             </Button>

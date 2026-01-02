@@ -30,7 +30,7 @@ export const authOptions = {
         return {
           id: profile.id,
           name: profile.name,
-          email: profile.email, // ⚠️ may be null
+          email: profile.email,
           image: profile.picture?.data?.url ?? null,
         };
       },

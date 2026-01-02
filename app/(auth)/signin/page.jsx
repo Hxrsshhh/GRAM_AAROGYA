@@ -19,7 +19,9 @@ import MouseGlow from "@/components/ui/MouseGlow";
 
 import { signIn } from "next-auth/react";
 
-const SignInForm = () => {
+
+export default function SignInPage() {
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -46,7 +48,6 @@ const SignInForm = () => {
         return;
       }
 
-      router.push("/dashboard");
       router.refresh();
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
@@ -57,12 +58,26 @@ const SignInForm = () => {
   };
 
   const handleGoogleLogin = async () => {
-    await signIn("google", {
-      callbackUrl: "/dashboard",
-    });
+    await signIn("google");
   };
 
   return (
+
+    <main className="h-[92vh] lg:h-screen sm:h-auto sm:min-h-screen relative w-full overflow-hidden bg-white dark:bg-slate-950 flex items-center justify-center px-6 py-12">
+      {/* High-End Background Effects */}
+      <MouseGlow />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] bg-emerald-500/10 dark:bg-emerald-500/5 blur-[130px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 dark:bg-cyan-500/5 blur-[100px] rounded-full" />
+      </div>
+
+      <Suspense
+        fallback={
+          <div className="flex items-center gap-3 font-black text-emerald-500 animate-pulse">
+            <Activity className="animate-bounce" /> INITIALIZING...
+          </div>
+        }
+      >
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
@@ -71,12 +86,14 @@ const SignInForm = () => {
     >
       {/* Brand Identity */}
       <div className="flex flex-col items-center mb-10">
+        <Link href='/'>
         <motion.div
           whileHover={{ rotate: 15, scale: 1.1 }}
           className="w-16 h-16 bg-slate-900 dark:bg-emerald-600 rounded-2xl flex items-center justify-center shadow-2xl mb-6 cursor-pointer"
         >
           <Activity className="text-white w-9 h-9" />
         </motion.div>
+        </Link>
         <h1 className="text-4xl font-black tracking-tighter text-slate-900 dark:text-white mb-2 text-center">
           Welcome{" "}
           <span className="text-emerald-600 dark:text-emerald-400">Back</span>
@@ -175,28 +192,10 @@ const SignInForm = () => {
         </div>
       </div>
     </motion.div>
+      </Suspense>
+    </main>
+
+
   );
 };
 
-export default function SignInPage() {
-  return (
-    <main className="min-h-screen relative w-full overflow-hidden bg-white dark:bg-slate-950 flex items-center justify-center px-6 py-12">
-      {/* High-End Background Effects */}
-      <MouseGlow />
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] bg-emerald-500/10 dark:bg-emerald-500/5 blur-[130px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 dark:bg-cyan-500/5 blur-[100px] rounded-full" />
-      </div>
-
-      <Suspense
-        fallback={
-          <div className="flex items-center gap-3 font-black text-emerald-500 animate-pulse">
-            <Activity className="animate-bounce" /> INITIALIZING...
-          </div>
-        }
-      >
-        <SignInForm />
-      </Suspense>
-    </main>
-  );
-}
