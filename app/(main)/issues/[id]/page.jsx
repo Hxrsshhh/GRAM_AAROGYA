@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/Issue-badge";
 import { Card } from "@/components/ui/Issue-card";
 import Button from "@/components/ui/Button";
 import Image from "next/image";
+import { toast } from "sonner";
 
 export default function App() {
   const [issue, setIssue] = useState(null);
@@ -102,11 +103,11 @@ export default function App() {
       await createComment(issue._id, comment);
 
       setComment("");
-
+      toast.success("Comment Added successfully ")
       await syncIssueData();
     } catch (err) {
       console.error("Post Comment Error:", err);
-      alert("Failed to post: " + err.message);
+      toast.error("Failed to post: " + err.message);
     } finally {
       setIsSubmitting(false);
     }

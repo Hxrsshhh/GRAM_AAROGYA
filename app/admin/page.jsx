@@ -24,6 +24,8 @@ import {
 import { StatCard } from "@/components/ui/StatCard";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
+import { fireOneTimeToast } from "@/lib/oneTimeToast";
+import { useRouter } from "next/navigation";
 
 const CATEGORY_COLORS = {
   infrastructure: "#3b82f6", // Blue – stability, structure
@@ -55,6 +57,14 @@ export default function AdminDashboard() {
   });
 
   const [barSize, setBarSize] = useState(24);
+  const router = useRouter();
+
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      fireOneTimeToast("signinSuccess", "Welcome back!");
+      fireOneTimeToast("googleLoginSuccess", "Welcome back!");
+    });
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -98,6 +108,9 @@ export default function AdminDashboard() {
     color: CATEGORY_COLORS[cat.name?.toLowerCase()] || "#64748b",
   }));
 
+  const handleClick = (id) => {
+    router.push(`/admin/issues/${id}`);
+  };
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-500 font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
       <div className="fixed inset-0 pointer-events-none opacity-30">
@@ -130,7 +143,7 @@ export default function AdminDashboard() {
                   <p className="text-[10px] md:text-xs font-bold uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">
                     Admin Control Environment
                   </p>
-                  <span className="text-slate-300 dark:text-slate-800">{" "}</span>
+                  <span className="text-slate-300 dark:text-slate-800"> </span>
                   <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">
                     v4.0
                   </span>
@@ -325,6 +338,7 @@ export default function AdminDashboard() {
                 {dashboard.recentIssuess.map((issue) => (
                   <div
                     key={issue.id}
+                    onClick={() => handleClick(issue.id)}
                     className="p-5 active:bg-slate-50 dark:active:bg-slate-800/50 transition-colors"
                   >
                     <div className="flex justify-between items-start mb-2">
@@ -347,7 +361,7 @@ export default function AdminDashboard() {
                         </span>
                         <span
                           className={`text-[9px] font-black uppercase tracking-widest self-center ${
-                            issue.priority === "Emergency"
+                            issue.priority === "Critical"
                               ? "text-rose-500"
                               : issue.priority === "High"
                               ? "text-orange-500"
@@ -360,9 +374,9 @@ export default function AdminDashboard() {
                       <div className="flex items-center gap-1.5">
                         <div
                           className={`w-1.5 h-1.5 rounded-full ${
-                            issue.status === "Resolved"
+                            issue.status === "resolved"
                               ? "bg-emerald-500"
-                              : issue.status === "In Progress"
+                              : issue.status === "in-progress"
                               ? "bg-blue-500"
                               : "bg-orange-500"
                           }`}
@@ -403,6 +417,7 @@ export default function AdminDashboard() {
                   {dashboard.recentIssuess.map((issue) => (
                     <tr
                       key={issue.id}
+                      onClick={() => handleClick(issue.id)}
                       className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
                     >
                       <td className="px-8 py-5">
@@ -422,9 +437,9 @@ export default function AdminDashboard() {
                         <div className="flex items-center gap-2">
                           <div
                             className={`w-2 h-2 rounded-full ${
-                              issue.status === "Resolved"
+                              issue.status === "resolved"
                                 ? "bg-emerald-500"
-                                : issue.status === "In Progress"
+                                : issue.status === "in-progress"
                                 ? "bg-blue-500"
                                 : "bg-orange-500"
                             }`}
@@ -437,7 +452,7 @@ export default function AdminDashboard() {
                       <td className="px-8 py-5">
                         <span
                           className={`text-[10px] font-black uppercase tracking-widest ${
-                            issue.priority === "Emergency"
+                            issue.priority === "Critical"
                               ? "text-rose-500"
                               : issue.priority === "High"
                               ? "text-orange-500"

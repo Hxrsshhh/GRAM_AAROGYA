@@ -46,6 +46,7 @@ export default function Settings() {
   const handleDelete = async () => {
     try {
       setLoading(true);
+      localStorage.setItem("AccountDeleted", "true");
       await deleteUserAccount();
       await signOut({ callbackUrl: "/" });
     } catch (err) {

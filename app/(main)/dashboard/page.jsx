@@ -31,6 +31,8 @@ import Link from "next/link";
 import { getDashboardData } from "@/lib/api/dashboard";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
+import { toast } from "sonner";
+import { fireOneTimeToast } from "@/lib/oneTimeToast";
 
 export default function Dashboard() {
   const [stats, setStats] = useState([]);
@@ -40,12 +42,19 @@ export default function Dashboard() {
 
   const { data: session } = useSession();
   const user = session?.user;
+   
+
 
   useEffect(() => {
+
+  fireOneTimeToast("googleLoginSuccess", "Signed in with Google 🚀");
+  fireOneTimeToast("signupSuccess", "Welcome to Pulse 🎉");
+  fireOneTimeToast("signinSuccess", "Welcome Back to Pulse 🎉");
+
+
     async function loadDashboard() {
       try {
         const data = await getDashboardData();
-        console.log(data);
 
         const formattedStats = [
           {

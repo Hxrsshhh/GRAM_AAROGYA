@@ -26,6 +26,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 import { InputWrapper } from "@/components/ui/InputWrapper";
+import { toast } from "sonner";
 
 const AiScan = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -119,7 +120,7 @@ const AiScan = () => {
 
   const handleGetLocation = async () => {
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
+      toast.info("Geolocation is not supported by your browser");
       return;
     }
 
@@ -249,6 +250,7 @@ const AiScan = () => {
       alert("Something went wrong");
     } finally {
       setIsSubmitting(false);
+      sessionStorage.setItem('IssueAdded','true');
       router.push("/issues");
     }
   };

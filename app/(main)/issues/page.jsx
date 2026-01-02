@@ -16,6 +16,7 @@ import { Card } from "@/components/ui/Issue-card";
 import Link from "next/link";
 import { getAllIssues } from "@/app/api/issues";
 import Image from "next/image";
+import { fireOneTimeToast } from "@/lib/oneTimeToast";
 
 export default function App() {
   const [issues, setIssues] = useState([]);
@@ -25,6 +26,9 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState("all");
 
   useEffect(() => {
+
+    fireOneTimeToast('IssueAdded','Issue Added Successfully');
+
     async function loadIssues() {
       try {
         setLoading(true);

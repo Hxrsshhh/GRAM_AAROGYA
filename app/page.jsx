@@ -32,6 +32,8 @@ import Accordion from "@/components/ui/Accordion";
 import FeatureCard from "@/components/ui/FeatureCard";
 import { useTheme } from "next-themes";
 import Link from "next/link";
+import { toast } from "sonner";
+import { fireOneTimeToast } from "@/lib/oneTimeToast";
 
 export default function App() {
   const [isOpen, setIsOpen] = useState(false);
@@ -41,7 +43,10 @@ export default function App() {
 
   const { setTheme, resolvedTheme } = useTheme();
 
+
   useEffect(() => {
+     fireOneTimeToast('logoutSuccess','Logged Out Successfully');
+     fireOneTimeToast('AccountDeleted','Account Deleted Successfully');
     setMounted(true);
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
