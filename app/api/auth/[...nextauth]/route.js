@@ -30,7 +30,7 @@ export const authOptions = {
         return {
           id: profile.id,
           name: profile.name,
-          email: profile.email, // ⚠️ may be null
+          email: profile.email,
           image: profile.picture?.data?.url ?? null,
         };
       },
@@ -126,7 +126,6 @@ export const authOptions = {
         token.id = user.id;
         token.role = user.role;
       }
-      // Always sync onboardingStatus from DB
       if (token?.id) {
         await connectDB();
         const dbUser = await User.findById(token.id).select("onboardingStatus");

@@ -6,12 +6,12 @@ import { Loader2 } from "lucide-react";
 
 const Button = ({
   children,
-  variant = "primary", // Destructured: won't go into ...props
-  size = "md",        // Destructured: won't go into ...props
+  variant = "primary", 
+  size = "md", 
   className = "",
   isLoading = false,
   disabled,
-  ...props // ✅ Now contains only standard attributes like onClick, type, etc.
+  ...props 
 }) => {
   const variants = {
     primary:
@@ -22,8 +22,7 @@ const Button = ({
       "border-2 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-500 hover:text-emerald-600 dark:hover:border-emerald-400 dark:hover:text-emerald-400 backdrop-blur-md",
     glass:
       "bg-white/10 dark:bg-slate-900/40 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 text-slate-900 dark:text-white hover:bg-white/20 dark:hover:bg-slate-800/60",
-    danger:
-      "bg-red-600 text-white border border-red-500/50 hover:bg-red-700", // Fixed the 'bg-red' typo
+    danger: "bg-red-600 text-white border border-red-500/50 hover:bg-red-700", 
   };
 
   const sizes = {
@@ -34,9 +33,8 @@ const Button = ({
 
   return (
     <motion.button
-      // We pass standard props first, but ensure type is "button" by default
-      type="button" 
-      {...props} 
+      type="button"
+      {...props}
       whileHover={!isLoading && !disabled ? { scale: 1.02 } : undefined}
       whileTap={!isLoading && !disabled ? { scale: 0.98 } : undefined}
       disabled={isLoading || disabled}
@@ -54,7 +52,7 @@ const Button = ({
       </span>
 
       {!isLoading && !disabled && (
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+        <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
       )}
     </motion.button>
   );

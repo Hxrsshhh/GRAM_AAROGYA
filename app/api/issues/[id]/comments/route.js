@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Issues from "@/models/Issues";
-import { getServerSession } from "next-auth"; 
+import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function POST(req, { params }) {
   try {
     await connectDB();
-    const { id } = await params; 
+    const { id } = await params;
     const { text } = await req.json();
 
     const session = await getServerSession(authOptions);
@@ -26,7 +26,7 @@ export async function POST(req, { params }) {
           },
         },
       },
-      { new: true } 
+      { new: true }
     );
 
     if (!updatedIssue) {
@@ -47,7 +47,7 @@ export async function GET(req, { params }) {
 
     const issue = await Issues.findById(id).populate({
       path: "comments.createdBy",
-      select: "name avatar", 
+      select: "name avatar",
     });
 
     if (!issue) {

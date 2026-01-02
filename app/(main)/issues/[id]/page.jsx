@@ -29,6 +29,7 @@ import { IssueMap } from "@/components/layouts/MapComponent";
 import { Badge } from "@/components/ui/Issue-badge";
 import { Card } from "@/components/ui/Issue-card";
 import Button from "@/components/ui/Button";
+import Image from "next/image";
 
 export default function App() {
   const [issue, setIssue] = useState(null);
@@ -139,7 +140,7 @@ export default function App() {
 
   const handleBack = () => {
     router.back();
-  }
+  };
 
   if (loading) {
     return (
@@ -180,28 +181,27 @@ export default function App() {
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(16, 185, 129, 0.4); }
       `}</style>
 
-      <main className="max-w-[83rem] mx-auto px-6 py-12">
-        {/* NAVIGATION */}
+      <main className="max-w-332 mx-auto px-6 py-12">
         <div className="mb-8 mt-6">
-            <button
+          <button
             onClick={handleBack}
-             className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-full border-2 border-slate-200 dark:border-slate-800 flex items-center justify-center group-hover:bg-emerald-500 group-hover:border-emerald-500 transition-all duration-300">
-                <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
-              </div>
-              <div className="flex flex-col items-start text-left">
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-0.5">
-                  Return to
-                </span>
-                <span className="text-[11px] font-black uppercase tracking-widest text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors">
-                  Incident Feed
-                </span>
-              </div>
-            </button>
+            className="flex items-center gap-3 group"
+          >
+            <div className="w-10 h-10 rounded-full border-2 border-slate-200 dark:border-slate-800 flex items-center justify-center group-hover:bg-emerald-500 group-hover:border-emerald-500 transition-all duration-300">
+              <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+            </div>
+            <div className="flex flex-col items-start text-left">
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-0.5">
+                Return to
+              </span>
+              <span className="text-[11px] font-black uppercase tracking-widest text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors">
+                Incident Feed
+              </span>
+            </div>
+          </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          {/* LEFT CONTENT */}
           <div className="lg:col-span-8 space-y-8">
             <header className="space-y-6">
               <div className="flex flex-wrap items-center gap-3">
@@ -258,11 +258,16 @@ export default function App() {
             {/* IMAGE SLIDER */}
             {issue.images?.length > 0 && (
               <div className="relative group overflow-hidden rounded-[3rem] shadow-2xl shadow-emerald-900/10 bg-slate-200 dark:bg-slate-900 aspect-[16/9]">
-                <img
-                  src={issue.images[currentImgIndex]}
-                  className="w-full h-full object-cover transition-transform duration-700"
-                  alt={`Evidence ${currentImgIndex + 1}`}
-                />
+                <div className="relative w-full h-full overflow-hidden">
+                  <Image
+                    src={issue.images[currentImgIndex]}
+                    alt={`Evidence ${currentImgIndex + 1}`}
+                    fill
+                    className="object-cover transition-transform duration-700"
+                    sizes="(max-width: 768px) 100vw, 600px"
+                    priority
+                  />
+                </div>
 
                 {issue.images.length > 1 && (
                   <div className="absolute inset-0 flex items-center justify-between px-6 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -300,17 +305,15 @@ export default function App() {
               </div>
             )}
 
-            {/* DESCRIPTION */}
             <section className="space-y-3">
               <h3 className="text-[9px] font-black uppercase tracking-[0.3em] text-emerald-500">
                 Official Complaint
               </h3>
               <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 font-semibold leading-relaxed pl-6 border-l-2 border-slate-200 dark:border-slate-800">
-                "{issue.description}"
+                {issue.description}
               </p>
             </section>
 
-            {/* COMMENT INPUT SECTION */}
             <div className="mt-12 pt-12 border-t-2 border-slate-100 dark:border-slate-900">
               <div className="flex items-center gap-2 mb-6">
                 <MessageSquare className="w-4 h-4 text-emerald-500" />
@@ -318,11 +321,11 @@ export default function App() {
                   Contribute Context
                 </h2>
               </div>
-              <Card className="bg-slate-50/50 dark:bg-slate-900/50 border-dashed border-2 !p-6">
+              <Card className="bg-slate-50/50 dark:bg-slate-900/50 border-dashed border-2 p-6!">
                 <div className="space-y-4">
                   <textarea
                     placeholder="Share evidence, updates, or personal experience regarding this incident..."
-                    className="w-full min-h-[120px] p-5 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-3xl text-sm font-bold focus:ring-8 focus:ring-emerald-500/5 focus:border-emerald-500 outline-none transition-all placeholder:text-slate-300"
+                    className="w-full min-h-30 p-5 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-3xl text-sm font-bold focus:ring-8 focus:ring-emerald-500/5 focus:border-emerald-500 outline-none transition-all placeholder:text-slate-300"
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                   />
@@ -344,10 +347,8 @@ export default function App() {
             </div>
           </div>
 
-          {/* RIGHT SIDEBAR */}
           <div className="lg:col-span-4 space-y-6">
-            {/* map part  */}
-            <Card className="!p-6 border-emerald-500/10 overflow-hidden relative">
+            <Card className="p-6! border-emerald-500/10 overflow-hidden relative">
               <div className="absolute top-0 right-0 p-4">
                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></div>
               </div>
@@ -363,8 +364,7 @@ export default function App() {
               </div>
             </Card>
 
-            {/* Official Response Stepper */}
-            <Card className="!p-0 overflow-hidden bg-emerald-600 text-white border-none shadow-2xl shadow-emerald-600/30 rounded-[2.5rem]">
+            <Card className="p-0! overflow-hidden bg-emerald-600 text-white border-none shadow-2xl shadow-emerald-600/30 rounded-[2.5rem]">
               <div className="p-6 sm:p-8 space-y-8">
                 <div className="flex items-center justify-between">
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-300/80">
@@ -374,9 +374,8 @@ export default function App() {
                 </div>
 
                 <div className="space-y-8 relative">
-                  <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-white/10" />
+                  <div className="absolute left-2.75 top-2 bottom-2 w-0.5 bg-white/10" />
 
-                  {/* Logic to find where we are in the process */}
                   {(() => {
                     const currentIdx = STATUS_STEPS.findIndex(
                       (s) => s.id === issue.status
@@ -394,7 +393,6 @@ export default function App() {
                             isCompleted ? "opacity-100" : "opacity-30"
                           }`}
                         >
-                          {/* Step Circle */}
                           <div
                             className={`
                   w-6 h-6 rounded-full flex items-center justify-center z-10 ring-4 ring-emerald-600 transition-all duration-500
@@ -409,7 +407,6 @@ export default function App() {
                               }`}
                             />
 
-                            {/* Active Pulse */}
                             {isCurrent && issue.status !== "resolved" && (
                               <span className="absolute inset-0 rounded-full bg-white animate-ping opacity-40" />
                             )}
@@ -451,7 +448,6 @@ export default function App() {
               </div>
             </Card>
 
-            {/* ACTIVITY LOG */}
             <div className="space-y-4">
               <div className="flex items-center justify-between px-2">
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">
@@ -461,7 +457,7 @@ export default function App() {
                   {localComments.length} Records
                 </span>
               </div>
-              <div className="space-y-3 max-h-[360px] overflow-y-auto pr-2 custom-scrollbar transition-all">
+              <div className="space-y-3 max-h-90 overflow-y-auto pr-2 custom-scrollbar transition-all">
                 {localComments.map((c) => (
                   <div
                     key={c.id}
@@ -493,11 +489,9 @@ export default function App() {
               </div>
             </div>
 
-            {/* VOICE TESTIMONY */}
             {issue.voiceNote && (
-              <Card className="border-l-4 border-l-emerald-500 !p-3 sm:!p-4 bg-gradient-to-r from-emerald-500/5 to-transparent overflow-hidden">
+              <Card className="border-l-4 border-l-emerald-500 p-3! sm:p-4! bg-linear-to-r from-emerald-500/5 to-transparent overflow-hidden">
                 <div className="space-y-3 sm:space-y-4">
-                  {/* Header Section: Scaled text for mobile/desktop */}
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.15em] text-emerald-600 dark:text-emerald-500 flex items-center gap-1.5">
                       <Mic className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Voice
@@ -515,7 +509,6 @@ export default function App() {
                   />
 
                   <div className="flex items-center gap-3 sm:gap-5">
-                    {/* Play Button: Slightly larger on desktop for better UX */}
                     <button
                       onClick={toggleAudio}
                       className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all"
@@ -528,22 +521,19 @@ export default function App() {
                       )}
                     </button>
 
-                    {/* Dynamic Waveform: Uses a grid to control density across screen sizes */}
-                    <div className="flex-1 h-8 sm:h-10 flex items-end gap-[2px] sm:gap-1 overflow-hidden">
+                    <div className="flex-1 h-8 sm:h-10 flex items-end gap-0.5 sm:gap-1 overflow-hidden">
                       {[...Array(40)].map((_, i) => (
                         <div
                           key={i}
-                          className={`flex-1 min-w-[2px] rounded-full transition-all duration-300 ${
+                          className={`flex-1 min-w-0.5 rounded-full transition-all duration-300 ${
                             isPlaying
                               ? "animate-pulse bg-emerald-500"
                               : "bg-slate-300 dark:bg-slate-700"
-                          } ${
-                            // Hide specific bars on very small screens to prevent crowding
-                            i > 20 ? "hidden xs:block" : ""
-                          } ${i > 30 ? "hidden md:block" : ""}`}
+                          } ${i > 20 ? "hidden xs:block" : ""} ${
+                            i > 30 ? "hidden md:block" : ""
+                          }`}
                           style={{
                             height: `${25 + (Math.sin(i * 1.5) * 20 + 20)}%`,
-                            // Adding a slight delay to pulses for a more natural look
                             animationDelay: isPlaying ? `${i * 0.05}s` : "0s",
                           }}
                         />
@@ -554,8 +544,7 @@ export default function App() {
               </Card>
             )}
 
-            {/* CITIZEN REPORTER */}
-            <Card className="!p-6">
+            <Card className="p-6!">
               <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">
                 Citizen Reporter
               </h3>

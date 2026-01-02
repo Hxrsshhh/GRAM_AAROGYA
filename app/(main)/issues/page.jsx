@@ -6,9 +6,8 @@ import {
   Search,
   Filter,
   MapPin,
-  Calendar,
-  ChevronRight,
   ArrowUpRight,
+  ChevronDown,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/Issue-badge";
@@ -16,6 +15,7 @@ import { Card } from "@/components/ui/Issue-card";
 
 import Link from "next/link";
 import { getAllIssues } from "@/app/api/issues";
+import Image from "next/image";
 
 export default function App() {
   const [issues, setIssues] = useState([]);
@@ -52,6 +52,7 @@ export default function App() {
   });
 
   const statuses = ["all", "pending", "in-progress", "resolved", "rejected"];
+
   const categories = [
     "all",
     "infrastructure",
@@ -84,19 +85,18 @@ export default function App() {
   }
 
   return (
-    <div className="h-screen  flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-hidden">
-      {/* HEADER SECTION - Fixed Height */}
-      <div className="bg-white  dark:bg-slate-950/30 border-b border-slate-200 dark:border-slate-800 pt-12 pb-8 flex-shrink-0">
-        <div className="max-w-7xl mx-auto px-6 mt-12">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div className="h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans overflow-hidden">
+      <header className="hidden pt-16 md:block flex-shrink-0 z-50 w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-md ">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-2 mb-2">
                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
                   Live Community Feed
                 </span>
               </div>
-              <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-slate-900 dark:text-white">
+              <h1 className="text-2xl md:text-3xl font-black tracking-tighter text-slate-900 dark:text-white">
                 Public{" "}
                 <span className="text-emerald-500 underline decoration-emerald-500/30 underline-offset-8">
                   Issues
@@ -105,16 +105,16 @@ export default function App() {
             </div>
 
             <div className="flex gap-3">
-              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-5 py-2 text-center">
-                <p className="text-xl font-black text-emerald-600">
+              <div className="flex-1 md:flex-none bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-5 py-2 text-center min-w-[100px]">
+                <p className="text-lg md:text-xl font-black text-emerald-600 leading-none mb-1">
                   {issues.length}
                 </p>
                 <p className="text-[8px] font-black uppercase text-emerald-600/60 tracking-widest">
                   Reports
                 </p>
               </div>
-              <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl px-5 py-2 text-center">
-                <p className="text-xl font-black text-amber-600">
+              <div className="flex-1 md:flex-none bg-amber-500/10 border border-amber-500/20 rounded-xl px-5 py-2 text-center min-w-[100px]">
+                <p className="text-lg md:text-xl font-black text-amber-600 leading-none mb-1">
                   {issues.filter((i) => i.status === "pending").length}
                 </p>
                 <p className="text-[8px] font-black uppercase text-amber-600/60 tracking-widest">
@@ -124,48 +124,63 @@ export default function App() {
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* MAIN CONTENT AREA - Fills remaining height, no body scroll */}
-      <div className="flex-1 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 h-full py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
-            {/* LEFT: FILTERS - Static */}
-            <div className="lg:col-span-4 hidden lg:block">
-              <Card className="border-emerald-500/10 h-auto">
-                <div className="flex items-center gap-2 mb-6">
+      {/* MAIN CONTENT AREA */}
+      <main className="flex-1 min-h-0 max-w-7xl mx-auto w-full px-4 md:px-6 overflow-y-auto no-scrollbar lg:overflow-hidden">
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    `,
+          }}
+        />
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
+          {/* MOBILE SEARCH - Enhanced look only for small screens */}
+          <aside className="lg:col-span-4 sticky top-16 md:top-0 z-40 lg:relative lg:top-0 md:py-4 pt-4 pb-2">
+            <div className="lg:hidden absolute inset-0 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md -mx-4 h-full pointer-events-none" />
+
+            <Card className="relative border-emerald-500/20 lg:border-emerald-500/10 p-1.5 md:p-4 lg:p-6 shadow-xl lg:shadow-none bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm lg:bg-white dark:lg:bg-slate-900 rounded-2xl lg:rounded-3xl">
+              {/* Desktop Filter Title (Hidden on Mobile) */}
+              <div className="hidden lg:flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
                   <Filter className="w-5 h-5 text-emerald-500" />
                   <h3 className="font-black uppercase tracking-widest text-sm">
                     Refine Feed
                   </h3>
                 </div>
+              </div>
 
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">
-                      Search
-                    </label>
-                    <div className="relative">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input
-                        type="text"
-                        placeholder="Keyword..."
-                        className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm font-bold"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </div>
+              <div className="flex flex-col gap-4 lg:gap-6">
+                <div className="w-full">
+                  <label className="hidden lg:block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">
+                    Search
+                  </label>
+                  <div className="relative group">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500 lg:text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                    <input
+                      type="text"
+                      placeholder="Find an issue..."
+                      className="w-full pl-11 pr-4 py-3.5 lg:py-3 bg-slate-100/50 lg:bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl lg:rounded-xl focus:ring-2 focus:ring-emerald-500/50 outline-none text-sm font-bold transition-all placeholder:text-slate-400"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                   </div>
+                </div>
 
+                {/* Hidden on mobile, original layout on desktop */}
+                <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-1 gap-4 lg:space-y-6">
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">
                       Category
                     </label>
-                    <div className="relative group">
+                    <div className="relative">
                       <select
                         value={selectedCategory}
                         onChange={(e) => setSelectedCategory(e.target.value)}
-                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl appearance-none focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm font-bold capitalize cursor-pointer"
+                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl appearance-none outline-none text-sm font-bold capitalize"
                       >
                         {categories.map((c) => (
                           <option key={c} value={c}>
@@ -173,12 +188,12 @@ export default function App() {
                           </option>
                         ))}
                       </select>
-                      <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 rotate-90 pointer-events-none" />
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">
+                  <div className="md:col-span-2 lg:col-span-1">
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">
                       Status
                     </label>
                     <div className="flex flex-wrap gap-2">
@@ -186,10 +201,10 @@ export default function App() {
                         <button
                           key={status}
                           onClick={() => setSelectedStatus(status)}
-                          className={`px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
+                          className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase border transition-all ${
                             selectedStatus === status
-                              ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
-                              : "bg-slate-50 dark:bg-slate-800/50 text-slate-500 hover:bg-slate-100"
+                              ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-500/30"
+                              : "bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-500"
                           }`}
                         >
                           {status}
@@ -198,119 +213,87 @@ export default function App() {
                     </div>
                   </div>
                 </div>
-              </Card>
-            </div>
+              </div>
+            </Card>
+          </aside>
 
-            {/* RIGHT: LIST - Independently Scrollable */}
-            <div className="lg:col-span-8 flex flex-col h-full overflow-hidden">
-              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                <div className="grid grid-cols-1 gap-4 pb-12">
-                  <AnimatePresence mode="popLayout">
-                    {filteredIssues.map((issue, index) => (
-                      <motion.div
-                        key={issue._id}
-                        layout
-                        initial={{ opacity: 0, scale: 0.98, y: 10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.2, delay: index * 0.03 }}
-                      >
-                        <Link href={`/issues/${issue._id}`}>
-                          <Card
-                            hover
-                            className="group overflow-hidden border-l-4 border-l-transparent hover:border-l-emerald-500"
-                          >
-                            <div className="flex flex-col sm:flex-row gap-6">
-                              <div className="relative w-full sm:w-28 h-28 flex-shrink-0">
-                                <img
+          {/* FEED LIST */}
+          <section className="lg:col-span-8 flex flex-col min-h-0 mt-8 md:mt-[-20px] ">
+            <div className="flex-1 lg:overflow-y-auto no-scrollbar lg:py-8">
+              <div className="space-y-4 pb-24">
+                <AnimatePresence mode="popLayout">
+                  {filteredIssues.map((issue, index) => (
+                    <motion.div
+                      key={issue._id}
+                      layout
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2, delay: index * 0.03 }}
+                    >
+                      <Link href={`/issues/${issue._id}`}>
+                        <Card
+                          hover
+                          className="group overflow-hidden border-l-4 border-l-transparent hover:border-l-emerald-500 p-4 md:p-5 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800"
+                        >
+                          <div className="flex flex-col sm:flex-row gap-4 md:gap-6">
+                            <div className="relative w-full sm:w-32 h-44 sm:h-32 flex-shrink-0">
+                              <div className="relative w-full h-full">
+                                <Image
                                   src={
                                     issue.images?.[0] ||
-                                    `https://ui-avatars.com/api/?name=${issue.category}&background=random&size=128`
+                                    `https://ui-avatars.com/api/?name=${issue.category}`
                                   }
-                                  alt=""
-                                  className="w-full h-full rounded-2xl object-cover"
+                                  alt={issue.category || "issue image"}
+                                  fill
+                                  className="rounded-xl object-cover"
+                                  sizes="(max-width: 768px) 100vw, 200px"
                                 />
                               </div>
 
-                              <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
-                                <div>
-                                  <div className="flex items-start justify-between gap-4 mb-2">
-                                    <h3 className="font-black text-base tracking-tight text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors line-clamp-1">
-                                      {issue.title}
-                                    </h3>
-                                    <Badge variant={issue.status}>
-                                      {issue.status}
-                                    </Badge>
-                                  </div>
-                                  <p className="text-slate-500 dark:text-slate-400 text-xs font-medium line-clamp-2 mb-4">
-                                    {issue.description}
-                                  </p>
-                                </div>
-
-                                <div className="flex flex-wrap items-center gap-y-2 gap-x-5 text-[9px] font-black uppercase tracking-widest text-slate-400">
-                                  <span className="flex items-center gap-1.5">
-                                    <MapPin className="w-3 h-3 text-emerald-500" />
-                                    {issue.address?.split(",")[0] || "Zone A"}
-                                  </span>
-                                  <span className="flex items-center gap-1.5">
-                                    <Calendar className="w-3 h-3 text-emerald-500" />
-                                    {new Date(
-                                      issue.createdAt
-                                    ).toLocaleDateString()}
-                                  </span>
-                                  <span className="flex items-center gap-1.5 ml-auto text-emerald-600 font-black">
-                                    Details{" "}
-                                    <ArrowUpRight className="w-2.5 h-2.5" />
-                                  </span>
-                                </div>
+                              <div className="absolute top-2 left-2 lg:hidden">
+                                <Badge
+                                  variant={issue.status}
+                                  className="shadow-lg"
+                                >
+                                  {issue.status}
+                                </Badge>
                               </div>
                             </div>
-                          </Card>
-                        </Link>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-
-                  {filteredIssues.length === 0 && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                    >
-                      <Card className="text-center py-20 bg-slate-50/50 dark:bg-slate-900/50 border-dashed border-2">
-                        <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6">
-                          <Search className="w-8 h-8 text-slate-300" />
-                        </div>
-                        <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">
-                          Empty Feed
-                        </h3>
-                        <p className="text-slate-500 font-bold text-xs mt-2">
-                          Try changing your filters.
-                        </p>
-                      </Card>
+                            <div className="flex-1 min-w-0 flex flex-col justify-between">
+                              <div className="flex items-start justify-between gap-4 mb-2">
+                                <h3 className="font-black text-lg tracking-tight text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors line-clamp-1">
+                                  {issue.title}
+                                </h3>
+                                <div className="hidden lg:block">
+                                  <Badge variant={issue.status}>
+                                    {issue.status}
+                                  </Badge>
+                                </div>
+                              </div>
+                              <p className="text-slate-500 dark:text-slate-400 text-sm font-medium line-clamp-2 mb-4">
+                                {issue.description}
+                              </p>
+                              <div className="flex flex-wrap items-center justify-between text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
+                                  <MapPin className="w-3.5 h-3.5 text-emerald-500" />{" "}
+                                  {issue.address?.split(",")[0]}
+                                </span>
+                                <span className="flex items-center gap-1.5 text-emerald-600 font-black">
+                                  View <ArrowUpRight className="w-3 h-3" />
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      </Link>
                     </motion.div>
-                  )}
-                </div>
+                  ))}
+                </AnimatePresence>
               </div>
             </div>
-          </div>
+          </section>
         </div>
-      </div>
-
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #e2e8f0;
-          border-radius: 10px;
-        }
-        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #1e293b;
-        }
-      `}</style>
+      </main>
     </div>
   );
 }

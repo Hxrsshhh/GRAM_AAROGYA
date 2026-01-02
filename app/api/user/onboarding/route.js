@@ -17,19 +17,19 @@ export async function POST(req) {
   await connectDB();
 
   await User.findByIdAndUpdate(session.user.id, {
-  onboardingStatus: status,
-  ...(profile && {
-    username: profile.username,
-    phone: profile.phone,
-    bio: profile.bio,
-    avatar: profile.avatar,
-    location: {
-      city: profile.city,
-      state: profile.state,
-      country: "India", 
-    },
-  }),
-});
+    onboardingStatus: status,
+    ...(profile && {
+      username: profile.username,
+      phone: profile.phone,
+      bio: profile.bio,
+      avatar: profile.avatar,
+      location: {
+        city: profile.city,
+        state: profile.state,
+        country: "India",
+      },
+    }),
+  });
 
   return NextResponse.json({ success: true });
 }

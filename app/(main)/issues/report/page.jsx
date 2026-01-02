@@ -2,535 +2,208 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  MapPin,
-  FileText,
-  X,
-  ChevronRight,
-  ChevronLeft,
-  Activity,
-  Shield,
-  Zap,
-  CheckCircle2,
-  AlertTriangle,
-  Flame,
-  Clock,
-  Camera,
-  Layers,
-  LocateFixed,
-  Map,
-  Mic,
-} from "lucide-react";
+import { Edit3, Cpu, ShieldCheck, Sparkles, RotateCcw } from "lucide-react";
 
-import { StepIndicator } from "@/components/ui/StepIndicator";
-import { CustomInput } from "@/components/ui/CustomInput";
-import { useSession } from "next-auth/react";
-import { uploadToCloudinary } from "@/lib/cloudinary/cloudinaryUpload";
+import AiScan from "@/components/reportIssues/AiScan";
+import ReportIssue from "@/components/reportIssues/ReportManual";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
-const ReportIssue = () => {
-  const [step, setStep] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLocating, setIsLocating] = useState(false);
-  const [error, setError] = useState("");
-
-  const [isListening, setIsListening] = useState(false);
-  const [imageFiles, setImageFiles] = useState([]);
-  const [imagePreviews, setImagePreviews] = useState([]);
-  const [voiceBlob, setVoiceBlob] = useState(null);
+export default function App() {
+  const [isAiMode, setIsAiMode] = useState(true);
 
   const router = useRouter();
 
-  const { data: session, status } = useSession();
-
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
+  const [aiFile, setAiFile] = useState(null);
+  const [manualData, setManualData] = useState({
     category: "",
-    priority: "Medium",
-    location: {
-      address: "",
-      lat: null,
-      lng: null,
-      coordinates: "",
-    },
+    description: "",
   });
 
-  const categories = [
-    { value: "infrastructure", label: "Infra", icon: "🏗️" },
-    { value: "sanitation", label: "Waste", icon: "🗑️" },
-    { value: "safety", label: "Safety", icon: "⚠️" },
-    { value: "environment", label: "Eco", icon: "🌳" },
-    { value: "utilities", label: "Power", icon: "💡" },
-    { value: "traffic", label: "Traffic", icon: "🚦" },
-    { value: "other", label: "Other", icon: "📋" },
-  ];
+  const handleRefresh = () => {
+    setAiFile(null);
 
-  const priorities = [
-    { id: "Low", icon: Clock, label: "Standard" },
-    { id: "Medium", icon: Activity, label: "Urgent" },
-    { id: "High", icon: AlertTriangle, label: "Critical" },
-    { id: "Critical", icon: Flame, label: "SOS" },
-  ];
-
-  const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
-
-    const limited = files.slice(0, 5 - imageFiles.length);
-
-    limited.forEach((file) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreviews((prev) => [...prev, reader.result]);
-      };
-      reader.readAsDataURL(file);
-    });
-
-    setImageFiles((prev) => [...prev, ...limited]);
-  };
-
-  const handleGetLocation = async () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
-      return;
-    }
-
-    setIsLocating(true);
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-
-        try {
-          const res = await fetch(`/api/geocoder?lat=${lat}&lon=${lng}`);
-          const data = await res.json();
-          console.log(data);
-
-          if (data && data.display_name) {
-            setFormData((prev) => ({
-              ...prev,
-              location: {
-                address: data.display_name,
-                lat: lat,
-                lng: lng,
-                coordinates: `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
-              },
-            }));
-          } else {
-            setFormData((prev) => ({
-              ...prev,
-              location: {
-                address: `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`,
-                lat: lat,
-                lng: lng,
-              },
-            }));
-          }
-        } catch (error) {
-          console.error("Geocoding failed:", error);
-          setError("Address lookup failed, but coordinates were captured.");
-        } finally {
-          setIsLocating(false);
-        }
-      },
-      (error) => {
-        setIsLocating(false);
-        setError("Error getting coordinates: " + error.message);
-      },
-      { enableHighAccuracy: true }
-    );
-  };
-
-  const removeImage = (index) => {
-    setImageFiles((prev) => prev.filter((_, i) => i !== index));
-    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleSubmit = async () => {
-    try {
-      setIsSubmitting(true);
-
-      if (!session) {
-        alert("Login required");
-        setIsSubmitting(false);
-        return;
-      }
-
-      /* ---------- UPLOAD IMAGES ---------- */
-      const imageUrls = await Promise.all(
-        imageFiles.map((file) => uploadToCloudinary(file, "image"))
-      );
-
-      /* ---------- UPLOAD VOICE ---------- */
-      let voiceNote = "";
-      if (voiceBlob) {
-        voiceNote = await uploadToCloudinary(voiceBlob, "audio");
-      }
-
-      /* ---------- SEND ISSUE DATA ---------- */
-      const payload = {
-        title: formData.title,
-        description: formData.description,
-        category: formData.category,
-        priority: formData.priority,
-        location: formData.location,
-        images: imageUrls,
-        voiceNote,
-      };
-
-      const res = await fetch("/api/reports", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) throw new Error("Submit failed");
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong");
-    } finally {
-      setIsSubmitting(false);
-      router.push("/issues");
-    }
-  };
-
-  const mediaRecorderRef = React.useRef(null);
-  const chunksRef = React.useRef([]);
-
-  const toggleListening = async () => {
-    if (isListening) {
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream
-        .getTracks()
-        .forEach((track) => track.stop());
-
-      setIsListening(false);
-      return;
-    }
-
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const recorder = new MediaRecorder(stream);
-
-    mediaRecorderRef.current = recorder;
-    chunksRef.current = [];
-
-    recorder.ondataavailable = (e) => chunksRef.current.push(e.data);
-
-    recorder.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-      setVoiceBlob(blob);
-      chunksRef.current = [];
-    };
-
-    recorder.start();
-    setIsListening(true);
+    setManualData({ category: "", description: "" });
+    router.refresh();
+    console.log("Registry states cleared.");
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-700 selection:bg-emerald-500 selection:text-white">
-      {/* Background Decor */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-10 dark:opacity-20">
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-emerald-500/10 blur-[80px] rounded-full" />
+    <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-500 selection:bg-emerald-500 selection:text-white font-['Plus_Jakarta_Sans'] overflow-hidden flex flex-col">
+      {/* Dynamic Background Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[15%] -right-[5%] w-[40%] h-[40%] bg-emerald-500/10 blur-[100px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[15%] -left-[5%] w-[30%] h-[30%] bg-blue-500/10 blur-[100px] rounded-full" />
       </div>
 
-      <main className="relative  z-10 max-w-3xl mx-auto px-6 py-4">
-        <div className="text-center mt-22 mb-8">
-          <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-2 italic">
-            File <span className="text-emerald-500 not-italic">Report.</span>
-          </h1>
-          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-[0.2em]">
-            Municipal Sync Protocol
-          </p>
+      <div className="mt-20 px-6 py-4 flex items-center justify-between gap-4 shrink-0 max-w-2xl mx-auto w-full z-10">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-[10px] font-black uppercase tracking-tighter text-slate-500">
+            Protocol Interface
+          </span>
         </div>
 
-        <div className="bg-white dark:bg-slate-900/50 backdrop-blur-2xl border border-slate-200/60 dark:border-slate-800 rounded-[2rem] p-6 md:p-8 shadow-xl">
-          <StepIndicator currentStep={step} totalSteps={3} />
+        <div className="flex items-center gap-3">
+          <motion.button
+            whileHover={{ rotate: -180 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={handleRefresh}
+            className="p-2 rounded-xl bg-white dark:bg-slate-900 text-slate-400 hover:text-emerald-500 border border-slate-200 dark:border-slate-800 transition-colors shadow-sm"
+            title="Refresh Fields"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+          </motion.button>
 
+          <div className="flex items-center bg-slate-200/50 dark:bg-slate-900/50 backdrop-blur-md p-1 rounded-xl border border-white/50 dark:border-slate-800 shadow-sm">
+            <button
+              onClick={() => setIsAiMode(true)}
+              className={`relative flex items-center gap-2 px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
+                isAiMode
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-slate-500"
+              }`}
+            >
+              {isAiMode && (
+                <motion.div
+                  layoutId="tab"
+                  className="absolute inset-0 bg-white dark:bg-slate-800 shadow-sm ring-1 ring-black/5 rounded-lg"
+                />
+              )}
+              <span className="relative z-10 flex items-center gap-1.5">
+                <Cpu
+                  className={`w-3.5 h-3.5 ${
+                    isAiMode ? "animate-spin-slow" : ""
+                  }`}
+                />
+                AI
+              </span>
+            </button>
+            <button
+              onClick={() => setIsAiMode(false)}
+              className={`relative flex items-center gap-2 px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
+                !isAiMode
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-slate-500"
+              }`}
+            >
+              {!isAiMode && (
+                <motion.div
+                  layoutId="tab"
+                  className="absolute inset-0 bg-white dark:bg-slate-800 shadow-sm ring-1 ring-black/5 rounded-lg"
+                />
+              )}
+              <span className="relative z-10 flex items-center gap-1.5">
+                <Edit3 className="w-3.5 h-3.5" />
+                Manual
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <main className=" flex flex-col  items-center justify-start pt-4 lg:px-6  min-h-0 z-10">
+        <div className="w-full max-w-7xl flex flex-col">
           <AnimatePresence mode="wait">
-            {step === 1 && (
-              <motion.div
-                key="step1"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="space-y-6"
-              >
-                <div>
-                  <h3 className="text-lg font-black mb-4 flex items-center gap-2">
-                    <Layers className="text-emerald-500 w-5 h-5" /> Domain
-                  </h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {categories.map((cat) => (
-                      <button
-                        key={cat.value}
-                        onClick={() =>
-                          setFormData({ ...formData, category: cat.value })
-                        }
-                        className={`group p-4 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center text-center gap-2 ${
-                          formData.category === cat.value
-                            ? "border-emerald-500 bg-emerald-500/10"
-                            : "border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30"
-                        }`}
-                      >
-                        <span className="text-2xl group-hover:scale-110 transition-transform">
-                          {cat.icon}
-                        </span>
-                        <span className="text-[10px] font-black uppercase tracking-tight">
-                          {cat.label}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+            <motion.div
+              key={isAiMode ? "ai" : "manual"}
+              className="flex-1"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="mb-6 text-center">
+                <h2 className="text-2xl font-black tracking-tight mb-1">
+                  {isAiMode ? "Intelligent Asset Scan" : "Manual Reporting"}
+                </h2>
+                <p className="text-slate-500 dark:text-slate-400 text-[11px] max-w-sm mx-auto uppercase tracking-wider font-bold opacity-60">
+                  {isAiMode
+                    ? "AI-Powered Infrastructure Diagnostic"
+                    : "Direct Citizen-Lead Documentation"}
+                </p>
+              </div>
 
-                <div>
-                  <h3 className="text-lg font-black mb-4 flex items-center gap-2">
-                    <Zap className="text-emerald-500 w-5 h-5" /> Priority
-                  </h3>
-                  <div className="grid grid-cols-4 gap-2">
-                    {priorities.map((p) => {
-                      const Icon = p.icon;
-                      return (
-                        <button
-                          key={p.id}
-                          onClick={() =>
-                            setFormData({ ...formData, priority: p.id })
-                          }
-                          className={`py-3 rounded-xl border-2 transition-all flex flex-col items-center gap-1 ${
-                            formData.priority === p.id
-                              ? "border-emerald-500 bg-emerald-500 text-white"
-                              : "border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400"
-                          }`}
-                        >
-                          <Icon size={16} />
-                          <span className="text-[9px] font-black uppercase tracking-widest">
-                            {p.label}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {step === 2 && (
-              <motion.div
-                key="step2"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="space-y-4"
-              >
-                <CustomInput
-                  label="Headline"
-                  placeholder="Summarize the issue..."
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                  icon={FileText}
+              {isAiMode ? (
+                <AiScan file={aiFile} setFile={setAiFile} />
+              ) : (
+                <ReportIssue
+                  formData={manualData}
+                  setFormData={setManualData}
                 />
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 pl-1">
-                    Description
-                  </label>
-
-                  {/* Relative wrapper to contain the absolute button */}
-                  <div className="relative group">
-                    <textarea
-                      rows={4}
-                      className="w-full bg-slate-50 dark:bg-slate-900/50 border-2 border-slate-200 dark:border-slate-800 rounded-xl p-4 pr-12 text-slate-900 dark:text-white font-semibold outline-none focus:border-emerald-500 transition-all resize-none text-sm"
-                      placeholder="Provide context..."
-                      value={formData.description}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          description: e.target.value,
-                        })
-                      }
-                    />
-
-                    {/* Voice Button UI */}
-                    <button
-                      type="button"
-                      onClick={toggleListening}
-                      className={`absolute bottom-4 right-2 p-2.5 rounded-lg border transition-all shadow-sm active:scale-95
-                      ${
-                        isListening
-                          ? "bg-emerald-50 dark:bg-emerald-100/20 border-emerald-500 text-emerald-600 animate-pulse ring-4               ring-emerald-500/20"
-                          : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700               text-slate-500 dark:text-slate-400"
-                      } 
-                    hover:text-emerald-500 hover:border-emerald-500 transition-all`}
-                      title={isListening ? "Stop Listening" : "Voice Input"}
-                    >
-                      <Mic
-                        className={`h-4 w-4 ${
-                          isListening ? "fill-emerald-500" : ""
-                        }`}
-                      />
-
-                      {/* Optional: Add a small red dot indicator */}
-                      {isListening && (
-                        <span className="absolute top-1 right-1 flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                        </span>
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                <CustomInput
-                  label="Address / Geo-Data"
-                  placeholder="Street name or landmark"
-                  value={formData.location.address || ""}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      location: {
-                        ...formData.location,
-                        address: e.target.value,
-                      },
-                    })
-                  }
-                  icon={MapPin}
-                  rightElement={
-                    <button
-                      onClick={handleGetLocation}
-                      disabled={isLocating}
-                      className="p-2 text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-colors disabled:opacity-50"
-                      title="Detect Live Location"
-                    >
-                      <LocateFixed
-                        size={18}
-                        className={isLocating ? "animate-pulse" : ""}
-                      />
-                    </button>
-                  }
-                />
-              </motion.div>
-            )}
-
-            {step === 3 && (
-              <motion.div
-                key="step3"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="space-y-6"
-              >
-                <div className="text-center p-8 rounded-2xl border-4 border-dashed border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30 group hover:border-emerald-500/30 transition-colors">
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                    id="upload"
-                  />
-                  <label
-                    htmlFor="upload"
-                    className="cursor-pointer flex flex-col items-center"
-                  >
-                    <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-600 mb-4 group-hover:scale-105 transition-transform">
-                      <Camera size={28} />
-                    </div>
-                    <h4 className="text-xl font-black mb-1">Evidence</h4>
-                    <p className="text-slate-500 font-semibold text-xs mb-3">
-                      Upload up to 5 validation photos
-                    </p>
-                    <div className="px-4 py-1.5 bg-white dark:bg-slate-800 rounded-lg text-[9px] font-black uppercase tracking-widest border border-slate-200 dark:border-slate-700">
-                      {imagePreviews.length} / 5
-                    </div>
-                  </label>
-                </div>
-
-                {imagePreviews.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {imagePreviews.map((img, idx) => (
-                      <div key={idx} className="relative w-16 h-16 group">
-                        <img
-                          src={img}
-                          className="w-full h-full object-cover rounded-xl shadow-md"
-                          alt="Report preview"
-                        />
-                        <button
-                          onClick={() => removeImage(idx)}
-                          className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-lg flex items-center justify-center shadow-lg"
-                        >
-                          <X size={12} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-900 text-white flex items-center gap-4">
-                  <Shield className="w-8 h-8 text-emerald-500 shrink-0" />
-                  <p className="text-slate-400 text-[10px] leading-relaxed">
-                    Report will be cryptographically signed and added to the
-                    municipal ledger for verification.
-                  </p>
-                </div>
-              </motion.div>
-            )}
+              )}
+            </motion.div>
           </AnimatePresence>
 
-          <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <button
-              onClick={() => setStep((s) => Math.max(1, s - 1))}
-              disabled={step === 1}
-              className="flex items-center gap-1 font-black uppercase tracking-widest text-[10px] text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-0 transition-all"
-            >
-              <ChevronLeft size={16} /> Back
-            </button>
-
-            {step < 3 ? (
-              <button
-                disabled={
-                  (step === 1 && !formData.category) ||
-                  (step === 2 &&
-                    (!formData.title || !formData.location.address))
-                }
-                onClick={() => setStep((s) => s + 1)}
-                className="bg-emerald-600 text-white px-8 py-3.5 rounded-xl font-black uppercase tracking-widest text-xs flex items-center gap-2 hover:bg-emerald-500 disabled:grayscale disabled:opacity-50 transition-all"
-              >
-                Next <ChevronRight size={16} />
-              </button>
-            ) : (
-              <button
-                onClick={handleSubmit}
-                disabled={isSubmitting || imagePreviews.length === 0}
-                className={`relative px-10 py-3.5 rounded-xl font-black uppercase tracking-widest text-xs flex items-center gap-2 shadow-xl transition-all ${
-                  isSubmitting
-                    ? "bg-emerald-800 text-slate-100"
-                    : "bg-emerald-600 text-white hover:bg-emerald-500"
-                }`}
-              >
-                {isSubmitting ? "Transmitting..." : "Finalize Report"}
-                {!isSubmitting && <CheckCircle2 size={16} />}
-              </button>
-            )}
+          {/* Inline Status (Replaces the larger bar for better space efficiency) */}
+          <div className="mt-8 flex items-center justify-center gap-6 py-3 border-t border-slate-200/50 dark:border-slate-800/50">
+            <div className="flex items-center gap-2">
+              <div className="flex -space-x-1.5">
+                {[1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="w-5 h-5 rounded-full border border-white dark:border-slate-950 bg-slate-200 overflow-hidden"
+                  >
+                    <div className="relative w-10 h-10">
+                      <Image
+                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${
+                          i + 20
+                        }`}
+                        alt="User"
+                        fill
+                        className="object-cover"
+                        sizes="40px"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
+                12 Active Nodes
+              </p>
+            </div>
+            <div className="w-px h-3 bg-slate-200 dark:bg-slate-800" />
+            <div className="flex items-center gap-1.5">
+              <ShieldCheck className="w-3 h-3 text-emerald-500" />
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
+                Verified Protocol
+              </span>
+            </div>
           </div>
         </div>
       </main>
+
+      {/* Compact Floating Action */}
+      <footer className="p-6 shrink-0 flex justify-end">
+        <button className="w-10 h-10 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all">
+          <Sparkles className="w-4 h-4" />
+        </button>
+      </footer>
 
       <style
         dangerouslySetInnerHTML={{
           __html: `
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+          animation: spin-slow 8s linear infinite;
+        }
+
+        body { 
+          font-family: 'Plus Jakarta Sans', sans-serif; 
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
+          height: 100vh;
+        }
       `,
         }}
       />
     </div>
   );
-};
-
-export default function App() {
-  return <ReportIssue />;
 }

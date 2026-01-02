@@ -10,15 +10,11 @@ import {
   Camera,
   Save,
   ShieldCheck,
-  ChevronRight,
   Settings,
   Loader2,
-  Award,
   Heart,
   Activity,
   Lock,
-  Globe,
-  Briefcase,
 } from "lucide-react";
 
 import { ProfileCard as Card } from "@/components/ui/Card";
@@ -28,6 +24,7 @@ import Button from "@/components/ui/Button";
 import { InputField } from "@/components/ui/input";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export default function Profile() {
   const [loading, setLoading] = useState(false);
@@ -118,7 +115,8 @@ export default function Profile() {
             {session?.user?.onboardingStatus !== "completed" && (
               <Button
                 onClick={() => router.push("/onboarding")}
-                variant="secondary" className="text-xs"
+                variant="secondary"
+                className="text-xs"
               >
                 Complete your profile
               </Button>
@@ -131,17 +129,22 @@ export default function Profile() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* LEFT COLUMN - Profile Card & Stats */}
           <div className="lg:col-span-4 space-y-6">
             <Card>
               <div className="h-24 bg-emerald-600 dark:bg-emerald-700 relative">
                 <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
                   <div className="relative group">
-                    <img
-                      src={formData?.avatar || "/avatar.jpg"}
-                      className="w-28 h-28 rounded-2xl border-4 border-white dark:border-slate-900 shadow-2xl object-cover"
-                      alt="Profile"
-                    />
+                    <div className="relative w-28 h-28 rounded-2xl border-4 border-white dark:border-slate-900 shadow-2xl overflow-hidden">
+                      <Image
+                        src={formData?.avatar || "/avatar.jpg"}
+                        alt="Profile"
+                        fill
+                        className="object-cover"
+                        sizes="112px"
+                        priority
+                      />
+                    </div>
+
                     {editing && (
                       <button className="absolute -bottom-2 -right-2 p-2 bg-emerald-600 text-white rounded-xl shadow-lg hover:scale-110 transition-transform">
                         <Camera size={14} />
@@ -160,11 +163,11 @@ export default function Profile() {
                 </p>
 
                 <div className="flex justify-center gap-2 mb-8">
-                 {session?.user.isverified &&  
-                 <Badge variant="success">
-                    <ShieldCheck size={12} className="mr-1.5" /> Verified
-                  </Badge>
-                  }
+                  {session?.user.isverified && (
+                    <Badge variant="success">
+                      <ShieldCheck size={12} className="mr-1.5" /> Verified
+                    </Badge>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 pt-6 border-t border-slate-100 dark:border-slate-800">
@@ -208,7 +211,6 @@ export default function Profile() {
             </Card>
           </div>
 
-          {/* RIGHT COLUMN - Edit Information */}
           <div className="lg:col-span-8 space-y-6">
             <Card>
               <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/20">
@@ -253,7 +255,7 @@ export default function Profile() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <InputField
                     label="Full Name"
-                    value={formData.name}
+                    value={formData.name || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
@@ -263,7 +265,7 @@ export default function Profile() {
 
                   <InputField
                     label="Official Email"
-                    value={formData.email}
+                    value={formData.email || ""}
                     type="email"
                     disabled={true}
                     leftIcon={<Mail />}
@@ -271,7 +273,7 @@ export default function Profile() {
 
                   <InputField
                     label="Contact Number"
-                    value={formData.phone}
+                    value={formData.phone || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, phone: e.target.value })
                     }
@@ -301,7 +303,7 @@ export default function Profile() {
                           ? "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:border-slate-900 dark:focus:border-emerald-500 shadow-sm"
                           : "bg-slate-50 dark:bg-slate-800/50 border-transparent text-slate-500"
                       }`}
-                    value={formData.bio}
+                    value={formData.bio || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, bio: e.target.value })
                     }
@@ -325,47 +327,6 @@ export default function Profile() {
                 </div>
               </div>
             </Card>
-
-            {/* Quick Actions / Integration Module */}
-            {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card className="p-5 flex items-center justify-between group cursor-pointer hover:border-blue-200 transition-colors">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-xl">
-                    <Briefcase size={20} />
-                  </div>
-                  <div>
-                    <p className="font-black text-slate-900 dark:text-white">
-                      Service History
-                    </p>
-                    <p className="text-xs text-slate-400">
-                      Download report as PDF
-                    </p>
-                  </div>
-                </div>
-                <ChevronRight
-                  size={18}
-                  className="text-slate-300 group-hover:translate-x-1 transition-transform"
-                />
-              </Card>
-
-              <Card className="p-5 flex items-center justify-between group cursor-pointer hover:border-emerald-200 transition-colors">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-xl">
-                    <Award size={20} />
-                  </div>
-                  <div>
-                    <p className="font-black text-slate-900 dark:text-white">
-                      Badges & Awards
-                    </p>
-                    <p className="text-xs text-slate-400">4 new achievements</p>
-                  </div>
-                </div>
-                <ChevronRight
-                  size={18}
-                  className="text-slate-300 group-hover:translate-x-1 transition-transform"
-                />
-              </Card>
-            </div> */}
           </div>
         </div>
       </div>

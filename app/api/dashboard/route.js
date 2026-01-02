@@ -5,58 +5,68 @@ import Issues from "@/models/Issues";
 export async function GET(req) {
   try {
     await ConnectDB();
-
-    // 1. Get Current Stats & Status Counts
-    // We use $facet to run multiple aggregations in one pass
     const statsResult = await Issues.aggregate([
       {
         $facet: {
-          statusCounts: [
-            { $group: { _id: "$status", count: { $sum: 1 } } }
-          ],
+          statusCounts: [{ $group: { _id: "$status", count: { $sum: 1 } } }],
           totalReports: [{ $count: "count" }],
           resolvedThisMonth: [
             {
               $match: {
                 status: "resolved",
-                resolvedAt: { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) }
-              }
+                updatedAt: {
+                  $gte: new Date(
+                    new Date().getFullYear(),
+                    new Date().getMonth(),
+                    1
+                  ),
+                },
+              },
             },
-            { $count: "count" }
-          ]
-        }
-      }
+            { $count: "count" },
+          ],
+        },
+      },
     ]);
 
-    // 2. Generate Chart Data (Monthly Pulse)
-    // Groups by month and counts reports
     const monthlyData = await Issues.aggregate([
       {
         $match: {
-          createdAt: { $gte: new Date(new Date().getFullYear(), 0, 1) } // Since start of year
-        }
+          createdAt: { $gte: new Date(new Date().getFullYear(), 0, 1) }, // Since start of year
+        },
       },
       {
         $group: {
           _id: { $month: "$createdAt" },
-          reports: { $sum: 1 }
-        }
+          reports: { $sum: 1 },
+        },
       },
-      { $sort: { "_id": 1 } }
+      { $sort: { _id: 1 } },
     ]);
 
-    // 3. Get Recent Transmissions
-    // Populates reporter name and limits to 4
     const recentIssues = await Issues.find({ isArchived: false })
       .sort({ createdAt: -1 })
       .limit(4)
-      .populate("reportedBy", "name") 
+      .populate("reportedBy", "name")
       .lean();
 
     // --- DATA FORMATTING FOR FRONTEND ---
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
     const chartData = monthNames.map((name, index) => {
-      const found = monthlyData.find(m => m._id === index + 1);
+      const found = monthlyData.find((m) => m._id === index + 1);
       return { name, reports: found ? found.reports : 0 };
     });
 
@@ -71,14 +81,16 @@ export async function GET(req) {
         pending: statusObj.pending || 0,
         resolved: statusObj.resolved || 0,
         inProgress: statusObj["in-progress"] || 0,
-        resolvedThisMonth: statsResult[0].resolvedThisMonth[0]?.count || 0
+        resolvedThisMonth: statsResult[0].resolvedThisMonth[0]?.count || 0,
       },
       chartData,
-      recentIssues
+      recentIssues,
     });
-
   } catch (error) {
     console.error("Dashboard Data Error:", error);
-    return NextResponse.json({ error: "Failed to fetch pulse data" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch pulse data" },
+      { status: 500 }
+    );
   }
 }

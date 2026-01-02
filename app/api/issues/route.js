@@ -8,7 +8,7 @@ export async function GET(request) {
 
     const issues = await Issues.find({})
       .populate("reportedBy", "name email")
-      .sort({ createdAt: -1 }); // latest first
+      .sort({ createdAt: -1 }); 
 
     return NextResponse.json(
       {
