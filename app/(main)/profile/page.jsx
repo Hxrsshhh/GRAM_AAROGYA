@@ -25,6 +25,7 @@ import { InputField } from "@/components/ui/input";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { toast } from "sonner";
 
 export default function Profile() {
   const [loading, setLoading] = useState(false);
@@ -57,7 +58,6 @@ export default function Profile() {
 
   const handleSave = async () => {
     setSaving(true);
-    console.log(formData);
     try {
       const response = await fetch("/api/user/profile", {
         method: "PUT",
@@ -72,10 +72,11 @@ export default function Profile() {
 
       const updatedUser = await response.json();
       setFormData(updatedUser);
+      toast.success("User Updated successfullt");
       setEditing(false);
     } catch (error) {
       console.error("Save failed:", error.message);
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setSaving(false);
     }
@@ -112,15 +113,17 @@ export default function Profile() {
             </h1>
           </div>
           <div className="flex gap-3">
-            {session?.user?.onboardingStatus !== "completed" && (
-              <Button
-                onClick={() => router.push("/onboarding")}
-                variant="secondary"
-                className="text-xs"
-              >
-                Complete your profile
-              </Button>
-            )}
+            {status === "authenticated" &&
+              session?.user?.onboardingStatus &&
+              session.user.onboardingStatus !== "completed" && (
+                <Button
+                  onClick={() => router.push("/onboarding")}
+                  variant="secondary"
+                  className="text-xs"
+                >
+                  Complete your profile
+                </Button>
+              )}
 
             <Button variant="secondary" className="text-xs">
               <Settings size={14} /> Preferences

@@ -92,6 +92,7 @@ const Navbar = () => {
   ];
 
   const handleLogout = async () => {
+     sessionStorage.setItem("logoutSuccess", "true");
     await signOut({
       redirect: false,
     });

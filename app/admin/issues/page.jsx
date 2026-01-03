@@ -28,6 +28,7 @@ const STATUSES = ["All", "pending", "in-progress", "resolved"];
 import { IncidentCard } from "@/components/layouts/IncidentCard";
 import { getAllIssues } from "@/app/api/issues";
 import Link from "next/link";
+import { toast } from "sonner";
 
 IncidentCard.displayName = "IncidentCard";
 
@@ -86,13 +87,14 @@ export default function Issues() {
           prevIssues.filter((issue) => issue._id !== selectedIssue._id)
         );
         setDeleteModalOpen(false);
+        toast.success("Issue deleted Successfully");
       } else {
         const errorData = await res.json();
-        alert(`Error: ${errorData.message || "Failed to delete"}`);
+        toast.error(`Error: ${errorData.message || "Failed to delete"}`);
       }
     } catch (err) {
       console.error("Delete Error:", err);
-      alert("System communication failure during purge.");
+      toast.error("System communication failure during purge.");
     } finally {
       setIsDeleting(false);
       setSelectedIssue(null);

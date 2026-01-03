@@ -190,6 +190,7 @@ export default function ReportIssue() {
       alert("Something went wrong");
     } finally {
       setIsSubmitting(false);
+      sessionStorage.setItem('IssueAdded','true');
       router.push("/issues");
     }
   };

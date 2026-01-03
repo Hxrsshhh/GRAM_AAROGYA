@@ -6,26 +6,15 @@ import { Edit3, Cpu, ShieldCheck, Sparkles, RotateCcw } from "lucide-react";
 
 import AiScan from "@/components/reportIssues/AiScan";
 import ReportIssue from "@/components/reportIssues/ReportManual";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 export default function App() {
   const [isAiMode, setIsAiMode] = useState(true);
 
-  const router = useRouter();
-
-  const [aiFile, setAiFile] = useState(null);
-  const [manualData, setManualData] = useState({
-    category: "",
-    description: "",
-  });
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const handleRefresh = () => {
-    setAiFile(null);
-
-    setManualData({ category: "", description: "" });
-    router.refresh();
-    console.log("Registry states cleared.");
+    setRefreshKey((prev) => prev + 1);
   };
 
   return (
@@ -126,12 +115,9 @@ export default function App() {
               </div>
 
               {isAiMode ? (
-                <AiScan file={aiFile} setFile={setAiFile} />
+                <AiScan key={`ai-${refreshKey}`} />
               ) : (
-                <ReportIssue
-                  formData={manualData}
-                  setFormData={setManualData}
-                />
+                <ReportIssue key={`manual-${refreshKey}`} />
               )}
             </motion.div>
           </AnimatePresence>
@@ -147,13 +133,11 @@ export default function App() {
                   >
                     <div className="relative w-10 h-10">
                       <Image
-                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${
-                          i + 20
-                        }`}
-                        alt="User"
-                        fill
-                        className="object-cover"
-                        sizes="40px"
+                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=21`}
+                        alt="avatar"
+                        width={40}
+                        height={40}
+                        unoptimized
                       />
                     </div>
                   </div>

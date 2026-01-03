@@ -4,31 +4,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { NextResponse } from "next/server";
 
-export async function PATCH(req, { params }) {
-  const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "admin") {
-    return new Response("Forbidden", { status: 403 });
-  }
-
-  await connectDB();
-
-  const updates = await req.json();
-
-  const updatedUser = await User.findByIdAndUpdate(params.id, updates, {
-    new: true,
-  });
-
-  return Response.json({
-    success: true,
-    user: {
-      _id: updatedUser._id,
-      role: updatedUser.role,
-      isBlocked: updatedUser.isBlocked,
-      isVerified: updatedUser.isVerified,
-      status: updatedUser.status,
-    },
-  });
-}
 
 export async function DELETE(req, { params }) {
   try {
@@ -73,5 +48,44 @@ export async function DELETE(req, { params }) {
       { error: err.message || "Failed to delete user" },
       { status: 500 }
     );
+  }
+}
+
+
+export async function PATCH(req, { params }) {
+  try {
+  
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "admin") {
+      return new Response(JSON.stringify({ error: "Unauthorized access" }), { 
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    await connectDB();
+    const updates = await req.json();
+    const { id } = await params;
+
+    if (!id) {
+      return new Response(JSON.stringify({ error: "User ID is required" }), { status: 400 });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(id, updates, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updatedUser) {
+      return new Response(JSON.stringify({ error: "User not found" }), { status: 404 });
+    }
+
+    return Response.json(updatedUser);
+
+  } catch (error) {
+    console.error("User Update Error:", error);
+    return new Response(JSON.stringify({ error: "Internal Server Error" }), { 
+      status: 500 
+    });
   }
 }

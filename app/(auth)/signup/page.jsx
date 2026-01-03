@@ -31,6 +31,7 @@ export default function SignUp() {
   const router = useRouter();
 
   const handleGoogleLogin = async () => {
+    localStorage.setItem("googleLoginSuccess", "true");
     await signIn("google");
   };
 
@@ -66,6 +67,7 @@ export default function SignUp() {
             "Account created, but login failed. Please try the login page."
           );
         }
+        sessionStorage.setItem("signupSuccess", "true");
         router.push("/dashboard");
       }
     } catch (err) {

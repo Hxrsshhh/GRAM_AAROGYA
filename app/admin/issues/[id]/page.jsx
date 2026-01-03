@@ -30,6 +30,7 @@ import { SelectField } from "@/components/ui/Selectefield";
 
 import ConfirmIssueDeleteModal from "@/components/modals/confirmdeletIssueModal";
 import Image from "next/image";
+import { toast } from "sonner";
 
 const CATEGORIES = [
   "infrastructure",
@@ -96,6 +97,7 @@ export default function IssueDetail() {
         const updatedData = await res.json();
         setIssue(updatedData);
         setCommentText("");
+        toast.success('Comment Added Successfully');
       }
     } catch (err) {
       console.error("Comment Error:", err);
@@ -117,9 +119,9 @@ export default function IssueDetail() {
         }),
       });
       if (!res.ok) throw new Error("Update failed");
-      alert("Database synced successfully");
+      toast.success("Database synced successfully");
     } catch (err) {
-      alert("Error updating record");
+      toast.error("Error updating record");
     } finally {
       setIsSaving(false);
     }
@@ -161,7 +163,7 @@ export default function IssueDetail() {
     <div className="h-screen w-full flex flex-col bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 overflow-hidden font-['Plus_Jakarta_Sans',sans-serif]">
       {/* --- HEADER / MOBILE BOTTOM DOCK --- */}
       {/* Fixed to bottom on mobile, stays at top on desktop */}
-      <header className="fixed bottom-0 left-0 right-0 lg:relative lg:bottom-auto h-16 lg:h-14 flex-shrink-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t lg:border-t-0 lg:border-b border-slate-200 dark:border-slate-800 z-50 shadow-[0_-10px_25px_rgba(0,0,0,0.1)] lg:shadow-none">
+      <header className="fixed bottom-0 left-0 z-100 right-0 lg:relative lg:bottom-auto h-16 lg:h-14 flex-shrink-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t lg:border-t-0 lg:border-b border-slate-200 dark:border-slate-800  shadow-[0_-10px_25px_rgba(0,0,0,0.1)] lg:shadow-none">
         <div className="max-w-7xl mx-auto h-full px-4 md:px-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
@@ -197,7 +199,7 @@ export default function IssueDetail() {
               <>
                 <Save size={14} />{" "}
                 <span className="hidden xs:inline">Sync Database</span>
-                <span className="xs:hidden">Sync</span>
+                <span className="xs:hidden">Sync...</span>
               </>
             )}
           </button>
