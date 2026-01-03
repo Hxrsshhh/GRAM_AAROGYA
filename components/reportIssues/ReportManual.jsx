@@ -28,6 +28,7 @@ import { useSession } from "next-auth/react";
 import { uploadToCloudinary } from "@/lib/cloudinary/cloudinaryUpload";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { toast } from "sonner";
 
 export default function ReportIssue() {
   const [step, setStep] = useState(1);
@@ -187,7 +188,7 @@ export default function ReportIssue() {
       if (!res.ok) throw new Error("Submit failed");
     } catch (err) {
       console.error(err);
-      alert("Something went wrong");
+      toast.error("Something went wrong");
     } finally {
       setIsSubmitting(false);
       sessionStorage.setItem('IssueAdded','true');
@@ -217,11 +218,19 @@ export default function ReportIssue() {
 
     recorder.ondataavailable = (e) => chunksRef.current.push(e.data);
 
-    recorder.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-      setVoiceBlob(blob);
-      chunksRef.current = [];
-    };
+   recorder.onstop = () => {
+  const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+
+  const file = new File(
+    [blob],
+    `voice-${Date.now()}.webm`,
+    { type: "audio/webm" }
+  );
+
+  setVoiceBlob(file);
+  chunksRef.current = [];
+};
+
 
     recorder.start();
     setIsListening(true);
@@ -348,6 +357,7 @@ export default function ReportIssue() {
                     <button
                       type="button"
                       onClick={toggleListening}
+                      
                       className={`absolute bottom-4 right-2 p-2.5 rounded-lg border transition-all shadow-sm active:scale-95
                       ${
                         isListening
