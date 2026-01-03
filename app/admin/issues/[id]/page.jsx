@@ -128,7 +128,6 @@ export default function IssueDetail() {
   };
 
   const handleConfirmDelete = async () => {
-    if (!confirm("CRITICAL: Permanently delete this record?")) return;
     try {
       const res = await fetch(`/api/admin/issues/${id}`, { method: "DELETE" });
       if (res.ok) router.push("/admin/issues");
