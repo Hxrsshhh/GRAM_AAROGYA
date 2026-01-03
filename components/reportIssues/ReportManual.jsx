@@ -191,7 +191,7 @@ export default function ReportIssue() {
       toast.error("Something went wrong");
     } finally {
       setIsSubmitting(false);
-      sessionStorage.setItem('IssueAdded','true');
+      sessionStorage.setItem("IssueAdded", "true");
       router.push("/issues");
     }
   };
@@ -218,19 +218,16 @@ export default function ReportIssue() {
 
     recorder.ondataavailable = (e) => chunksRef.current.push(e.data);
 
-   recorder.onstop = () => {
-  const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+    recorder.onstop = () => {
+      const blob = new Blob(chunksRef.current, { type: "audio/webm" });
 
-  const file = new File(
-    [blob],
-    `voice-${Date.now()}.webm`,
-    { type: "audio/webm" }
-  );
+      const file = new File([blob], `voice-${Date.now()}.webm`, {
+        type: "audio/webm",
+      });
 
-  setVoiceBlob(file);
-  chunksRef.current = [];
-};
-
+      setVoiceBlob(file);
+      chunksRef.current = [];
+    };
 
     recorder.start();
     setIsListening(true);
@@ -357,7 +354,6 @@ export default function ReportIssue() {
                     <button
                       type="button"
                       onClick={toggleListening}
-                      
                       className={`absolute bottom-4 right-2 p-2.5 rounded-lg border transition-all shadow-sm active:scale-95
                       ${
                         isListening
@@ -501,7 +497,15 @@ export default function ReportIssue() {
                   (step === 2 &&
                     (!formData.title || !formData.location.address))
                 }
-                onClick={() => setStep((s) => s + 1)}
+                onClick={() => {
+                  if (isListening) {
+                    toast.warning(
+                      "Please stop voice recording before continuing"
+                    );
+                    return;
+                  }
+                  setStep((s) => s + 1);
+                }}
                 className="bg-emerald-600 text-white px-8 py-3.5 rounded-xl font-black uppercase tracking-widest text-xs flex items-center gap-2 hover:bg-emerald-500 disabled:grayscale disabled:opacity-50 transition-all"
               >
                 Next <ChevronRight size={16} />
