@@ -116,7 +116,7 @@ export default function SignInPage() {
               <div className="space-y-4">
                 <Input
                   type="email"
-                  label="Neural ID (Email)"
+                  label="Email Address"
                   placeholder="name@pulse.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -128,7 +128,7 @@ export default function SignInPage() {
                 <div className="space-y-1">
                   <Input
                     type={showPassword ? "text" : "password"}
-                    label="Access Key"
+                    label="Password"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
