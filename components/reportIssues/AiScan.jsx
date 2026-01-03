@@ -170,47 +170,91 @@ const AiScan = () => {
     );
   };
 
-  /* ---------------- AI ANALYSIS ---------------- */
-  const analyzeWithAI = async () => {
-    if (loadingAI || imagePreviews.length === 0) return;
+  // /* ---------------- AI ANALYSIS ---------------- */
+  // const analyzeWithAI = async () => {
+  //   if (loadingAI || imagePreviews.length === 0) return;
 
-    setLoadingAI(true);
-    addLog("AI ENGINE ENGAGED");
+  //   setLoadingAI(true);
+  //   addLog("AI ENGINE ENGAGED");
 
-    try {
-      const imagesPayload = imagePreviews.map((img) => ({
-        data: img.split(",")[1],
-        mimeType: img.substring(img.indexOf(":") + 1, img.indexOf(";")),
-      }));
+  //   try {
+  //     const imagesPayload = imagePreviews.map((img) => ({
+  //       data: img.split(",")[1],
+  //       mimeType: img.substring(img.indexOf(":") + 1, img.indexOf(";")),
+  //     }));
 
-      const res = await fetch("/api/ai/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ images: imagesPayload }),
-      });
+  //     const res = await fetch("/api/ai/analyze", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ images: imagesPayload }),
+  //     });
 
-      const data = await res.json();
+  //     const data = await res.json();
 
-      if (!data || typeof data.confidence !== "number") {
-        throw new Error("Invalid AI response");
-      }
+  //     if (!data || typeof data.confidence !== "number") {
+  //       throw new Error("Invalid AI response");
+  //     }
 
-      setFormData((prev) => ({ ...prev, ...data }));
-      addLog("AI CLASSIFICATION SUCCESS");
-    } catch (err) {
-      console.error(err);
-      addLog("AI FALLBACK MODE");
-      setFormData((prev) => ({
-        ...prev,
-        confidence: 85,
-        category: "infrastructure",
-        title: "Manual Entry Required",
-        priority: "Medium",
-      }));
-    } finally {
-      setLoadingAI(false);
-    }
-  };
+  //     setFormData((prev) => ({ ...prev, ...data }));
+  //     addLog("AI CLASSIFICATION SUCCESS");
+  //   } catch (err) {
+  //     console.error(err);
+  //     addLog("AI FALLBACK MODE");
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       confidence: 85,
+  //       category: "infrastructure",
+  //       title: "Manual Entry Required",
+  //       priority: "Medium",
+  //     }));
+  //   } finally {
+  //     setLoadingAI(false);
+  //   }
+  // };
+
+ const analyzeWithAI = async () => {
+  if (loadingAI || imagePreviews.length === 0) return;
+
+  setLoadingAI(true);
+  addLog("G3-FLASH NEURAL LINK ACTIVE");
+
+  try {
+    const imagesPayload = imagePreviews.map((img) => ({
+      data: img.split(",")[1],
+      mimeType: img.split(";")[0].split(":")[1],
+    }));
+
+    addLog("STREAMING MULTIMODAL TELEMETRY...");
+
+    const res = await fetch("/api/ai/analyzeG", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ images: imagesPayload }),
+    });
+
+    const data = await res.json();
+
+    if (data.error) throw new Error(data.error);
+
+    // Populate your form state
+    setFormData((prev) => ({
+      ...prev,
+      title: data.title,
+      description: data.description,
+      category: data.category,
+      priority: data.priority,
+      confidence: data.confidence,
+    }));
+
+    addLog(`SCAN SUCCESSFUL: ${data.confidence}% ACCURACY`);
+
+  } catch (err) {
+    addLog("CRITICAL: NEURAL SCAN INTERRUPTED");
+    console.error(err);
+  } finally {
+    setLoadingAI(false);
+  }
+};
 
   const handleSubmit = async () => {
     try {
@@ -250,12 +294,13 @@ const AiScan = () => {
       alert("Something went wrong");
     } finally {
       setIsSubmitting(false);
-      sessionStorage.setItem('IssueAdded','true');
+      sessionStorage.setItem("IssueAdded", "true");
       router.push("/issues");
     }
   };
 
   return (
+
     <div className=" max-h-screen py-4 lg:py-0 max-w-screen bg-slate-50/10 dark:bg-transparent text-slate-900 dark:text-slate-200 font-['Plus_Jakarta_Sans'] flex flex-col overflow-y-auto lg:overflow-hidden transition-colors duration-300">
       {/* Background Decor */}
       <div className="fixed inset-0 pointer-events-none">
@@ -267,7 +312,7 @@ const AiScan = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full lg:overflow-hidden">
           {/* Left Panel */}
           <div className="lg:col-span-5   flex flex-col gap-6 lg:overflow-hidden">
-            <div className="flex-1 bg-white/50 md:h-[60vh]  dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-[2.5rem] overflow-hidden relative group min-h-50 max-h-75 lg:max-h-[65vh] lg:min-h-30 ring-1 ring-black/5 dark:ring-white/5 shadow-xl dark:shadow-inner">
+            <div className="flex-1 bg-white/50 md:max-h-[27vh]  dark:bg-slate-900/20 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-[2.5rem] overflow-hidden md:overflow-hidden relative group min-h-50 max-h-75 lg:max-h-[65vh] lg:min-h-30 ring-1 ring-black/5 dark:ring-white/5 shadow-xl dark:shadow-inner">
               {imagePreviews.length === 0 ? (
                 <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer transition-all duration-500 hover:bg-emerald-500/[0.02]">
                   <input
@@ -402,7 +447,7 @@ const AiScan = () => {
           </div>
 
           {/* Right Panel */}
-          <div className="lg:col-span-7 md:h-[62vh]  bg-white/50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] flex flex-col lg:overflow-hidden backdrop-blur-sm min-h-0 shadow-xl">
+          <div className="lg:col-span-7 md:h-[60vh]  bg-white/50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] flex flex-col lg:overflow-hidden backdrop-blur-sm min-h-0 shadow-xl">
             <div className="px-8 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white/80 dark:bg-slate-900/50 shrink-0">
               <div className="flex items-center gap-3">
                 <Layers
@@ -683,6 +728,7 @@ const AiScan = () => {
         }}
       />
     </div>
+
   );
 };
 

@@ -1,5 +1,3 @@
-
-
 export async function getAllIssues() {
   const res = await fetch("/api/issues", {
     method: "GET",
@@ -108,4 +106,28 @@ const formatRelativeTime = (dateString) => {
 
   const diffInDays = Math.floor(diffInHours / 24);
   return diffInDays === 1 ? "Yesterday" : `${diffInDays} days ago`;
+};
+
+export const toggleUpvote = async (id) => {
+  const res = await fetch(`/api/issues/${id}/upvote`, {
+    method: "POST",
+    credentials: "include",
+  });
+
+  const data = await res.json();
+
+  // 🚨 THIS IS THE MISSING PART
+  if (!res.ok) {
+    throw new Error(data.message || "Upvote failed");
+  }
+
+  return data;
+};
+
+export const incrementView = async (id) => {
+  const res = await fetch(`/api/issues/${id}/view`, {
+    method: "POST",
+  });
+  if (!res.ok) return null;
+  return res.json(); // Return the JSON so we can get the updated count
 };

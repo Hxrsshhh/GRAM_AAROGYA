@@ -24,13 +24,19 @@ import {
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { createComment, getIssueById } from "@/app/api/issues";
+import {
+  createComment,
+  getIssueById,
+  incrementView,
+  toggleUpvote,
+} from "@/app/api/issues";
 import { IssueMap } from "@/components/layouts/MapComponent";
 import { Badge } from "@/components/ui/Issue-badge";
 import { Card } from "@/components/ui/Issue-card";
 import Button from "@/components/ui/Button";
 import Image from "next/image";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 
 export default function App() {
   const [issue, setIssue] = useState(null);
@@ -45,6 +51,8 @@ export default function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const router = useRouter();
+
+  const { data: session } = useSession();
 
   const STATUS_STEPS = [
     {
@@ -76,6 +84,10 @@ export default function App() {
       const data = await getIssueById(id);
       setIssue(data);
 
+      if (session?.user?.id && data.upvotedBy) {
+        setHasUpvoted(data.upvotedBy.includes(session.user.id));
+      }
+
       const formattedComments = (data.comments || []).map((c) => ({
         id: c._id,
         name: c.createdBy?.name || "Anonymous Citizen",
@@ -103,7 +115,7 @@ export default function App() {
       await createComment(issue._id, comment);
 
       setComment("");
-      toast.success("Comment Added successfully ")
+      toast.success("Comment Added successfully ");
       await syncIssueData();
     } catch (err) {
       console.error("Post Comment Error:", err);
@@ -141,6 +153,45 @@ export default function App() {
 
   const handleBack = () => {
     router.back();
+  };
+
+  const handleUpvote = async () => {
+    if (!session) {
+      toast.error("Please login to upvote");
+      return;
+    }
+
+    const previousUpvotes = issue.upvotes;
+    const previousHasUpvoted = hasUpvoted;
+
+    // optimistic UI
+    setHasUpvoted(!previousHasUpvoted);
+    setIssue((prev) => ({
+      ...prev,
+      upvotes: Math.max((prev.upvotes ?? 0) + (previousHasUpvoted ? -1 : 1), 0),
+    }));
+
+    try {
+      const res = await toggleUpvote(issue._id);
+
+      // sync with backend (SOURCE OF TRUTH)
+      setHasUpvoted(res.hasUpvoted);
+      setIssue((prev) => ({
+        ...prev,
+        upvotes: res.upvotes,
+      }));
+
+      toast.success(res.hasUpvoted ? "Upvoted" : "Upvote removed");
+    } catch (err) {
+      // rollback
+      setHasUpvoted(previousHasUpvoted);
+      setIssue((prev) => ({
+        ...prev,
+        upvotes: previousUpvotes,
+      }));
+
+      toast.error(err.message || "Unable to upvote");
+    }
   };
 
   if (loading) {
@@ -232,8 +283,9 @@ export default function App() {
                     {issue.viewCount || 0} Views
                   </span>
                 </div>
+
                 <button
-                  onClick={() => setHasUpvoted(!hasUpvoted)}
+                  onClick={handleUpvote}
                   className="flex items-center gap-2 hover:opacity-70 transition-opacity"
                 >
                   <ThumbsUp
@@ -244,9 +296,10 @@ export default function App() {
                     }`}
                   />
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                    {(issue.upvotes || 0) + (hasUpvoted ? 1 : 0)} UpVotes
+                    {issue?.upvotes ?? 0} Upvotes
                   </span>
                 </button>
+
                 <button className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500 hover:text-white transition-all text-slate-400">
                   <Share2 className="w-3 h-3" />
                   <span className="text-[9px] font-black uppercase tracking-widest">

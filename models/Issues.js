@@ -58,7 +58,7 @@ const IssueSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["pending", "in-progress", "resolved"],
+      enum: ["pending", "in-progress", "resolved", "rejected"],
       default: "pending",
       index: true,
     },
@@ -104,12 +104,15 @@ const IssueSchema = new mongoose.Schema(
     upvotes: {
       type: Number,
       default: 0,
+      min: 0,
     },
-    upvotedBy: {
-      type: [mongoose.Schema.Types.ObjectId],
-      ref: "User",
-      index: true,
-    },
+    upvotedBy: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        index: true,
+      },
+    ],
 
     viewCount: {
       type: Number,
