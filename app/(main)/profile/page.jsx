@@ -58,7 +58,6 @@ export default function Profile() {
 
   const handleSave = async () => {
     setSaving(true);
-    console.log(formData);
     try {
       const response = await fetch("/api/user/profile", {
         method: "PUT",

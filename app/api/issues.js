@@ -123,11 +123,3 @@ export const toggleUpvote = async (id) => {
 
   return data;
 };
-
-export const incrementView = async (id) => {
-  const res = await fetch(`/api/issues/${id}/view`, {
-    method: "POST",
-  });
-  if (!res.ok) return null;
-  return res.json(); // Return the JSON so we can get the updated count
-};

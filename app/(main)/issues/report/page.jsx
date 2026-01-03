@@ -133,13 +133,11 @@ export default function App() {
                   >
                     <div className="relative w-10 h-10">
                       <Image
-                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${
-                          i + 20
-                        }`}
-                        alt="User"
-                        fill
-                        className="object-cover"
-                        sizes="40px"
+                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=21`}
+                        alt="avatar"
+                        width={40}
+                        height={40}
+                        unoptimized
                       />
                     </div>
                   </div>
