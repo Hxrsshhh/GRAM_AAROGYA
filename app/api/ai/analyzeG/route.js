@@ -9,17 +9,20 @@ export async function POST(req) {
     const { images } = await req.json();
 
     if (!images || images.length === 0) {
-      return NextResponse.json({ error: "No image payload detected" }, { status: 400 });
+      return NextResponse.json(
+        { error: "No image payload detected" },
+        { status: 400 }
+      );
     }
 
     // SWITCH TO PRO MODEL HERE
-    // Use "gemini-3-pro" or "gemini-1.5-pro" depending on your region's availability
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-3-flash-preview", 
-      generationConfig: { 
+    //models - gemini-3-flash-preview
+    const model = genAI.getGenerativeModel({
+      model: "gemini-3-flash-preview",
+      generationConfig: {
         responseMimeType: "application/json",
         temperature: 0.4, // Lower temperature for more consistent data extraction
-      } 
+      },
     });
 
     const systemPrompt = `
@@ -49,11 +52,34 @@ export async function POST(req) {
     const text = result.response.text();
 
     return NextResponse.json(JSON.parse(text));
-  } catch (error) {
-    console.error("Gemini 3 Pro Error:", error);
+  }  catch (error) {
+  console.error("Gemini Error:", error);
+
+  const message = error?.message || "";
+
+  // 🎯 QUOTA / LIMIT
+  if (
+    message.includes("quota") ||
+    message.includes("Too Many Requests") ||
+    message.includes("429")
+  ) {
     return NextResponse.json(
-      { error: error.message || "Neural Engine timeout" }, 
-      { status: 500 }
+      {
+        error: "AI daily limit reached",
+        code: "AI_QUOTA_EXCEEDED",
+      },
+      { status: 429 }
     );
   }
+
+  // ❌ MODEL / CONFIG ERROR
+  return NextResponse.json(
+    {
+      error: "AI model unavailable",
+      code: "AI_MODEL_ERROR",
+    },
+    { status: 500 }
+  );
+}
+
 }

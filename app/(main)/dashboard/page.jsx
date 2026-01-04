@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   TrendingUp,
   Plus,
@@ -14,6 +14,7 @@ import {
   Clock,
   CheckCircle2,
   Activity,
+  ZapOff,
 } from "lucide-react";
 import {
   AreaChart,
@@ -31,7 +32,6 @@ import Link from "next/link";
 import { getDashboardData } from "@/lib/api/dashboard";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
-import { toast } from "sonner";
 import { fireOneTimeToast } from "@/lib/oneTimeToast";
 
 export default function Dashboard() {
@@ -42,15 +42,11 @@ export default function Dashboard() {
 
   const { data: session } = useSession();
   const user = session?.user;
-   
-
 
   useEffect(() => {
-
-  fireOneTimeToast("googleLoginSuccess", "Signed in with Google 🚀");
-  fireOneTimeToast("signupSuccess", "Welcome to Pulse 🎉");
-  fireOneTimeToast("signinSuccess", "Welcome Back to Pulse 🎉");
-
+    fireOneTimeToast("googleLoginSuccess", "Signed in with Google 🚀");
+    fireOneTimeToast("signupSuccess", "Welcome to Pulse 🎉");
+    fireOneTimeToast("signinSuccess", "Welcome Back to Pulse 🎉");
 
     async function loadDashboard() {
       try {
@@ -209,13 +205,7 @@ export default function Dashboard() {
                   margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                 >
                   <defs>
-                    <linearGradient
-                      id="colorReports"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
+                    <linearGradient id="colorReports" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
                       <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                     </linearGradient>
@@ -336,71 +326,96 @@ export default function Dashboard() {
             <h2 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
               Recent Transmissions
             </h2>
-            <Link href="/issues">
-              <button className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 transition-colors">
-                View All Nodes
-              </button>
-            </Link>
+            {recentIssues.length > 0 && (
+              <Link href="/issues">
+                <button className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 transition-colors">
+                  View All Nodes
+                </button>
+              </Link>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {recentIssues.length > 0 ? (
-              recentIssues.slice(0, 4).map((issue) => (
-                <Link href={`/issues/${issue._id}`} key={issue._id}>
-                  <motion.div
-                    whileHover={{ y: -4, scale: 1.01 }}
-                    className="cursor-pointer group relative flex items-center gap-4 p-4 rounded-[2rem] border border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-all duration-300"
-                  >
-                    <div className="relative w-16 h-16 shrink-0">
-                      <div className="relative w-full h-full">
-                        <Image
-                          src={issue.images?.[0]}
-                          alt={issue.title}
-                          fill
-                          className="rounded-2xl object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-                          sizes="(max-width: 768px) 100vw, 33vw"
-                        />
-                      </div>
+            <AnimatePresence mode="popLayout">
+              {recentIssues.length > 0 ? (
+                recentIssues.slice(0, 4).map((issue) => (
+                  <Link href={`/issues/${issue._id}`} key={issue._id}>
+                    <motion.div
+                      whileHover={{ y: -4, scale: 1.01 }}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="cursor-pointer group relative flex items-center gap-4 p-4 rounded-[2rem] border border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-all duration-300"
+                    >
+                      <div className="relative w-16 h-16 shrink-0">
+                        <div className="relative w-full h-full">
+                          <Image
+                            src={issue.images?.[0] || "/placeholder-issue.jpg"}
+                            alt={issue.title}
+                            fill
+                            className="rounded-2xl object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                            sizes="(max-width: 768px) 100vw, 33vw"
+                          />
+                        </div>
 
-                      <div
-                        className={`absolute -top-1 -right-1 px-2 py-0.5 text-[7px] font-black text-white rounded-full uppercase tracking-tighter ${
-                          issue.status === "resolved"
-                            ? "bg-emerald-500"
-                            : "bg-amber-500"
-                        }`}
-                      >
-                        {issue.status}
+                        <div
+                          className={`absolute -top-1 -right-1 px-2 py-0.5 text-[7px] font-black text-white rounded-full uppercase tracking-tighter ${
+                            issue.status === "resolved"
+                              ? "bg-emerald-500"
+                              : "bg-amber-500"
+                          }`}
+                        >
+                          {issue.status}
+                        </div>
                       </div>
-                    </div>
-                    <div className="grow">
-                      <h3 className="font-black text-slate-800 dark:text-slate-100 text-sm mb-1 group-hover:text-emerald-600 transition-colors">
-                        {issue.title}
-                      </h3>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1">
-                        <span className="flex items-center gap-1.5 text-[9px] font-bold text-slate-400">
-                          <MapPin className="w-3 h-3 text-emerald-500" />
-                          {/* Fixed to match your nested location schema */}
-                          {issue.location?.address?.split(",")[0] || "Global"}
-                        </span>
-                        <span className="flex items-center gap-1.5 text-[9px] font-bold text-slate-400">
-                          <Calendar className="w-3 h-3 text-emerald-500" />
-                          {new Date(issue.createdAt).toLocaleDateString()}
-                        </span>
+                      <div className="grow">
+                        <h3 className="font-black text-slate-800 dark:text-slate-100 text-sm mb-1 group-hover:text-emerald-600 transition-colors line-clamp-1">
+                          {issue.title}
+                        </h3>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1">
+                          <span className="flex items-center gap-1.5 text-[9px] font-bold text-slate-400">
+                            <MapPin className="w-3 h-3 text-emerald-500" />
+                            {issue.location?.address?.split(",")[0] || "Global"}
+                          </span>
+                          <span className="flex items-center gap-1.5 text-[9px] font-bold text-slate-400">
+                            <Calendar className="w-3 h-3 text-emerald-500" />
+                            {new Date(issue.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
                       </div>
+                      <div className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                        <ArrowRight className="w-3 h-3" />
+                      </div>
+                    </motion.div>
+                  </Link>
+                ))
+              ) : (
+                /* RESPONSIVE EMPTY STATE DIV */
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="col-span-full py-16 flex flex-col items-center justify-center text-center bg-slate-50/50 dark:bg-slate-900/20 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[2.5rem]"
+                >
+                  <div className="relative mb-6">
+                    <div className="absolute inset-0 bg-emerald-500/20 blur-2xl rounded-full animate-pulse" />
+                    <div className="relative p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-xl">
+                      <ZapOff className="w-8 h-8 text-emerald-500/50" />
                     </div>
-                    <div className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:bg-emerald-500 group-hover:text-white transition-all">
-                      <ArrowRight className="w-3 h-3" />
-                    </div>
-                  </motion.div>
-                </Link>
-              ))
-            ) : (
-              <div className="col-span-full py-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
-                <p className="text-slate-400 font-black uppercase tracking-widest text-[10px]">
-                  No active data nodes found.
-                </p>
-              </div>
-            )}
+                  </div>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest mb-2">
+                    Zero Transmissions Detected
+                  </h3>
+                  <p className="text-[11px] font-bold text-slate-400 max-w-[240px] leading-relaxed mb-8">
+                    The network is currently clear. No anomalies have been reported in your sector.
+                  </p>
+                  <Link href="/issues/report">
+                    <button className="flex items-center gap-2 px-6 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-950 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-transform">
+                      <Plus className="w-3.5 h-3.5" />
+                      Initialize First Report
+                    </button>
+                  </Link>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </DashboardCard>
       </div>

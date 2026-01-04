@@ -37,6 +37,7 @@ export default function Issues() {
   const [filterCat, setFilterCat] = useState("All");
   const [filterStat, setFilterStat] = useState("All");
   const [issues, setIssues] = useState([]);
+  const [loading, setLoading] = useState(true); // New Loading State
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState(null);
@@ -45,11 +46,15 @@ export default function Issues() {
   useEffect(() => {
     const fetchIssues = async () => {
       try {
+        setLoading(true);
         const data = await getAllIssues();
         if (!data) throw new Error("Failed to fetch issues");
         setIssues(data.data);
       } catch (err) {
         console.error(err);
+        toast.error("Failed to establish uplink with data vault.");
+      } finally {
+        setLoading(false);
       }
     };
     fetchIssues();
@@ -114,7 +119,6 @@ export default function Issues() {
         {/* Header Section */}
         <div className="max-w-7xl mx-auto px-4 md:px-6 pt-18 md:pt-12">
           <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 lg:gap-8">
-            {/* TITLE SECTION */}
             <div className="space-y-2 flex-1">
               <div className="flex items-center gap-2 group cursor-default">
                 <div className="relative flex h-2 w-2">
@@ -138,7 +142,6 @@ export default function Issues() {
               </p>
             </div>
 
-            {/* ACTION BUTTONS */}
             <div className="flex items-center gap-2 md:gap-3 w-full md:w-auto">
               <button className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 md:px-6 py-3.5 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:border-emerald-500/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all shadow-sm active:scale-95">
                 <Download size={14} className="text-emerald-500" />
@@ -156,7 +159,6 @@ export default function Issues() {
             </div>
           </header>
 
-          {/* DECORATIVE DIVIDER */}
           <div className="w-full h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-800 to-transparent mt-8 opacity-50" />
         </div>
 
@@ -164,7 +166,6 @@ export default function Issues() {
           <div className="max-w-7xl mx-auto">
             <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-4 lg:p-6 shadow-sm">
               <div className="flex flex-col lg:flex-row gap-6">
-               
                 <div className="relative flex-1 group">
                   <Search
                     className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors"
@@ -179,7 +180,6 @@ export default function Issues() {
                   />
                 </div>
 
-              
                 <div className="hidden lg:flex flex-wrap items-center gap-4">
                   <div className="flex flex-col gap-1.5 min-w-[140px]">
                     <span className="text-[8px] font-black uppercase text-slate-400 px-1 ml-1 tracking-wider">
@@ -224,24 +224,47 @@ export default function Issues() {
           </div>
         </div>
 
-       
         <main className="p-2 px-6 max-w-7xl mx-auto w-full">
-        
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <AnimatePresence mode="popLayout">
-              {filtered.map((issue, idx) => (
-                <Link
-                  href={`/admin/issues/${issue._id}`}
-                  key={issue._id}
-                  className="block transform transition-transform duration-300 hover:-translate-y-1"
-                >
-                  <IncidentCard
-                    issue={issue}
-                    idx={idx}
-                    onDelete={() => handleDeleteClick(issue)}
-                  />
-                </Link>
-              ))}
+              {loading ? (
+                // LOADING SKELETON UI
+                [...Array(6)].map((_, i) => (
+                  <div
+                    key={`skeleton-${i}`}
+                    className="h-64 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] p-6 animate-pulse"
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="h-6 w-1/2 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                      <div className="h-6 w-12 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                    </div>
+                    <div className="space-y-3">
+                      <div className="h-3 w-full bg-slate-200 dark:bg-slate-800 rounded" />
+                      <div className="h-3 w-5/6 bg-slate-200 dark:bg-slate-800 rounded" />
+                    </div>
+                    <div className="mt-8 flex gap-3">
+                      <div className="h-8 w-20 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+                      <div className="h-8 w-20 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+                    </div>
+                    <div className="mt-6 h-10 w-full bg-slate-100 dark:bg-slate-800/50 rounded-xl" />
+                  </div>
+                ))
+              ) : (
+                // REAL DATA
+                filtered.map((issue, idx) => (
+                  <Link
+                    href={`/admin/issues/${issue._id}`}
+                    key={issue._id}
+                    className="block transform transition-transform duration-300 hover:-translate-y-1"
+                  >
+                    <IncidentCard
+                      issue={issue}
+                      idx={idx}
+                      onDelete={() => handleDeleteClick(issue)}
+                    />
+                  </Link>
+                ))
+              )}
 
               <ConfirmIssueDeleteModal
                 open={deleteModalOpen}
@@ -253,7 +276,7 @@ export default function Issues() {
             </AnimatePresence>
           </div>
 
-          {filtered.length === 0 && (
+          {!loading && filtered.length === 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -271,16 +294,15 @@ export default function Issues() {
             </motion.div>
           )}
 
-          {/* Footer Controls */}
           <footer className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-6 p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-lg transition-colors">
             <div className="flex items-center gap-4">
               <div className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em]">
                 Active Archive:{" "}
-                <span className="text-emerald-500">{filtered.length}</span>
+                <span className="text-emerald-500">{loading ? "..." : filtered.length}</span>
               </div>
               <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-800" />
               <div className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em]">
-                Total: {issues.length}
+                Total: {loading ? "..." : issues.length}
               </div>
             </div>
 

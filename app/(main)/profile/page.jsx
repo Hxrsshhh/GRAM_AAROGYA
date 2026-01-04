@@ -48,6 +48,7 @@ export default function Profile() {
           const res = await fetch("/api/user/profile");
           const data = await res.json();
           setFormData(data);
+          console.log(data);
         } catch (error) {
           console.error("Failed to fetch profile", error);
         }
@@ -112,19 +113,18 @@ export default function Profile() {
               </span>
             </h1>
           </div>
-          <div className="flex gap-3">
-            {status === "authenticated" &&
-              session?.user?.onboardingStatus &&
-              session.user.onboardingStatus !== "completed" && (
-                <Button
-                  onClick={() => router.push("/onboarding")}
-                  variant="secondary"
-                  className="text-xs"
-                >
-                  Complete your profile
-                </Button>
-              )}
 
+          <div className="flex gap-3">
+
+            {formData?.onboardingStatus === "skipped" && (
+              <Button
+                onClick={() => router.push("/onboarding")}
+                variant="secondary"
+                className="text-xs bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+              >
+                Complete your profile
+              </Button>
+            )}
             <Button variant="secondary" className="text-xs">
               <Settings size={14} /> Preferences
             </Button>
@@ -288,7 +288,13 @@ export default function Profile() {
                     label="Headquarters / Location"
                     value={formData.location?.city || ""}
                     onChange={(e) =>
-                      setFormData({ ...formData, address: e.target.value })
+                      setFormData({
+                        ...formData,
+                        location: {
+                          ...formData.location,
+                          city: e.target.value,
+                        },
+                      })
                     }
                     leftIcon={<MapPin />}
                     disabled={!editing}

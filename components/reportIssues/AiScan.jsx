@@ -28,6 +28,9 @@ import { useRouter } from "next/navigation";
 import { InputWrapper } from "@/components/ui/InputWrapper";
 import { toast } from "sonner";
 
+const countWords = (text = "") =>
+  text.trim().split(/\s+/).filter(Boolean).length;
+
 const AiScan = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingAI, setLoadingAI] = useState(false);
@@ -86,36 +89,51 @@ const AiScan = () => {
     setLogs((prev) => [msg, ...prev].slice(0, 4));
   };
 
+  const resetForm = () => {
+    setImageFiles([]);
+    setImagePreviews([]);
+    setFormData({
+      title: "",
+      description: "",
+      category: "",
+      priority: "Medium",
+      confidence: null,
+      location: {
+        address: "",
+        lat: null,
+        lng: null,
+        coordinates: "",
+      },
+    });
+    setIsEditingAI(false);
+    addLog("SYSTEM RESET: STANDBY");
+  };
+
   /* ---------------- IMAGE HANDLING ---------------- */
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
 
-    const currentCount = imageFiles.length;
-    const limited = files.slice(0, 5 - currentCount);
-
-    if (limited.length === 0) {
-      addLog("MAX PAYLOAD REACHED");
+    if (imageFiles.length >= 1 || files.length > 1) {
+      toast.error("Single Image Protocol Active: Remove existing file first.");
+      addLog("UPLOAD REJECTED: LIMIT EXCEEDED");
       return;
     }
 
-    limited.forEach((file) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreviews((prev) => [...prev, reader.result]);
-      };
-      reader.readAsDataURL(file);
-    });
+    const file = files[0];
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreviews([reader.result]);
+    };
+    reader.readAsDataURL(file);
 
-    setImageFiles((prev) => [...prev, ...limited]);
-    addLog(`LOADED ${limited.length} IMAGE SEGMENTS`);
+    setImageFiles([file]);
+    addLog(`LOADED SOURCE IMAGE`);
   };
 
-  const removeImage = (index) => {
-    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
-    setImageFiles((prev) => prev.filter((_, i) => i !== index));
-    setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : 0));
-    addLog("PAYLOAD SEGMENT DELETED");
+  const removeImage = () => {
+    resetForm();
+    addLog("PAYLOAD PURGED");
   };
 
   const handleGetLocation = async () => {
@@ -170,91 +188,58 @@ const AiScan = () => {
     );
   };
 
-  // /* ---------------- AI ANALYSIS ---------------- */
-  // const analyzeWithAI = async () => {
-  //   if (loadingAI || imagePreviews.length === 0) return;
+  const analyzeWithAI = async () => {
+    if (loadingAI || imagePreviews.length === 0) return;
 
-  //   setLoadingAI(true);
-  //   addLog("AI ENGINE ENGAGED");
+    setLoadingAI(true);
+    addLog("G3-FLASH NEURAL LINK ACTIVE");
 
-  //   try {
-  //     const imagesPayload = imagePreviews.map((img) => ({
-  //       data: img.split(",")[1],
-  //       mimeType: img.substring(img.indexOf(":") + 1, img.indexOf(";")),
-  //     }));
+    try {
+      const imagesPayload = imagePreviews.map((img) => ({
+        data: img.split(",")[1],
+        mimeType: img.split(";")[0].split(":")[1],
+      }));
 
-  //     const res = await fetch("/api/ai/analyze", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ images: imagesPayload }),
-  //     });
+      addLog("STREAMING MULTIMODAL TELEMETRY...");
 
-  //     const data = await res.json();
+      const res = await fetch("/api/ai/analyzeG", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ images: imagesPayload }),
+      });
 
-  //     if (!data || typeof data.confidence !== "number") {
-  //       throw new Error("Invalid AI response");
-  //     }
+      const data = await res.json();
 
-  //     setFormData((prev) => ({ ...prev, ...data }));
-  //     addLog("AI CLASSIFICATION SUCCESS");
-  //   } catch (err) {
-  //     console.error(err);
-  //     addLog("AI FALLBACK MODE");
-  //     setFormData((prev) => ({
-  //       ...prev,
-  //       confidence: 85,
-  //       category: "infrastructure",
-  //       title: "Manual Entry Required",
-  //       priority: "Medium",
-  //     }));
-  //   } finally {
-  //     setLoadingAI(false);
-  //   }
-  // };
+      if (!res.ok) {
+        if (res.status === 429) {
+          toast.warning("AI daily limit reached. Please try again later.");
+          addLog("AI QUOTA EXCEEDED");
+        } else {
+          toast.error(data?.error || "AI service unavailable");
+          addLog("AI ERROR");
+        }
+        return;
+      }
 
- const analyzeWithAI = async () => {
-  if (loadingAI || imagePreviews.length === 0) return;
+      // if (data.error) throw new Error(data.error);
 
-  setLoadingAI(true);
-  addLog("G3-FLASH NEURAL LINK ACTIVE");
+      setFormData((prev) => ({
+        ...prev,
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        priority: data.priority,
+        confidence: data.confidence,
+      }));
 
-  try {
-    const imagesPayload = imagePreviews.map((img) => ({
-      data: img.split(",")[1],
-      mimeType: img.split(";")[0].split(":")[1],
-    }));
-
-    addLog("STREAMING MULTIMODAL TELEMETRY...");
-
-    const res = await fetch("/api/ai/analyzeG", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ images: imagesPayload }),
-    });
-
-    const data = await res.json();
-
-    if (data.error) throw new Error(data.error);
-
-    // Populate your form state
-    setFormData((prev) => ({
-      ...prev,
-      title: data.title,
-      description: data.description,
-      category: data.category,
-      priority: data.priority,
-      confidence: data.confidence,
-    }));
-
-    addLog(`SCAN SUCCESSFUL: ${data.confidence}% ACCURACY`);
-
-  } catch (err) {
-    addLog("CRITICAL: NEURAL SCAN INTERRUPTED");
-    console.error(err);
-  } finally {
-    setLoadingAI(false);
-  }
-};
+      addLog(`SCAN SUCCESSFUL: ${data.confidence}% ACCURACY`);
+    } catch (err) {
+      addLog("CRITICAL: NEURAL SCAN INTERRUPTED");
+      console.error(err);
+    } finally {
+      setLoadingAI(false);
+    }
+  };
 
   const handleSubmit = async () => {
     try {
@@ -300,9 +285,7 @@ const AiScan = () => {
   };
 
   return (
-
     <div className=" max-h-screen py-4 lg:py-0 max-w-screen bg-slate-50/10 dark:bg-transparent text-slate-900 dark:text-slate-200 font-['Plus_Jakarta_Sans'] flex flex-col overflow-y-auto lg:overflow-hidden transition-colors duration-300">
-      {/* Background Decor */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/10 dark:bg-emerald-500/5 blur-[120px]" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-500/10 dark:bg-emerald-500/5 blur-[120px]" />
@@ -318,7 +301,6 @@ const AiScan = () => {
                   <input
                     type="file"
                     hidden
-                    multiple
                     onChange={handleImageUpload}
                     accept="image/*"
                   />
@@ -370,35 +352,12 @@ const AiScan = () => {
                     </div>
                   )}
                   <div className="absolute top-4 right-4 flex gap-2">
-                    <label className="p-2 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl rounded-xl hover:bg-emerald-500 hover:text-white dark:hover:text-slate-950 transition-all border border-slate-200 dark:border-white/10 cursor-pointer shadow-lg">
-                      <input
-                        type="file"
-                        hidden
-                        multiple
-                        onChange={handleImageUpload}
-                        accept="image/*"
-                      />
-                      <Plus size={16} />
-                    </label>
                     <button
-                      onClick={() => removeImage(activeImageIndex)}
+                      onClick={removeImage}
                       className="p-2 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl rounded-xl hover:bg-red-500/20 hover:text-red-500 transition-all border border-slate-200 dark:border-white/10 shadow-lg text-slate-500 dark:text-slate-400"
                     >
                       <X size={16} />
                     </button>
-                  </div>
-                  <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2.5 bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl px-4 py-2 rounded-full border border-slate-200 dark:border-white/5 shadow-2xl">
-                    {imagePreviews.map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setActiveImageIndex(i)}
-                        className={`transition-all duration-300 rounded-full ${
-                          i === activeImageIndex
-                            ? "w-5 h-1.5 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"
-                            : "w-1.5 h-1.5 bg-slate-300 dark:bg-slate-600 hover:bg-slate-400"
-                        }`}
-                      />
-                    ))}
                   </div>
                 </div>
               )}
@@ -493,7 +452,7 @@ const AiScan = () => {
                     />
                   </div>
                   <p className="text-[10px] font-black uppercase tracking-[0.3em] max-w-50 text-slate-600 dark:text-slate-400">
-                    System standby. Upload multiple angles.
+                    System standby. Upload evidentiary capture.
                   </p>
                 </div>
               ) : (
@@ -514,9 +473,30 @@ const AiScan = () => {
                             Confidence Score
                           </span>
                         </div>
-                        <span className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
-                          {formData.confidence}%
-                        </span>
+                        {isEditingAI ? (
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="number"
+                              min="0"
+                              max="100"
+                              value={formData.confidence}
+                              onChange={(e) =>
+                                setFormData((p) => ({
+                                  ...p,
+                                  confidence: parseInt(e.target.value) || 0,
+                                }))
+                              }
+                              className="w-16 bg-white dark:bg-slate-900 border border-emerald-500/30 rounded-lg text-xl font-black text-emerald-600 text-center outline-none"
+                            />
+                            <span className="text-xl font-black text-emerald-600">
+                              %
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
+                            {formData.confidence}%
+                          </span>
+                        )}
                       </div>
                       <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-900 rounded-full overflow-hidden">
                         <motion.div
@@ -600,17 +580,21 @@ const AiScan = () => {
                     </div>
                   </div>
 
-                  <InputWrapper
-                    label="Integrated Designation"
-                    icon={ShieldCheck}
-                  >
+                  <InputWrapper label="Integrated Designation">
                     <input
                       value={formData.title}
-                      readOnly={!isEditingAI}
-                      onChange={(e) =>
-                        setFormData((p) => ({ ...p, title: e.target.value }))
-                      }
-                      className="w-full bg-white dark:bg-slate-950 p-4 rounded-2xl text-[13px] font-black text-slate-900 dark:text-white outline-none border border-slate-200 dark:border-slate-800 focus:border-emerald-500/30 transition-all shadow-sm"
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const words = countWords(value);
+
+                        if (words > 20) {
+                          toast.warning("Title cannot exceed 20 words");
+                          return;
+                        }
+
+                        setFormData((p) => ({ ...p, title: value }));
+                      }}
+                      className="w-full bg-white dark:bg-slate-950 p-4 rounded-2xl text-[13px] font-black"
                     />
                   </InputWrapper>
 
@@ -709,12 +693,10 @@ const AiScan = () => {
           __html: `
             @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&display=swap');
             
-            /* DESKTOP: Keep original rigid layout */
             @media (min-width: 1024px) {
               html, body { margin: 0; height: 100%; overflow: hidden !important; }
             }
 
-            /* MOBILE: Allow natural scrolling */
             @media (max-width: 1023px) {
               html, body { margin: 0; height: auto; overflow: visible !important; }
             }
@@ -728,7 +710,6 @@ const AiScan = () => {
         }}
       />
     </div>
-
   );
 };
 

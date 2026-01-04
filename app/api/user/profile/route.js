@@ -11,9 +11,8 @@ export async function GET() {
   }
   await connectDB();
   const user = await User.findById(session.user.id).select(
-    "name email avatar phone location bio"
+    "name email avatar phone location bio isVerified isBlocked onboardingStatus  "
   );
-  console.log(user);
   return NextResponse.json(user);
 }
 
@@ -25,7 +24,7 @@ export async function PUT(request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const body = await request.json();
-    const { name, phone, address, bio } = body;
+    const { name, phone, location, bio } = body;
 
     await connectDB();
     const updatedUser = await User.findByIdAndUpdate(
@@ -34,12 +33,12 @@ export async function PUT(request) {
         $set: {
           name,
           phone,
-          address,
           bio,
+          "location.city": location?.city,
         },
       },
       { new: true, runValidators: true }
-    ).select("name email avatar phone address bio");
+    ).select("name email avatar phone location bio");
 
     if (!updatedUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });

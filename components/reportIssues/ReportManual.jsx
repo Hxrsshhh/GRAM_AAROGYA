@@ -30,6 +30,9 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
 
+const countWords = (text = "") =>
+  text.trim().split(/\s+/).filter(Boolean).length;
+
 export default function ReportIssue() {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -324,11 +327,24 @@ export default function ReportIssue() {
                   label="Headline"
                   placeholder="Summarize the issue..."
                   value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const words = countWords(value);
+
+                    if (words > 20) {
+                      toast.warning("Headline cannot exceed 100 words");
+                      return;
+                    }
+
+                    setFormData({ ...formData, title: value });
+                  }}
                   icon={FileText}
                 />
+
+                {/* Word counter (small UX win) */}
+                <p className="text-[10px] text-slate-400 text-right mt-1">
+                  {countWords(formData.title)} / 100 words
+                </p>
 
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 pl-1">

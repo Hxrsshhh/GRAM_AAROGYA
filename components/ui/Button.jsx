@@ -6,12 +6,14 @@ import { Loader2 } from "lucide-react";
 
 const Button = ({
   children,
-  variant = "primary", 
-  size = "md", 
+  variant = "primary",
+  size = "md",
   className = "",
   isLoading = false,
   disabled,
-  ...props 
+  leftIcon, // 1. Destructure leftIcon here
+  rightIcon,
+  ...props
 }) => {
   const variants = {
     primary:
@@ -22,7 +24,7 @@ const Button = ({
       "border-2 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-500 hover:text-emerald-600 dark:hover:border-emerald-400 dark:hover:text-emerald-400 backdrop-blur-md",
     glass:
       "bg-white/10 dark:bg-slate-900/40 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 text-slate-900 dark:text-white hover:bg-white/20 dark:hover:bg-slate-800/60",
-    danger: "bg-red-600 text-white border border-red-500/50 hover:bg-red-700", 
+    danger: "bg-red-600 text-white border border-red-500/50 hover:bg-red-700",
   };
 
   const sizes = {
@@ -47,8 +49,13 @@ const Button = ({
       )}
     >
       <span className="relative z-10 flex items-center gap-2">
-        {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+        {isLoading ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          leftIcon // 4. Render the icon here
+        )}
         {children}
+        {!isLoading && rightIcon}
       </span>
 
       {!isLoading && !disabled && (
