@@ -113,7 +113,10 @@ export default function AdminDashboard() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-32 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-3xl" />
+              <div
+                key={i}
+                className="h-32 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-3xl"
+              />
             ))}
           </div>
 
@@ -142,7 +145,10 @@ export default function AdminDashboard() {
     <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
       <div className="relative mb-6">
         <div className="absolute inset-0 bg-emerald-500/20 blur-3xl rounded-full" />
-        <Inbox size={48} className="relative text-slate-300 dark:text-slate-700" />
+        <Inbox
+          size={48}
+          className="relative text-slate-300 dark:text-slate-700"
+        />
       </div>
       <h3 className="text-lg font-black italic text-slate-900 dark:text-white mb-2">
         Clear <span className="text-emerald-500 not-italic">Horizon</span>
@@ -196,7 +202,10 @@ export default function AdminDashboard() {
                 className="group relative w-full md:w-auto overflow-hidden flex items-center justify-center gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-rose-500/50 px-6 py-4 md:py-3 rounded-2xl transition-all duration-300 active:scale-95 shadow-sm hover:shadow-rose-500/5"
               >
                 <div className="absolute inset-0 bg-rose-500 opacity-0 group-hover:opacity-[0.03] transition-opacity" />
-                <LogOut size={16} className="text-slate-400 group-hover:text-rose-500 transition-colors" />
+                <LogOut
+                  size={16}
+                  className="text-slate-400 group-hover:text-rose-500 transition-colors"
+                />
                 <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 group-hover:text-rose-500 transition-colors">
                   Terminate Session
                 </span>
@@ -205,46 +214,121 @@ export default function AdminDashboard() {
           </header>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-10">
-            <StatCard index={0} title="Civic Users" value={dashboard?.stats.totalUsers} change="12.5%" isPositive icon={Users} colorClass="bg-blue-500" />
-            <StatCard index={1} title="Incidents Logged" value={dashboard?.stats.totalReports} change="8.2%" isPositive icon={FileText} colorClass="bg-emerald-500" />
-            <StatCard index={2} title="Resolved" value={dashboard?.stats.resolvedReports} change="15.3%" isPositive icon={CheckCircle2} colorClass="bg-purple-500" />
-            <StatCard index={3} title="Avg Response" value={`${dashboard?.stats.avgResponseTime}d`} change="0.4d" isPositive={false} icon={Clock} colorClass="bg-orange-500" />
+            <StatCard
+              index={0}
+              title="Civic Users"
+              value={dashboard?.stats.totalUsers}
+              change="12.5%"
+              isPositive
+              icon={Users}
+              colorClass="bg-blue-500"
+            />
+            <StatCard
+              index={1}
+              title="Incidents Logged"
+              value={dashboard?.stats.totalReports}
+              change="8.2%"
+              isPositive
+              icon={FileText}
+              colorClass="bg-emerald-500"
+            />
+            <StatCard
+              index={2}
+              title="Resolved"
+              value={dashboard?.stats.resolvedReports}
+              change="15.3%"
+              isPositive
+              icon={CheckCircle2}
+              colorClass="bg-purple-500"
+            />
+            <StatCard
+              index={3}
+              title="Avg Response"
+              value={`${dashboard?.stats.avgResponseTime}d`}
+              change="0.4d"
+              isPositive={false}
+              icon={Clock}
+              colorClass="bg-orange-500"
+            />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mb-8 md:mb-10">
             <div className="lg:col-span-2 min-w-0 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-[1.5rem] md:rounded-[2.5rem] p-5 md:p-8">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <h2 className="text-lg md:text-xl font-black italic">
-                  Incident <span className="text-emerald-500 not-italic">Velocity</span>
+                  Incident{" "}
+                  <span className="text-emerald-500 not-italic">Velocity</span>
                 </h2>
                 <div className="flex gap-4 bg-slate-50 dark:bg-slate-800/40 p-2 rounded-xl">
                   <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase px-1">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500" /> Reports
+                    <div className="w-2 h-2 rounded-full bg-emerald-500" />{" "}
+                    Reports
                   </div>
                   <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase px-1">
-                    <div className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600" /> Resolved
+                    <div className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600" />{" "}
+                    Resolved
                   </div>
                 </div>
               </div>
               <div className="w-full h-[320px] md:h-[380px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={dashboard.charts.monthly} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <BarChart
+                    data={dashboard.charts.monthly}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
                     <defs>
                       <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor="#10b981" />
                         <stop offset="100%" stopColor="#059669" />
                       </linearGradient>
                       <linearGradient id="resGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#94a3b8" stopOpacity={0.3} />
-                        <stop offset="100%" stopColor="#94a3b8" stopOpacity={0.1} />
+                        <stop
+                          offset="0%"
+                          stopColor="#94a3b8"
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor="#94a3b8"
+                          stopOpacity={0.1}
+                        />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#94a3b8" opacity={0.1} />
-                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 700 }} dy={10} />
+                    <CartesianGrid
+                      vertical={false}
+                      strokeDasharray="3 3"
+                      stroke="#94a3b8"
+                      opacity={0.1}
+                    />
+                    <XAxis
+                      dataKey="month"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 700 }}
+                      dy={10}
+                    />
                     <YAxis hide />
-                    <Tooltip cursor={{ fill: "rgba(16,185,129,0.05)" }} contentStyle={{ borderRadius: "16px", border: "none", backgroundColor: "#0f172a", color: "#fff" }} />
-                    <Bar dataKey="reports" fill="url(#barGrad)" radius={[4, 4, 0, 0]} barSize={20} />
-                    <Bar dataKey="resolved" fill="url(#resGrad)" radius={[4, 4, 0, 0]} barSize={20} />
+                    <Tooltip
+                      cursor={{ fill: "rgba(16,185,129,0.05)" }}
+                      contentStyle={{
+                        borderRadius: "16px",
+                        border: "none",
+                        backgroundColor: "#0f172a",
+                        color: "#fff",
+                      }}
+                    />
+                    <Bar
+                      dataKey="reports"
+                      fill="url(#barGrad)"
+                      radius={[4, 4, 0, 0]}
+                      barSize={20}
+                    />
+                    <Bar
+                      dataKey="resolved"
+                      fill="url(#resGrad)"
+                      radius={[4, 4, 0, 0]}
+                      barSize={20}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -252,12 +336,20 @@ export default function AdminDashboard() {
 
             <div className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-[1.5rem] md:rounded-[2.5rem] p-5 md:p-8 flex flex-col">
               <h2 className="text-lg md:text-xl font-black italic mb-6">
-                Incident <span className="text-emerald-500 not-italic">Domains</span>
+                Incident{" "}
+                <span className="text-emerald-500 not-italic">Domains</span>
               </h2>
               <div className="flex-1 min-h-[220px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={categoriesWithColors} innerRadius="60%" outerRadius="80%" paddingAngle={5} dataKey="value" stroke="none">
+                    <Pie
+                      data={categoriesWithColors}
+                      innerRadius="60%"
+                      outerRadius="80%"
+                      paddingAngle={5}
+                      dataKey="value"
+                      stroke="none"
+                    >
                       {categoriesWithColors.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
@@ -269,8 +361,13 @@ export default function AdminDashboard() {
               <div className="grid grid-cols-2 gap-3 mt-4">
                 {categoriesWithColors.map((cat, i) => (
                   <div key={i} className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
-                    <span className="text-[9px] font-black uppercase text-slate-500 truncate">{cat.name}</span>
+                    <div
+                      className="w-2 h-2 rounded-full shrink-0"
+                      style={{ backgroundColor: cat.color }}
+                    />
+                    <span className="text-[9px] font-black uppercase text-slate-500 truncate">
+                      {cat.name}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -281,7 +378,10 @@ export default function AdminDashboard() {
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden shadow-sm">
             <div className="p-6 md:p-8 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <h2 className="text-lg md:text-xl font-black italic">
-                Recent <span className="text-emerald-500 not-italic">Protocol Logs</span>
+                Recent{" "}
+                <span className="text-emerald-500 not-italic">
+                  Protocol Logs
+                </span>
               </h2>
               {dashboard.recentIssuess.length > 0 && (
                 <Link href="/admin/issues">
@@ -300,24 +400,54 @@ export default function AdminDashboard() {
                 <div className="block md:hidden">
                   <div className="divide-y divide-slate-100 dark:divide-slate-800">
                     {dashboard.recentIssuess.map((issue) => (
-                      <div key={issue.id} onClick={() => handleClick(issue.id)} className="p-5 active:bg-slate-50 dark:active:bg-slate-800/50 transition-colors">
+                      <div
+                        key={issue.id}
+                        onClick={() => handleClick(issue.id)}
+                        className="p-5 active:bg-slate-50 dark:active:bg-slate-800/50 transition-colors"
+                      >
                         <div className="flex justify-between items-start mb-2">
                           <div className="max-w-[70%]">
-                            <div className="font-bold text-sm dark:text-white leading-tight">{issue.title}</div>
+                            <div className="font-bold text-sm dark:text-white leading-tight">
+                              {issue.title}
+                            </div>
                             <div className="text-[9px] text-slate-400 font-bold uppercase mt-1">
                               ID: {issue.id.slice(0, 8)} • {issue.date}
                             </div>
                           </div>
-                          <button className="p-1 text-slate-400"><MoreVertical size={16} /></button>
+                          <button className="p-1 text-slate-400">
+                            <MoreVertical size={16} />
+                          </button>
                         </div>
                         <div className="flex items-center justify-between mt-4">
                           <div className="flex gap-2">
-                            <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-[9px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">{issue.category}</span>
-                            <span className={`text-[9px] font-black uppercase tracking-widest self-center ${issue.priority === "Critical" ? "text-rose-500" : issue.priority === "High" ? "text-orange-500" : "text-slate-400"}`}>{issue.priority}</span>
+                            <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-[9px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                              {issue.category}
+                            </span>
+                            <span
+                              className={`text-[9px] font-black uppercase tracking-widest self-center ${
+                                issue.priority === "Critical"
+                                  ? "text-rose-500"
+                                  : issue.priority === "High"
+                                  ? "text-orange-500"
+                                  : "text-slate-400"
+                              }`}
+                            >
+                              {issue.priority}
+                            </span>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <div className={`w-1.5 h-1.5 rounded-full ${issue.status === "resolved" ? "bg-emerald-500" : issue.status === "in-progress" ? "bg-blue-500" : "bg-orange-500"}`} />
-                            <span className="text-[10px] font-bold">{issue.status}</span>
+                            <div
+                              className={`w-1.5 h-1.5 rounded-full ${
+                                issue.status === "resolved"
+                                  ? "bg-emerald-500"
+                                  : issue.status === "in-progress"
+                                  ? "bg-blue-500"
+                                  : "bg-orange-500"
+                              }`}
+                            />
+                            <span className="text-[10px] font-bold">
+                              {issue.status}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -330,34 +460,76 @@ export default function AdminDashboard() {
                   <table className="w-full text-left">
                     <thead>
                       <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-500">
-                        <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest">Incident</th>
-                        <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest">Domain</th>
-                        <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest">Status</th>
-                        <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest">Priority</th>
-                        <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-right">Actions</th>
+                        <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest">
+                          Incident
+                        </th>
+                        <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest">
+                          Domain
+                        </th>
+                        <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest">
+                          Status
+                        </th>
+                        <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest">
+                          Priority
+                        </th>
+                        <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-right">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       {dashboard.recentIssuess.map((issue) => (
-                        <tr key={issue.id} onClick={() => handleClick(issue.id)} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer">
+                        <tr
+                          key={issue.id}
+                          onClick={() => handleClick(issue.id)}
+                          className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer"
+                        >
                           <td className="px-8 py-5">
-                            <div className="font-bold text-sm dark:text-white">{issue.title}</div>
-                            <div className="text-[10px] text-slate-400 font-bold uppercase mt-1">Logged: {issue.date}</div>
-                          </td>
-                          <td className="px-8 py-5">
-                            <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400">{issue.category}</span>
-                          </td>
-                          <td className="px-8 py-5">
-                            <div className="flex items-center gap-2">
-                              <div className={`w-2 h-2 rounded-full ${issue.status === "resolved" ? "bg-emerald-500" : issue.status === "in-progress" ? "bg-blue-500" : "bg-orange-500"}`} />
-                              <span className="text-xs font-bold">{issue.status}</span>
+                            <div className="font-bold text-sm dark:text-white">
+                              {issue.title}
+                            </div>
+                            <div className="text-[10px] text-slate-400 font-bold uppercase mt-1">
+                              Logged: {issue.date}
                             </div>
                           </td>
                           <td className="px-8 py-5">
-                            <span className={`text-[10px] font-black uppercase tracking-widest ${issue.priority === "Critical" ? "text-rose-500" : issue.priority === "High" ? "text-orange-500" : "text-slate-400"}`}>{issue.priority}</span>
+                            <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400">
+                              {issue.category}
+                            </span>
+                          </td>
+                          <td className="px-8 py-5">
+                            <div className="flex items-center gap-2">
+                              <div
+                                className={`w-2 h-2 rounded-full ${
+                                  issue.status === "resolved"
+                                    ? "bg-emerald-500"
+                                    : issue.status === "in-progress"
+                                    ? "bg-blue-500"
+                                    : "bg-orange-500"
+                                }`}
+                              />
+                              <span className="text-xs font-bold">
+                                {issue.status}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-8 py-5">
+                            <span
+                              className={`text-[10px] font-black uppercase tracking-widest ${
+                                issue.priority === "Critical"
+                                  ? "text-rose-500"
+                                  : issue.priority === "High"
+                                  ? "text-orange-500"
+                                  : "text-slate-400"
+                              }`}
+                            >
+                              {issue.priority}
+                            </span>
                           </td>
                           <td className="px-8 py-5 text-right">
-                            <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400"><MoreVertical size={16} /></button>
+                            <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400">
+                              <MoreVertical size={16} />
+                            </button>
                           </td>
                         </tr>
                       ))}

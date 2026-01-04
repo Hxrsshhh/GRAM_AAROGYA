@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MapPin,
@@ -14,12 +14,11 @@ import {
   CheckCircle2,
   AlertTriangle,
   Flame,
-  Clock,
   Camera,
   Layers,
   LocateFixed,
-  Map,
   Mic,
+  Image as ImageIcon,
 } from "lucide-react";
 
 import { StepIndicator } from "@/components/ui/StepIndicator";
@@ -30,122 +29,243 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
 
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
+
+/* ================= HELPERS & CONSTANTS ================= */
 const countWords = (text = "") =>
   text.trim().split(/\s+/).filter(Boolean).length;
 
+const categories = [
+  { label: "Infrastructure", value: "infrastructure", icon: "🏗️" },
+  { label: "Medical", value: "medical", icon: "🏥" },
+  { label: "Safety", value: "safety", icon: "🛡️" },
+  { label: "Environment", value: "environment", icon: "🌿" },
+  { label: "Utilities", value: "utilities", icon: "💡" },
+  { label: "Traffic", value: "traffic", icon: "🚦" },
+  { label: "Waste", value: "waste", icon: "🗑️" },
+  { label: "Other", value: "other", icon: "📁" },
+];
+
+const priorities = [
+  { id: "Low", label: "Low", icon: Activity },
+  { id: "Medium", label: "Medium", icon: AlertTriangle },
+  { id: "High", label: "High", icon: Flame },
+  { id: "Urgent", label: "Urgent", icon: Zap },
+];
+
+/* ================= LOCATION PICKER COMPONENT ================= */
+function LocationPicker({ lat, lng, onLocationChange }) {
+  const mapRef = useRef(null);
+  const mapInstance = useRef(null);
+  const markerRef = useRef(null);
+
+  useEffect(() => {
+    if (!lat || !lng || !mapRef.current) return;
+
+    if (!mapInstance.current) {
+      mapInstance.current = new maplibregl.Map({
+        container: mapRef.current,
+        style:
+          "https://tiles.basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+        center: [lng, lat],
+        zoom: 17,
+      });
+
+      markerRef.current = new maplibregl.Marker({ draggable: true })
+        .setLngLat([lng, lat])
+        .addTo(mapInstance.current);
+
+      markerRef.current.on("dragend", async () => {
+        const { lat, lng } = markerRef.current.getLngLat();
+        try {
+          const res = await fetch(
+            `/api/geocoder?lat=${lat}&lon=${lng}&zoom=18`
+          );
+          const data = await res.json();
+          onLocationChange(lat, lng, data.display_name, true);
+        } catch {
+          onLocationChange(
+            lat,
+            lng,
+            `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+            true
+          );
+        }
+      });
+    } else {
+      markerRef.current.setLngLat([lng, lat]);
+      mapInstance.current.flyTo({
+        center: [lng, lat],
+        zoom: 17,
+        essential: true,
+      });
+    }
+  }, [lat, lng, onLocationChange]);
+
+  return (
+    <div className="mt-3 rounded-xl overflow-hidden border-2 border-slate-100 dark:border-slate-800 shadow-inner">
+      <div ref={mapRef} className="h-48 w-full" />
+      <div className="bg-slate-50 dark:bg-slate-900/50 p-2 text-center">
+        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
+          Drag pin to refine location
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ================= MAIN REPORT COMPONENT ================= */
 export default function ReportIssue() {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
-  const [error, setError] = useState("");
-
   const [isListening, setIsListening] = useState(false);
+  const [isManualUpdate, setIsManualUpdate] = useState(false);
+  const [showImageSourceModal, setShowImageSourceModal] = useState(false);
+
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [voiceBlob, setVoiceBlob] = useState(null);
 
   const router = useRouter();
-
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
+  const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     category: "",
     priority: "Medium",
-    location: {
-      address: "",
-      lat: null,
-      lng: null,
-      coordinates: "",
-    },
+    location: { address: "", lat: null, lng: null, coordinates: "" },
   });
 
-  const categories = [
-    { value: "infrastructure", label: "Infra", icon: "🏗️" },
-    { value: "sanitation", label: "Waste", icon: "🗑️" },
-    { value: "safety", label: "Safety", icon: "⚠️" },
-    { value: "environment", label: "Eco", icon: "🌳" },
-    { value: "utilities", label: "Power", icon: "💡" },
-    { value: "traffic", label: "Traffic", icon: "🚦" },
-    { value: "other", label: "Other", icon: "📋" },
-  ];
-
-  const priorities = [
-    { id: "Low", icon: Clock, label: "Standard" },
-    { id: "Medium", icon: Activity, label: "Urgent" },
-    { id: "High", icon: AlertTriangle, label: "Critical" },
-    { id: "Critical", icon: Flame, label: "SOS" },
-  ];
-
-  const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
-
-    const limited = files.slice(0, 5 - imageFiles.length);
-
-    limited.forEach((file) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreviews((prev) => [...prev, reader.result]);
-      };
-      reader.readAsDataURL(file);
-    });
-
-    setImageFiles((prev) => [...prev, ...limited]);
-  };
-
-  const handleGetLocation = async () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
+  useEffect(() => {
+    if (isManualUpdate) {
+      setIsManualUpdate(false);
       return;
     }
 
+    const delayDebounceFn = setTimeout(() => {
+      if (formData.location.address && formData.location.address.length > 3) {
+        geocodeAddress(formData.location.address);
+      }
+    }, 800);
+    return () => clearTimeout(delayDebounceFn);
+  }, [formData.location.address, isManualUpdate]);
+
+  const updateLocationData = useCallback((lat, lng, address, fromPin = false) => {
+    if (fromPin) setIsManualUpdate(true);
+    setFormData((prev) => ({
+      ...prev,
+      location: {
+        ...prev.location,
+        address: address || prev.location.address,
+        lat: parseFloat(lat),
+        lng: parseFloat(lng),
+        coordinates: `${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(
+          6
+        )}`,
+      },
+    }));
+  }, []);
+
+  const geocodeAddress = async (address) => {
+    try {
+      const res = await fetch(
+        `/api/geocoder/forward?address=${encodeURIComponent(address)}&limit=1`
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.lat && data.lon) {
+        setFormData((prev) => ({
+          ...prev,
+          location: {
+            ...prev.location,
+            lat: parseFloat(data.lat),
+            lng: parseFloat(data.lon),
+          },
+        }));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleGetLocation = async () => {
+    if (!navigator.geolocation) return toast.error("GPS not supported");
     setIsLocating(true);
-
     navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-
-        try {
-          const res = await fetch(`/api/geocoder?lat=${lat}&lon=${lng}`);
-          const data = await res.json();
-          console.log(data);
-
-          if (data && data.display_name) {
-            setFormData((prev) => ({
-              ...prev,
-              location: {
-                address: data.display_name,
-                lat: lat,
-                lng: lng,
-                coordinates: `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
-              },
-            }));
-          } else {
-            setFormData((prev) => ({
-              ...prev,
-              location: {
-                address: `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`,
-                lat: lat,
-                lng: lng,
-              },
-            }));
-          }
-        } catch (error) {
-          console.error("Geocoding failed:", error);
-          setError("Address lookup failed, but coordinates were captured.");
-        } finally {
-          setIsLocating(false);
-        }
-      },
-      (error) => {
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        const res = await fetch(
+          `/api/geocoder?lat=${latitude}&lon=${longitude}&zoom=18`
+        );
+        const data = await res.json();
+        updateLocationData(latitude, longitude, data.display_name, true);
         setIsLocating(false);
-        setError("Error getting coordinates: " + error.message);
+        toast.success("High-accuracy location detected");
       },
-      { enableHighAccuracy: true }
+      () => {
+        setIsLocating(false);
+        toast.error("Location access denied. Please enable GPS.");
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
+  };
+
+  const toggleListening = async () => {
+    if (isListening) {
+      mediaRecorderRef.current.stop();
+      setIsListening(false);
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+      chunksRef.current = [];
+      recorder.ondataavailable = (e) => chunksRef.current.push(e.data);
+      recorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        setVoiceBlob(new File([blob], `voice-${Date.now()}.webm`));
+        toast.success("Voice context recorded");
+      };
+      recorder.start();
+      setIsListening(true);
+    } catch {
+      toast.error("Mic access denied");
+    }
+  };
+
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files).slice(0, 5 - imageFiles.length);
+    if (imageFiles.length >= 5) {
+      toast.error("Maximum 5 images allowed");
+      return;
+    }
+    
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () =>
+        setImagePreviews((prev) => [...prev, reader.result]);
+      reader.readAsDataURL(file);
+    });
+    setImageFiles((prev) => [...prev, ...files]);
+    setShowImageSourceModal(false);
+  };
+
+  const handleEvidenceClick = () => {
+    // Check if user is on mobile (width less than 768px)
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      setShowImageSourceModal(true);
+    } else {
+      fileInputRef.current?.click();
+    }
   };
 
   const removeImage = (index) => {
@@ -154,97 +274,41 @@ export default function ReportIssue() {
   };
 
   const handleSubmit = async () => {
+    if (!session) return toast.error("Please login to submit");
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-
-      if (!session) {
-        alert("Login required");
-        setIsSubmitting(false);
-        return;
-      }
-
       const imageUrls = await Promise.all(
-        imageFiles.map((file) => uploadToCloudinary(file, "image"))
+        imageFiles.map((f) => uploadToCloudinary(f, "image"))
       );
-
-      let voiceNote = "";
-      if (voiceBlob) {
-        voiceNote = await uploadToCloudinary(voiceBlob, "audio");
-      }
-
-      const payload = {
-        title: formData.title,
-        description: formData.description,
-        category: formData.category,
-        priority: formData.priority,
-        location: formData.location,
-        images: imageUrls,
-        voiceNote,
-      };
-
-      const res = await fetch("/api/reports", {
+      const voiceUrl = voiceBlob
+        ? await uploadToCloudinary(voiceBlob, "audio")
+        : "";
+      await fetch("/api/reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          ...formData,
+          images: imageUrls,
+          voiceNote: voiceUrl,
+        }),
       });
-
-      if (!res.ok) throw new Error("Submit failed");
-    } catch (err) {
-      console.error(err);
-      toast.error("Something went wrong");
+      toast.success("Report submitted successfully!");
+      router.push("/issues");
+    } catch {
+      toast.error("Submission failed");
     } finally {
       setIsSubmitting(false);
-      sessionStorage.setItem("IssueAdded", "true");
-      router.push("/issues");
     }
-  };
-
-  const mediaRecorderRef = React.useRef(null);
-  const chunksRef = React.useRef([]);
-
-  const toggleListening = async () => {
-    if (isListening) {
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream
-        .getTracks()
-        .forEach((track) => track.stop());
-
-      setIsListening(false);
-      return;
-    }
-
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const recorder = new MediaRecorder(stream);
-
-    mediaRecorderRef.current = recorder;
-    chunksRef.current = [];
-
-    recorder.ondataavailable = (e) => chunksRef.current.push(e.data);
-
-    recorder.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-
-      const file = new File([blob], `voice-${Date.now()}.webm`, {
-        type: "audio/webm",
-      });
-
-      setVoiceBlob(file);
-      chunksRef.current = [];
-    };
-
-    recorder.start();
-    setIsListening(true);
   };
 
   return (
-    <div className="lg:h-[70vh] max-h-screen bg-transparent text-slate-900 dark:text-white transition-colors duration-700 selection:bg-emerald-500 selection:text-white">
-      {/* Background Decor */}
+    <div className="lg:h-[78vh] max-h-screen bg-transparent text-slate-900 dark:text-white transition-colors duration-700 selection:bg-emerald-500 selection:text-white">
       <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-10 dark:opacity-20">
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-emerald-500/10 blur-[80px] rounded-full" />
       </div>
 
-      <main className="relative  z-10 max-w-3xl mx-auto px-6 py-4">
-        <div className="bg-white  dark:bg-slate-800/30 backdrop-blur-2xl border border-slate-200/60 dark:border-slate-800 rounded-[2rem] p-6 md:p-8 shadow-xl  ">
+      <main className="relative z-10 max-w-3xl mx-auto px-6 py-4">
+        <div className="bg-white dark:bg-slate-800/30 backdrop-blur-2xl border border-slate-200/60 dark:border-slate-800 rounded-[2rem] p-6 md:p-8 shadow-xl">
           <StepIndicator currentStep={step} totalSteps={3} />
 
           <AnimatePresence mode="wait">
@@ -327,21 +391,11 @@ export default function ReportIssue() {
                   label="Headline"
                   placeholder="Summarize the issue..."
                   value={formData.title}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    const words = countWords(value);
-
-                    if (words > 20) {
-                      toast.warning("Headline cannot exceed 100 words");
-                      return;
-                    }
-
-                    setFormData({ ...formData, title: value });
-                  }}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
                   icon={FileText}
                 />
-
-                {/* Word counter (small UX win) */}
                 <p className="text-[10px] text-slate-400 text-right mt-1">
                   {countWords(formData.title)} / 100 words
                 </p>
@@ -350,8 +404,6 @@ export default function ReportIssue() {
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 pl-1">
                     Description
                   </label>
-
-                  {/* Relative wrapper to contain the absolute button */}
                   <div className="relative group">
                     <textarea
                       rows={4}
@@ -365,27 +417,20 @@ export default function ReportIssue() {
                         })
                       }
                     />
-
-                    {/* Voice Button UI */}
                     <button
                       type="button"
                       onClick={toggleListening}
-                      className={`absolute bottom-4 right-2 p-2.5 rounded-lg border transition-all shadow-sm active:scale-95
-                      ${
+                      className={`absolute bottom-4 right-2 p-2.5 rounded-lg border transition-all shadow-sm active:scale-95 ${
                         isListening
-                          ? "bg-emerald-50 dark:bg-emerald-100/20 border-emerald-500 text-emerald-600 animate-pulse ring-4               ring-emerald-500/20"
-                          : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700               text-slate-500 dark:text-slate-400"
-                      } 
-                    hover:text-emerald-500 hover:border-emerald-500 transition-all`}
-                      title={isListening ? "Stop Listening" : "Voice Input"}
+                          ? "bg-emerald-50 dark:bg-emerald-100/20 border-emerald-500 text-emerald-600 animate-pulse ring-4 ring-emerald-500/20"
+                          : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"
+                      }`}
                     >
                       <Mic
                         className={`h-4 w-4 ${
                           isListening ? "fill-emerald-500" : ""
                         }`}
                       />
-
-                      {/* Optional: Add a small red dot indicator */}
                       {isListening && (
                         <span className="absolute top-1 right-1 flex h-2 w-2">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -414,8 +459,7 @@ export default function ReportIssue() {
                     <button
                       onClick={handleGetLocation}
                       disabled={isLocating}
-                      className="p-2 text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-colors disabled:opacity-50"
-                      title="Detect Live Location"
+                      className="p-2 text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-colors"
                     >
                       <LocateFixed
                         size={18}
@@ -424,6 +468,14 @@ export default function ReportIssue() {
                     </button>
                   }
                 />
+
+                {formData.location.lat && (
+                  <LocationPicker
+                    lat={formData.location.lat}
+                    lng={formData.location.lng}
+                    onLocationChange={updateLocationData}
+                  />
+                )}
               </motion.div>
             )}
 
@@ -435,30 +487,86 @@ export default function ReportIssue() {
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-6"
               >
-                <div className="text-center p-8 rounded-2xl border-4 border-dashed border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30 group hover:border-emerald-500/30 transition-colors">
+                <AnimatePresence>
+                  {showImageSourceModal && (
+                    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4">
+                      <motion.div 
+                        initial={{ opacity: 0 }} 
+                        animate={{ opacity: 1 }} 
+                        exit={{ opacity: 0 }}
+                        onClick={() => setShowImageSourceModal(false)}
+                        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                      />
+                      <motion.div 
+                        initial={{ y: 100, opacity: 0 }} 
+                        animate={{ y: 0, opacity: 1 }} 
+                        exit={{ y: 100, opacity: 0 }}
+                        className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl border border-slate-200 dark:border-slate-800"
+                      >
+                        <h3 className="text-xl font-black mb-6 text-center">Capture Evidence</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <button
+                            onClick={() => cameraInputRef.current?.click()}
+                            className="flex flex-col items-center gap-3 p-6 rounded-3xl bg-emerald-50 dark:bg-emerald-500/10 border-2 border-emerald-500/20 hover:border-emerald-500 transition-all group"
+                          >
+                            <div className="p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-sm group-hover:scale-110 transition-transform">
+                              <Camera className="text-emerald-500" size={24} />
+                            </div>
+                            <span className="font-black text-[10px] uppercase tracking-widest text-emerald-600">Camera</span>
+                          </button>
+                          
+                          <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="flex flex-col items-center gap-3 p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700 hover:border-emerald-500 transition-all group"
+                          >
+                            <div className="p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-sm group-hover:scale-110 transition-transform">
+                              <ImageIcon className="text-slate-500 group-hover:text-emerald-500" size={24} />
+                            </div>
+                            <span className="font-black text-[10px] uppercase tracking-widest text-slate-500 group-hover:text-emerald-600">Gallery</span>
+                          </button>
+                        </div>
+                        <button 
+                          onClick={() => setShowImageSourceModal(false)}
+                          className="w-full mt-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                        >
+                          Cancel
+                        </button>
+                      </motion.div>
+                    </div>
+                  )}
+                </AnimatePresence>
+
+                <div 
+                  onClick={handleEvidenceClick}
+                  className="text-center p-8 rounded-2xl border-4 border-dashed border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30 group hover:border-emerald-500/30 transition-colors cursor-pointer"
+                >
                   <input
+                    ref={fileInputRef}
                     type="file"
                     multiple
                     accept="image/*"
                     onChange={handleImageUpload}
                     className="hidden"
-                    id="upload"
                   />
-                  <label
-                    htmlFor="upload"
-                    className="cursor-pointer flex flex-col items-center"
-                  >
-                    <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-600 mb-4 group-hover:scale-105 transition-transform">
-                      <Camera size={28} />
-                    </div>
-                    <h4 className="text-xl font-black mb-1">Evidence</h4>
-                    <p className="text-slate-500 font-semibold text-xs mb-3">
-                      Upload up to 5 validation photos
-                    </p>
-                    <div className="px-4 py-1.5 bg-white dark:bg-slate-800 rounded-lg text-[9px] font-black uppercase tracking-widest border border-slate-200 dark:border-slate-700">
-                      {imagePreviews.length} / 5
-                    </div>
-                  </label>
+                  <input
+                    ref={cameraInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+
+                  <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-500/10 mx-auto rounded-2xl flex items-center justify-center text-emerald-600 mb-4 group-hover:scale-105 transition-transform">
+                    <Camera size={28} />
+                  </div>
+                  <h4 className="text-xl font-black mb-1">Evidence</h4>
+                  <p className="text-slate-500 font-semibold text-xs mb-3">
+                    Upload up to 5 validation photos
+                  </p>
+                  <div className="inline-block px-4 py-1.5 bg-white dark:bg-slate-800 rounded-lg text-[9px] font-black uppercase tracking-widest border border-slate-200 dark:border-slate-700">
+                    {imagePreviews.length} / 5
+                  </div>
                 </div>
 
                 {imagePreviews.length > 0 && (
@@ -468,15 +576,17 @@ export default function ReportIssue() {
                         <div className="relative w-full h-full rounded-xl shadow-md overflow-hidden">
                           <Image
                             src={img}
-                            alt="Report preview"
+                            alt="Preview"
                             fill
                             className="object-cover"
-                            sizes="(max-width: 768px) 100vw, 400px"
+                            sizes="64px"
                           />
                         </div>
-
                         <button
-                          onClick={() => removeImage(idx)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeImage(idx);
+                          }}
                           className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-lg flex items-center justify-center shadow-lg"
                         >
                           <X size={12} />
@@ -501,45 +611,46 @@ export default function ReportIssue() {
             <button
               onClick={() => setStep((s) => Math.max(1, s - 1))}
               disabled={step === 1}
-              className="flex items-center gap-1 font-black uppercase tracking-widest text-[10px] text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-0 transition-all"
+              className="flex items-center gap-1 font-black uppercase tracking-widest text-[10px] text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all disabled:opacity-0"
             >
               <ChevronLeft size={16} /> Back
             </button>
-
-            {step < 3 ? (
-              <button
-                disabled={
-                  (step === 1 && !formData.category) ||
-                  (step === 2 &&
-                    (!formData.title || !formData.location.address))
-                }
-                onClick={() => {
-                  if (isListening) {
-                    toast.warning(
-                      "Please stop voice recording before continuing"
-                    );
-                    return;
-                  }
-                  setStep((s) => s + 1);
-                }}
-                className="bg-emerald-600 text-white px-8 py-3.5 rounded-xl font-black uppercase tracking-widest text-xs flex items-center gap-2 hover:bg-emerald-500 disabled:grayscale disabled:opacity-50 transition-all"
-              >
-                Next <ChevronRight size={16} />
-              </button>
-            ) : (
-              <button
-                onClick={handleSubmit}
-                disabled={isSubmitting || imagePreviews.length === 0}
-                className={`relative px-10 py-3.5 rounded-xl font-black uppercase tracking-widest text-xs flex items-center gap-2 shadow-xl transition-all ${
-                  isSubmitting
-                    ? "bg-emerald-800 text-slate-100"
-                    : "bg-emerald-600 text-white hover:bg-emerald-500"
-                }`}
-              >
-                {isSubmitting ? "Transmitting..." : "Finalize Report"}
-                {!isSubmitting && <CheckCircle2 size={16} />}
-              </button>
-            )}
+            <button
+              onClick={
+                step === 3
+                  ? handleSubmit
+                  : async () => {
+                      if (
+                        step === 2 &&
+                        formData.location.address &&
+                        !formData.location.lat
+                      )
+                        await geocodeAddress(formData.location.address);
+                      setStep((s) => s + 1);
+                    }
+              }
+              disabled={
+                isSubmitting ||
+                (step === 1 && !formData.category) ||
+                (step === 2 && !formData.location.address)
+              }
+              className="bg-emerald-600 text-white px-8 py-3.5 rounded-xl font-black uppercase tracking-widest text-xs flex items-center gap-2 hover:bg-emerald-500 disabled:grayscale disabled:opacity-50 transition-all"
+            >
+              {step === 3
+                ? isSubmitting
+                  ? "Transmitting..."
+                  : "Finalize Report"
+                : "Next"}
+              {step === 3 ? (
+                isSubmitting ? (
+                  <Activity className="animate-spin" size={16} />
+                ) : (
+                  <CheckCircle2 size={16} />
+                )
+              ) : (
+                <ChevronRight size={16} />
+              )}
+            </button>
           </div>
         </div>
       </main>

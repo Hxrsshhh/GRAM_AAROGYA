@@ -227,44 +227,42 @@ export default function Issues() {
         <main className="p-2 px-6 max-w-7xl mx-auto w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <AnimatePresence mode="popLayout">
-              {loading ? (
-                // LOADING SKELETON UI
-                [...Array(6)].map((_, i) => (
-                  <div
-                    key={`skeleton-${i}`}
-                    className="h-64 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] p-6 animate-pulse"
-                  >
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="h-6 w-1/2 bg-slate-200 dark:bg-slate-800 rounded-lg" />
-                      <div className="h-6 w-12 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+              {loading
+                ? // LOADING SKELETON UI
+                  [...Array(6)].map((_, i) => (
+                    <div
+                      key={`skeleton-${i}`}
+                      className="h-64 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] p-6 animate-pulse"
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="h-6 w-1/2 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                        <div className="h-6 w-12 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                      </div>
+                      <div className="space-y-3">
+                        <div className="h-3 w-full bg-slate-200 dark:bg-slate-800 rounded" />
+                        <div className="h-3 w-5/6 bg-slate-200 dark:bg-slate-800 rounded" />
+                      </div>
+                      <div className="mt-8 flex gap-3">
+                        <div className="h-8 w-20 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+                        <div className="h-8 w-20 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+                      </div>
+                      <div className="mt-6 h-10 w-full bg-slate-100 dark:bg-slate-800/50 rounded-xl" />
                     </div>
-                    <div className="space-y-3">
-                      <div className="h-3 w-full bg-slate-200 dark:bg-slate-800 rounded" />
-                      <div className="h-3 w-5/6 bg-slate-200 dark:bg-slate-800 rounded" />
-                    </div>
-                    <div className="mt-8 flex gap-3">
-                      <div className="h-8 w-20 bg-slate-200 dark:bg-slate-800 rounded-xl" />
-                      <div className="h-8 w-20 bg-slate-200 dark:bg-slate-800 rounded-xl" />
-                    </div>
-                    <div className="mt-6 h-10 w-full bg-slate-100 dark:bg-slate-800/50 rounded-xl" />
-                  </div>
-                ))
-              ) : (
-                // REAL DATA
-                filtered.map((issue, idx) => (
-                  <Link
-                    href={`/admin/issues/${issue._id}`}
-                    key={issue._id}
-                    className="block transform transition-transform duration-300 hover:-translate-y-1"
-                  >
-                    <IncidentCard
-                      issue={issue}
-                      idx={idx}
-                      onDelete={() => handleDeleteClick(issue)}
-                    />
-                  </Link>
-                ))
-              )}
+                  ))
+                : // REAL DATA
+                  filtered.map((issue, idx) => (
+                    <Link
+                      href={`/admin/issues/${issue._id}`}
+                      key={issue._id}
+                      className="block transform transition-transform duration-300 hover:-translate-y-1"
+                    >
+                      <IncidentCard
+                        issue={issue}
+                        idx={idx}
+                        onDelete={() => handleDeleteClick(issue)}
+                      />
+                    </Link>
+                  ))}
 
               <ConfirmIssueDeleteModal
                 open={deleteModalOpen}
@@ -298,7 +296,9 @@ export default function Issues() {
             <div className="flex items-center gap-4">
               <div className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em]">
                 Active Archive:{" "}
-                <span className="text-emerald-500">{loading ? "..." : filtered.length}</span>
+                <span className="text-emerald-500">
+                  {loading ? "..." : filtered.length}
+                </span>
               </div>
               <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-800" />
               <div className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em]">

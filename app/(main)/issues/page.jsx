@@ -89,7 +89,7 @@ export default function App() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans overflow-hidden">
       <header className="hidden pt-16 md:block flex-shrink-0 z-50 w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-md ">
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -277,7 +277,7 @@ export default function App() {
                                 <div className="flex flex-wrap items-center justify-between text-[10px] font-bold uppercase tracking-widest text-slate-400">
                                   <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
                                     <MapPin className="w-3.5 h-3.5 text-emerald-500" />{" "}
-                                    {issue.address?.split(",")[0]}
+                                    {issue.location?.address?.split(",")[0]}
                                   </span>
                                   <span className="flex items-center gap-1.5 text-emerald-600 font-black">
                                     View <ArrowUpRight className="w-3 h-3" />

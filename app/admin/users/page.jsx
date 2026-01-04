@@ -375,7 +375,9 @@ export default function UserManagement() {
                 ))
               ) : (
                 <div className="col-span-full py-20 text-center">
-                   <p className="text-slate-400 font-black uppercase tracking-widest text-xs">No identities found matching search criteria</p>
+                  <p className="text-slate-400 font-black uppercase tracking-widest text-xs">
+                    No identities found matching search criteria
+                  </p>
                 </div>
               )}
             </AnimatePresence>

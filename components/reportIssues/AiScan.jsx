@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   MapPin,
   CheckCircle2,
@@ -18,6 +18,7 @@ import {
   Plus,
   Layers,
   ChevronDown,
+  Image as ImageIcon,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Button from "@/components/ui/Button";
@@ -28,18 +29,86 @@ import { useRouter } from "next/navigation";
 import { InputWrapper } from "@/components/ui/InputWrapper";
 import { toast } from "sonner";
 
+// Map imports
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
+
 const countWords = (text = "") =>
   text.trim().split(/\s+/).filter(Boolean).length;
+
+/* ================= LOCATION PICKER COMPONENT ================= */
+function LocationPicker({ lat, lng, onLocationChange }) {
+  const mapRef = useRef(null);
+  const mapInstance = useRef(null);
+  const markerRef = useRef(null);
+
+  useEffect(() => {
+    if (!lat || !lng || !mapRef.current) return;
+
+    if (!mapInstance.current) {
+      mapInstance.current = new maplibregl.Map({
+        container: mapRef.current,
+        style:
+          "https://tiles.basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+        center: [lng, lat],
+        zoom: 17,
+      });
+
+      markerRef.current = new maplibregl.Marker({ draggable: true })
+        .setLngLat([lng, lat])
+        .addTo(mapInstance.current);
+
+      markerRef.current.on("dragend", async () => {
+        const { lat, lng } = markerRef.current.getLngLat();
+        try {
+          // Reverse geocode when pin is dropped
+          const res = await fetch(
+            `/api/geocoder?lat=${lat}&lon=${lng}&zoom=18`
+          );
+          const data = await res.json();
+          onLocationChange(lat, lng, data.display_name, true);
+        } catch {
+          onLocationChange(
+            lat,
+            lng,
+            `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+            true
+          );
+        }
+      });
+    } else {
+      // Move map if coordinates update from external source (typing/GPS)
+      markerRef.current.setLngLat([lng, lat]);
+      mapInstance.current.flyTo({
+        center: [lng, lat],
+        zoom: 17,
+        essential: true,
+      });
+    }
+  }, [lat, lng]);
+
+  return (
+    <div className="mt-4 rounded-[2rem] overflow-hidden border border-slate-200 dark:border-slate-800 shadow-inner">
+      <div ref={mapRef} className="h-48 w-full" />
+    </div>
+  );
+}
 
 const AiScan = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingAI, setLoadingAI] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [isEditingAI, setIsEditingAI] = useState(false);
+  const [isManualUpdate, setIsManualUpdate] = useState(false); // Prevents circular geocoding loops
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [error, setError] = useState(null);
+
+  // New state for Source Selection Popup
+  const [showSourceSelect, setShowSourceSelect] = useState(false);
+  const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
 
   const { data: session } = useSession();
   const router = useRouter();
@@ -62,6 +131,53 @@ const AiScan = () => {
       coordinates: "",
     },
   });
+
+  /* ---------------- AUTO-GEOCODING LOGIC ---------------- */
+  useEffect(() => {
+    if (isManualUpdate) {
+      setIsManualUpdate(false);
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(() => {
+      if (formData.location.address && formData.location.address.length > 5) {
+        geocodeAddress(formData.location.address);
+      }
+    }, 1200);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [formData.location.address]);
+
+  const geocodeAddress = async (address) => {
+    try {
+      const res = await fetch(
+        `/api/geocoder/forward?address=${encodeURIComponent(address)}&limit=1`
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.lat && data.lon) {
+        updateLocationData(data.lat, data.lon, address, false);
+      }
+    } catch (err) {
+      console.error("Geocoding failed:", err);
+    }
+  };
+
+  const updateLocationData = (lat, lng, address, fromPin = false) => {
+    if (fromPin) setIsManualUpdate(true);
+    setFormData((prev) => ({
+      ...prev,
+      location: {
+        ...prev.location,
+        address: address || prev.location.address,
+        lat: parseFloat(lat),
+        lng: parseFloat(lng),
+        coordinates: `${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(
+          6
+        )}`,
+      },
+    }));
+  };
 
   const isFormComplete = Boolean(
     formData.title?.trim() &&
@@ -109,7 +225,6 @@ const AiScan = () => {
     addLog("SYSTEM RESET: STANDBY");
   };
 
-  /* ---------------- IMAGE HANDLING ---------------- */
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
@@ -129,6 +244,7 @@ const AiScan = () => {
 
     setImageFiles([file]);
     addLog(`LOADED SOURCE IMAGE`);
+    setShowSourceSelect(false);
   };
 
   const removeImage = () => {
@@ -143,46 +259,30 @@ const AiScan = () => {
     }
 
     setIsLocating(true);
-
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-
         try {
           const res = await fetch(`/api/geocoder?lat=${lat}&lon=${lng}`);
           const data = await res.json();
-
-          if (data && data.display_name) {
-            setFormData((prev) => ({
-              ...prev,
-              location: {
-                address: data.display_name,
-                lat: lat,
-                lng: lng,
-                coordinates: `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
-              },
-            }));
-          } else {
-            setFormData((prev) => ({
-              ...prev,
-              location: {
-                address: `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`,
-                lat: lat,
-                lng: lng,
-              },
-            }));
-          }
+          updateLocationData(lat, lng, data.display_name || "", true);
+          addLog("GEOPOSITION LOCKED");
         } catch (error) {
           console.error("Geocoding failed:", error);
-          setError("Address lookup failed, but coordinates were captured.");
+          updateLocationData(
+            lat,
+            lng,
+            `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`,
+            true
+          );
         } finally {
           setIsLocating(false);
         }
       },
       (error) => {
         setIsLocating(false);
-        setError("Error getting coordinates: " + error.message);
+        toast.error("Location access denied");
       },
       { enableHighAccuracy: true }
     );
@@ -221,8 +321,6 @@ const AiScan = () => {
         return;
       }
 
-      // if (data.error) throw new Error(data.error);
-
       setFormData((prev) => ({
         ...prev,
         title: data.title,
@@ -244,9 +342,8 @@ const AiScan = () => {
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true);
-
       if (!session) {
-        alert("Login required");
+        toast.error("Login required");
         setIsSubmitting(false);
         return;
       }
@@ -255,8 +352,6 @@ const AiScan = () => {
         imageFiles.map((file) => uploadToCloudinary(file, "image"))
       );
 
-      let voiceNote = "";
-
       const payload = {
         title: formData.title,
         description: formData.description,
@@ -264,7 +359,7 @@ const AiScan = () => {
         priority: formData.priority,
         location: formData.location,
         images: imageUrls,
-        voiceNote,
+        voiceNote: "",
       };
 
       const res = await fetch("/api/reports", {
@@ -274,18 +369,108 @@ const AiScan = () => {
       });
 
       if (!res.ok) throw new Error("Submit failed");
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong");
-    } finally {
-      setIsSubmitting(false);
+
       sessionStorage.setItem("IssueAdded", "true");
       router.push("/issues");
+    } catch (err) {
+      console.error(err);
+      toast.error("Submission failed");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleTriggerUpload = () => {
+    // If laptop view (lg breakpoint), trigger file input directly
+    if (window.innerWidth >= 1024) {
+      fileInputRef.current.click();
+    } else {
+      setShowSourceSelect(true);
     }
   };
 
   return (
     <div className=" max-h-screen py-4 lg:py-0 max-w-screen bg-slate-50/10 dark:bg-transparent text-slate-900 dark:text-slate-200 font-['Plus_Jakarta_Sans'] flex flex-col overflow-y-auto lg:overflow-hidden transition-colors duration-300">
+      {/* Hidden Inputs for specific triggers */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        hidden
+        onChange={handleImageUpload}
+        accept="image/*"
+      />
+      <input
+        type="file"
+        ref={cameraInputRef}
+        hidden
+        capture="environment"
+        onChange={handleImageUpload}
+        accept="image/*"
+      />
+
+      {/* MOBILE SOURCE SELECT MODAL - Hidden on Laptop (lg) */}
+      <AnimatePresence>
+        {showSourceSelect && (
+          <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center p-4 lg:hidden">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSourceSelect(false)}
+              className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 shadow-2xl border border-slate-200 dark:border-slate-800"
+            >
+              <div className="flex justify-between items-center mb-6 px-2">
+                <h3 className="text-xs font-black uppercase tracking-widest text-slate-500">
+                  Source Selection
+                </h3>
+                <button
+                  onClick={() => setShowSourceSelect(false)}
+                  className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => cameraInputRef.current.click()}
+                  className="flex flex-col items-center justify-center gap-3 p-6 bg-emerald-500/10 dark:bg-emerald-500/5 border border-emerald-500/20 rounded-3xl hover:bg-emerald-500/20 transition-all group"
+                >
+                  <div className="w-12 h-12 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center shadow-lg group-active:scale-90 transition-transform">
+                    <Camera className="text-emerald-500" size={24} />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider">
+                    Camera
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => fileInputRef.current.click()}
+                  className="flex flex-col items-center justify-center gap-3 p-6 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-3xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all group"
+                >
+                  <div className="w-12 h-12 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center shadow-lg group-active:scale-90 transition-transform">
+                    <ImageIcon className="text-slate-500" size={24} />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider">
+                    Gallery
+                  </span>
+                </button>
+              </div>
+
+              <p className="text-[9px] text-center mt-6 text-slate-400 font-mono tracking-tighter uppercase">
+                Secure Uplink Protocol: High Resolution Preferred
+              </p>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/10 dark:bg-emerald-500/5 blur-[120px]" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-500/10 dark:bg-emerald-500/5 blur-[120px]" />
@@ -294,16 +479,13 @@ const AiScan = () => {
       <main className=" mt-0 relative z-10 flex-1 w-full max-w-7xl px-6 lg:py-12 mb-10 lg:mb-60 lg:overflow-hidden flex flex-col">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full lg:overflow-hidden">
           {/* Left Panel */}
-          <div className="lg:col-span-5   flex flex-col gap-6 lg:overflow-hidden">
-            <div className="flex-1 bg-white/50 md:max-h-[27vh]  dark:bg-slate-900/20 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-[2.5rem] overflow-hidden md:overflow-hidden relative group min-h-50 max-h-75 lg:max-h-[65vh] lg:min-h-30 ring-1 ring-black/5 dark:ring-white/5 shadow-xl dark:shadow-inner">
+          <div className="lg:col-span-5 flex flex-col gap-6 lg:overflow-hidden">
+            <div className="flex-1 bg-white/50 md:max-h-[27vh] dark:bg-slate-900/20 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-[2.5rem] overflow-hidden md:overflow-hidden relative group min-h-50 max-h-75 lg:max-h-[65vh] lg:min-h-30 ring-1 ring-black/5 dark:ring-white/5 shadow-xl dark:shadow-inner">
               {imagePreviews.length === 0 ? (
-                <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer transition-all duration-500 hover:bg-emerald-500/[0.02]">
-                  <input
-                    type="file"
-                    hidden
-                    onChange={handleImageUpload}
-                    accept="image/*"
-                  />
+                <div
+                  onClick={handleTriggerUpload}
+                  className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer transition-all duration-500 hover:bg-emerald-500/[0.02]"
+                >
                   <div className="relative w-24 h-24 flex items-center justify-center mb-6 group">
                     <div className="absolute inset-0 bg-emerald-500/20 rounded-[2rem] rotate-45 scale-0 group-hover:scale-100 group-hover:rotate-90 transition-all duration-700 opacity-0 group-hover:opacity-100" />
                     <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center border border-slate-200 dark:border-slate-700 group-hover:border-emerald-500/50 group-hover:bg-white dark:group-hover:bg-slate-900 transition-all duration-300 z-10 shadow-lg">
@@ -321,7 +503,7 @@ const AiScan = () => {
                       SUPPORTED: JPG, PNG, HEIC
                     </p>
                   </div>
-                </label>
+                </div>
               ) : (
                 <div className="relative h-full w-full">
                   <AnimatePresence mode="wait">
@@ -374,9 +556,6 @@ const AiScan = () => {
                     CivicPulse Live Feed
                   </span>
                 </div>
-                <div className="text-[9px] text-slate-500 dark:text-slate-600 bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-800">
-                  SYSTEM_ACTIVE
-                </div>
               </div>
               <div className="overflow-y-auto h-24 no-scrollbar space-y-1.5">
                 {logs.map((log, i) => (
@@ -406,7 +585,7 @@ const AiScan = () => {
           </div>
 
           {/* Right Panel */}
-          <div className="lg:col-span-7 md:h-[60vh]  bg-white/50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] flex flex-col lg:overflow-hidden backdrop-blur-sm min-h-0 shadow-xl">
+          <div className="lg:col-span-7 md:h-[60vh] bg-white/50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] flex flex-col lg:overflow-hidden backdrop-blur-sm min-h-0 shadow-xl">
             <div className="px-8 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white/80 dark:bg-slate-900/50 shrink-0">
               <div className="flex items-center gap-3">
                 <Layers
@@ -585,13 +764,10 @@ const AiScan = () => {
                       value={formData.title}
                       onChange={(e) => {
                         const value = e.target.value;
-                        const words = countWords(value);
-
-                        if (words > 20) {
+                        if (countWords(value) > 20) {
                           toast.warning("Title cannot exceed 20 words");
                           return;
                         }
-
                         setFormData((p) => ({ ...p, title: value }));
                       }}
                       className="w-full bg-white dark:bg-slate-950 p-4 rounded-2xl text-[13px] font-black"
@@ -646,6 +822,14 @@ const AiScan = () => {
                       }
                       className="w-full bg-white dark:bg-slate-950 p-4 rounded-2xl text-[12px] font-mono font-black text-emerald-600 dark:text-emerald-400 outline-none border border-slate-200 dark:border-slate-800 shadow-sm"
                     />
+                    {/* Always show map if coordinates exist */}
+                    {formData.location.lat && formData.location.lng && (
+                      <LocationPicker
+                        lat={formData.location.lat}
+                        lng={formData.location.lng}
+                        onLocationChange={updateLocationData}
+                      />
+                    )}
                   </div>
                 </motion.div>
               )}
