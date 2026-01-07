@@ -54,66 +54,7 @@ const priorities = [
   { id: "Urgent", label: "Urgent", icon: Zap },
 ];
 
-/* ================= LOCATION PICKER COMPONENT ================= */
-function LocationPicker({ lat, lng, onLocationChange }) {
-  const mapRef = useRef(null);
-  const mapInstance = useRef(null);
-  const markerRef = useRef(null);
-
-  useEffect(() => {
-    if (!lat || !lng || !mapRef.current) return;
-
-    if (!mapInstance.current) {
-      mapInstance.current = new maplibregl.Map({
-        container: mapRef.current,
-        style:
-          "https://tiles.basemaps.cartocdn.com/gl/positron-gl-style/style.json",
-        center: [lng, lat],
-        zoom: 17,
-      });
-
-      markerRef.current = new maplibregl.Marker({ draggable: true })
-        .setLngLat([lng, lat])
-        .addTo(mapInstance.current);
-
-      markerRef.current.on("dragend", async () => {
-        const { lat, lng } = markerRef.current.getLngLat();
-        try {
-          const res = await fetch(
-            `/api/geocoder?lat=${lat}&lon=${lng}&zoom=18`
-          );
-          const data = await res.json();
-          onLocationChange(lat, lng, data.display_name, true);
-        } catch {
-          onLocationChange(
-            lat,
-            lng,
-            `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
-            true
-          );
-        }
-      });
-    } else {
-      markerRef.current.setLngLat([lng, lat]);
-      mapInstance.current.flyTo({
-        center: [lng, lat],
-        zoom: 17,
-        essential: true,
-      });
-    }
-  }, [lat, lng, onLocationChange]);
-
-  return (
-    <div className="mt-3 rounded-xl overflow-hidden border-2 border-slate-100 dark:border-slate-800 shadow-inner">
-      <div ref={mapRef} className="h-48 w-full" />
-      <div className="bg-slate-50 dark:bg-slate-900/50 p-2 text-center">
-        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
-          Drag pin to refine location
-        </p>
-      </div>
-    </div>
-  );
-}
+import LocationPicker from "../layouts/LocationPicker";
 
 /* ================= MAIN REPORT COMPONENT ================= */
 export default function ReportIssue() {

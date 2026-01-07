@@ -33,83 +33,118 @@ import { getDashboardData } from "@/lib/api/dashboard";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { fireOneTimeToast } from "@/lib/oneTimeToast";
+import useSWR from "swr";
 
 export default function Dashboard() {
-  const [stats, setStats] = useState([]);
-  const [chartData, setChartData] = useState([]);
-  const [recentIssues, setRecentIssues] = useState([]);
-  const [loading, setLoading] = useState(true);
-
   const { data: session } = useSession();
   const user = session?.user;
+
+  const fetcher = () => getDashboardData();
+
+  const { data, error, isLoading } = useSWR("/api/dashboard", fetcher, {
+    refreshInterval: 15000,
+    revalidateOnFocus: true,
+    shouldRetryOnError: false,
+  });
 
   useEffect(() => {
     fireOneTimeToast("googleLoginSuccess", "Signed in with Google 🚀");
     fireOneTimeToast("signupSuccess", "Welcome to Pulse 🎉");
     fireOneTimeToast("signinSuccess", "Welcome Back to Pulse 🎉");
-
-    async function loadDashboard() {
-      try {
-        const data = await getDashboardData();
-
-        const formattedStats = [
-          {
-            title: "Total Reports",
-            value: data.stats?.total || 0,
-            change: `+${data.stats?.resolvedThisMonth || 0} resolved`,
-            icon: <TrendingUp className="w-5 h-5" />,
-            color: "text-blue-500",
-            bg: "bg-blue-500/10",
-          },
-          {
-            title: "Pending",
-            value: data.stats?.pending || 0,
-            change: "Action required",
-            icon: <Clock className="w-5 h-5" />,
-            color: "text-amber-500",
-            bg: "bg-amber-500/10",
-          },
-          {
-            title: "Resolved",
-            value: data.stats?.resolved || 0,
-            change: "High efficiency",
-            icon: <CheckCircle2 className="w-5 h-5" />,
-            color: "text-emerald-500",
-            bg: "bg-emerald-500/10",
-          },
-          {
-            title: "Active Pulse",
-            value: data.stats?.inProgress || 0,
-            change: "Live updates",
-            icon: <Activity className="w-5 h-5" />,
-            color: "text-rose-500",
-            bg: "bg-rose-500/10",
-          },
-        ];
-
-        setStats(formattedStats);
-        setChartData(data.chartData || []);
-        setRecentIssues(data.recentIssues || []);
-      } catch (err) {
-        console.error("Dashboard fetch failed:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadDashboard();
   }, []);
 
-  if (loading) {
+  const statsData = data
+    ? [
+        {
+          title: "Total Reports",
+          value: data.stats?.total || 0,
+          change: `+${data.stats?.resolvedThisMonth || 0} resolved`,
+          icon: <TrendingUp className="w-5 h-5" />,
+          color: "text-blue-500",
+          bg: "bg-blue-500/10",
+        },
+        {
+          title: "Pending",
+          value: data.stats?.pending || 0,
+          change: "Action required",
+          icon: <Clock className="w-5 h-5" />,
+          color: "text-amber-500",
+          bg: "bg-amber-500/10",
+        },
+        {
+          title: "Resolved",
+          value: data.stats?.resolved || 0,
+          change: "High efficiency",
+          icon: <CheckCircle2 className="w-5 h-5" />,
+          color: "text-emerald-500",
+          bg: "bg-emerald-500/10",
+        },
+        {
+          title: "Active Pulse",
+          value: data.stats?.inProgress || 0,
+          change: "Live updates",
+          icon: <Activity className="w-5 h-5" />,
+          color: "text-rose-500",
+          bg: "bg-rose-500/10",
+        },
+      ]
+    : [];
+
+  const chartData = data?.chartData || [];
+  const recentIssues = data?.recentIssues || [];
+
+  if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen gap-4 bg-white dark:bg-slate-950">
-        <div className="relative flex items-center justify-center">
-          <div className="w-16 h-16 border-4 border-emerald-500/20 rounded-full border-t-emerald-500 animate-spin"></div>
-          <Shield className="absolute w-6 h-6 text-emerald-500 animate-pulse" />
+      <div className="min-h-screen bg-white dark:bg-slate-950 pt-24 pb-12 px-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Header Skeleton */}
+          <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6 animate-pulse">
+            <div>
+              <div className="h-10 w-64 bg-slate-200 dark:bg-slate-800 rounded-xl mb-3" />
+              <div className="h-4 w-48 bg-slate-100 dark:bg-slate-800/50 rounded-lg" />
+            </div>
+            <div className="h-12 w-44 bg-emerald-500/20 rounded-2xl" />
+          </div>
+
+          {/* Stats Grid Skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="h-32 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2rem] animate-pulse"
+              />
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            {/* Chart Skeleton */}
+            <div className="lg:col-span-2 h-[400px] bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2rem] p-8">
+              <div className="flex justify-between mb-8">
+                <div className="h-6 w-32 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
+                <div className="h-4 w-12 bg-emerald-500/20 rounded-full animate-pulse" />
+              </div>
+              <div className="w-full h-64 bg-slate-100/50 dark:bg-slate-800/30 rounded-xl animate-pulse" />
+            </div>
+            {/* Hub Skeleton */}
+            <div className="h-[400px] bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2rem] p-6 space-y-4">
+              <div className="h-6 w-24 bg-slate-200 dark:bg-slate-800 rounded-lg mb-4" />
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-14 bg-white dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700 animate-pulse"
+                />
+              ))}
+            </div>
+          </div>
         </div>
-        <p className="text-slate-500 dark:text-slate-400 font-black tracking-widest text-[10px] uppercase animate-pulse">
-          Syncing Neural Pulse...
-        </p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="pt-24 text-center text-red-500">
+        Failed to load dashboard
       </div>
     );
   }
@@ -147,7 +182,7 @@ export default function Dashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => (
+          {statsData.map((stat, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
@@ -205,7 +240,13 @@ export default function Dashboard() {
                   margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                 >
                   <defs>
-                    <linearGradient id="colorReports" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient
+                      id="colorReports"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
                       <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
                       <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                     </linearGradient>
@@ -405,7 +446,8 @@ export default function Dashboard() {
                     Zero Transmissions Detected
                   </h3>
                   <p className="text-[11px] font-bold text-slate-400 max-w-[240px] leading-relaxed mb-8">
-                    The network is currently clear. No anomalies have been reported in your sector.
+                    The network is currently clear. No anomalies have been
+                    reported in your sector.
                   </p>
                   <Link href="/issues/report">
                     <button className="flex items-center gap-2 px-6 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-950 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-transform">

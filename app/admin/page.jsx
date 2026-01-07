@@ -23,11 +23,15 @@ import {
   Cell,
   CartesianGrid,
 } from "recharts";
+
 import { StatCard } from "@/components/ui/StatCard";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { fireOneTimeToast } from "@/lib/oneTimeToast";
 import { useRouter } from "next/navigation";
+import useSWR from "swr";
+
+/* -------------------- CONSTANTS -------------------- */
 
 const CATEGORY_COLORS = {
   infrastructure: "#3b82f6",
@@ -39,27 +43,33 @@ const CATEGORY_COLORS = {
   other: "#64748b",
 };
 
-export default function AdminDashboard() {
-  const [loading, setLoading] = useState(true);
+/* -------------------- FETCHER -------------------- */
 
-  const [dashboard, setDashboard] = useState({
-    stats: {
-      totalUsers: 0,
-      activeUsers: 0,
-      blockedUsers: 0,
-      totalReports: 0,
-      resolvedReports: 0,
-      avgResponseTime: 0,
-    },
-    charts: {
-      monthly: [],
-      categories: [],
-    },
-    recentIssuess: [],
+const fetcher = async (url) => {
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to load dashboard");
+  return res.json();
+};
+
+export default function AdminDashboard() {
+  const router = useRouter();
+  const [barSize, setBarSize] = useState(24);
+
+  /* -------------------- SWR LIVE DATA -------------------- */
+
+  const {
+    data: dashboard,
+    error,
+    isLoading,
+  } = useSWR("/api/admin/stats", fetcher, {
+    refreshInterval: 15000, // 🔄 DB sync every 15s
+    dedupingInterval: 10000,
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+    keepPreviousData: true,
   });
 
-  const [barSize, setBarSize] = useState(24);
-  const router = useRouter();
+  /* -------------------- EFFECTS -------------------- */
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -69,37 +79,27 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch("/api/admin/stats");
-        if (!res.ok) {
-          throw new Error("Failed to fetch dashboard data");
-        }
-        const data = await res.json();
-        setDashboard(data);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  useEffect(() => {
     const update = () => {
       setBarSize(window.innerWidth < 640 ? 12 : 24);
     };
-
     update();
     window.addEventListener("resize", update);
-
     return () => window.removeEventListener("resize", update);
   }, []);
 
-  if (loading) {
+  /* -------------------- DERIVED DATA -------------------- */
+
+  const categoriesWithColors =
+    dashboard?.charts?.categories?.map((cat) => ({
+      ...cat,
+      color: CATEGORY_COLORS[cat.name?.toLowerCase()] || "#64748b",
+    })) || [];
+
+  const handleClick = (id) => {
+    router.push(`/admin/issues/${id}`);
+  };
+
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-10 animate-pulse transition-colors duration-500 font-['Plus_Jakarta_Sans',sans-serif]">
         <div className="max-w-7xl mx-auto w-full">
@@ -131,16 +131,6 @@ export default function AdminDashboard() {
     );
   }
 
-  const categoriesWithColors = dashboard.charts.categories.map((cat) => ({
-    ...cat,
-    color: CATEGORY_COLORS[cat.name?.toLowerCase()] || "#64748b",
-  }));
-
-  const handleClick = (id) => {
-    router.push(`/admin/issues/${id}`);
-  };
-
-  // Helper component for Empty State
   const EmptyState = () => (
     <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
       <div className="relative mb-6">

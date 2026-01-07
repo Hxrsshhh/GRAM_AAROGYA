@@ -1,55 +1,54 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useMemo } from "react";
+import useSWR from "swr";
+import { toast } from "sonner";
 import {
-  Users,
+  Award,
+  Ban,
+  Fingerprint,
+  LayoutGrid,
+  Save,
   Search,
   ShieldCheck,
-  Ban,
-  LayoutGrid,
-  Clock,
-  Award,
-  UserCog,
-  Save,
   Trash2,
-  Fingerprint,
+  UserCog,
   X,
+  Users,
+  UserCheck,
+  Clock,
+  Slash,
 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-
 import ConfirmDeleteModal from "@/components/modals/confirmDeleteModal";
-import { toast } from "sonner";
 
-// --- Loading Skeleton Component ---
-const SkeletonCard = () => (
-  <div className="p-6 rounded-[2rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 animate-pulse">
-    <div className="flex justify-between items-start mb-6">
-      <div className="w-12 h-12 rounded-xl bg-slate-200 dark:bg-slate-800" />
-      <div className="flex flex-col gap-2 items-end">
-        <div className="w-12 h-4 bg-slate-200 dark:bg-slate-800 rounded-lg" />
-        <div className="w-16 h-2 bg-slate-100 dark:bg-slate-800 rounded-full" />
-      </div>
-    </div>
-    <div className="mb-6 space-y-2">
-      <div className="w-3/4 h-5 bg-slate-200 dark:bg-slate-800 rounded-lg" />
-      <div className="w-1/2 h-3 bg-slate-100 dark:bg-slate-800 rounded-lg" />
-    </div>
-    <div className="grid grid-cols-2 gap-3 mb-6">
-      <div className="h-12 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-800" />
-      <div className="h-12 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-800" />
-    </div>
-    <div className="w-full h-10 bg-slate-200 dark:bg-slate-800 rounded-xl" />
-  </div>
-);
+/* ---------------- SWR FETCHER ---------------- */
+const fetcher = async (url) => {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch users");
+  return res.json();
+};
 
 export default function UserManagement() {
-  const [users, setUsers] = useState([]);
+  /* ---------------- SWR (LIVE DB) ---------------- */
+  const {
+    data: users = [],
+    error,
+    isLoading,
+    mutate,
+  } = useSWR("/api/admin/users", fetcher, {
+    refreshInterval: 5000,
+    revalidateOnFocus: true,
+  });
+
+  const initialFetch = isLoading;
+
+  /* ---------------- UI STATE ---------------- */
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [initialFetch, setInitialFetch] = useState(true); // New state for initial load
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [editDraft, setEditDraft] = useState({
     bio: "",
@@ -60,32 +59,58 @@ export default function UserManagement() {
 
   const MAX_BIO_LENGTH = 100;
 
-  useEffect(() => {
-    const FetchData = async () => {
-      try {
-        setInitialFetch(true);
-        const res = await fetch("/api/admin/users");
-        if (!res.ok) throw new Error("Failed to fetch data");
-        const data = await res.json();
-        setUsers(data);
-      } catch (err) {
-        toast.error("Could not load users");
-      } finally {
-        setInitialFetch(false);
-      }
-    };
-    FetchData();
-  }, []);
+  /* ---------------- DERIVED DATA ---------------- */
+  const filteredUsers = useMemo(() => {
+    return users.filter(
+      (u) =>
+        u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.username?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [users, searchTerm]);
 
+  const stats = useMemo(
+    () => [
+      {
+        label: "Total Accounts",
+        value: users.length,
+        icon: Users,
+        color: "text-blue-500",
+      },
+      {
+        label: "Active Admins",
+        value: users.filter((u) => u.role === "admin").length,
+        icon: ShieldCheck,
+        color: "text-emerald-500",
+      },
+      {
+        label: "Pending Review",
+        value: users.filter((u) => u.onboardingStatus === "pending").length,
+        icon: Clock,
+        color: "text-amber-500",
+      },
+      {
+        label: "Blocked",
+        value: users.filter((u) => u.isBlocked).length,
+        icon: Ban,
+        color: "text-rose-500",
+      },
+    ],
+    [users]
+  );
+
+  /* ---------------- HELPERS ---------------- */
   const updateDraft = (key, value) => {
     setEditDraft((prev) => ({ ...prev, [key]: value }));
   };
 
+  /* ---------------- UPDATE USER (LIVE) ---------------- */
   const handleFinalUpdate = async () => {
     if (!selectedUser) return;
 
     try {
       setLoading(true);
+
       const res = await fetch(`/api/admin/users/${selectedUser._id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -95,14 +120,15 @@ export default function UserManagement() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Update failed");
 
-      setUsers((prev) =>
-        prev.map((u) =>
-          u._id === selectedUser._id ? { ...u, ...editDraft } : u
-        )
+      await mutate(
+        (prev) =>
+          prev.map((u) =>
+            u._id === selectedUser._id ? { ...u, ...editDraft } : u
+          ),
+        false
       );
 
       setSelectedUser((prev) => ({ ...prev, ...editDraft }));
-
       toast.success("Identity synchronized with database");
     } catch (err) {
       toast.error(err.message);
@@ -111,18 +137,22 @@ export default function UserManagement() {
     }
   };
 
+  /* ---------------- DELETE USER (LIVE) ---------------- */
   const handleDelete = async (id) => {
     try {
       setLoading(true);
+
       const res = await fetch(`/api/admin/users/${id}`, {
         method: "DELETE",
       });
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Failed to delete user");
+        throw new Error(data.error || "Delete failed");
       }
-      setUsers((prev) => prev.filter((u) => u._id !== id));
+
+      await mutate((prev) => prev.filter((u) => u._id !== id), false);
+
       setSelectedUser(null);
       setOpen(false);
       toast.success("Deleted successfully");
@@ -133,39 +163,9 @@ export default function UserManagement() {
     }
   };
 
-  const filteredUsers = users.filter(
-    (u) =>
-      u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.username?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const stats = [
-    {
-      label: "Total Accounts",
-      value: users.length,
-      icon: Users,
-      color: "text-blue-500",
-    },
-    {
-      label: "Active Admins",
-      value: users.filter((u) => u.role === "admin").length,
-      icon: ShieldCheck,
-      color: "text-emerald-500",
-    },
-    {
-      label: "Pending Review",
-      value: users.filter((u) => u.onboardingStatus === "pending").length,
-      icon: Clock,
-      color: "text-amber-500",
-    },
-    {
-      label: "Blocked",
-      value: users.filter((u) => u.isBlocked).length,
-      icon: Ban,
-      color: "text-rose-500",
-    },
-  ];
+  if (error) {
+    toast.error("Could not load users");
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500 font-['Plus_Jakarta_Sans',sans-serif]">
@@ -630,3 +630,25 @@ export default function UserManagement() {
     </div>
   );
 }
+
+// --- Loading Skeleton Component ---
+const SkeletonCard = () => (
+  <div className="p-6 rounded-[2rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 animate-pulse">
+    <div className="flex justify-between items-start mb-6">
+      <div className="w-12 h-12 rounded-xl bg-slate-200 dark:bg-slate-800" />
+      <div className="flex flex-col gap-2 items-end">
+        <div className="w-12 h-4 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+        <div className="w-16 h-2 bg-slate-100 dark:bg-slate-800 rounded-full" />
+      </div>
+    </div>
+    <div className="mb-6 space-y-2">
+      <div className="w-3/4 h-5 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+      <div className="w-1/2 h-3 bg-slate-100 dark:bg-slate-800 rounded-lg" />
+    </div>
+    <div className="grid grid-cols-2 gap-3 mb-6">
+      <div className="h-12 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-800" />
+      <div className="h-12 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-800" />
+    </div>
+    <div className="w-full h-10 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+  </div>
+);

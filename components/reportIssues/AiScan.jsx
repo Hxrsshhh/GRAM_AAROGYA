@@ -37,62 +37,7 @@ const countWords = (text = "") =>
   text.trim().split(/\s+/).filter(Boolean).length;
 
 /* ================= LOCATION PICKER COMPONENT ================= */
-function LocationPicker({ lat, lng, onLocationChange }) {
-  const mapRef = useRef(null);
-  const mapInstance = useRef(null);
-  const markerRef = useRef(null);
-
-  useEffect(() => {
-    if (!lat || !lng || !mapRef.current) return;
-
-    if (!mapInstance.current) {
-      mapInstance.current = new maplibregl.Map({
-        container: mapRef.current,
-        style:
-          "https://tiles.basemaps.cartocdn.com/gl/positron-gl-style/style.json",
-        center: [lng, lat],
-        zoom: 17,
-      });
-
-      markerRef.current = new maplibregl.Marker({ draggable: true })
-        .setLngLat([lng, lat])
-        .addTo(mapInstance.current);
-
-      markerRef.current.on("dragend", async () => {
-        const { lat, lng } = markerRef.current.getLngLat();
-        try {
-          // Reverse geocode when pin is dropped
-          const res = await fetch(
-            `/api/geocoder?lat=${lat}&lon=${lng}&zoom=18`
-          );
-          const data = await res.json();
-          onLocationChange(lat, lng, data.display_name, true);
-        } catch {
-          onLocationChange(
-            lat,
-            lng,
-            `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
-            true
-          );
-        }
-      });
-    } else {
-      // Move map if coordinates update from external source (typing/GPS)
-      markerRef.current.setLngLat([lng, lat]);
-      mapInstance.current.flyTo({
-        center: [lng, lat],
-        zoom: 17,
-        essential: true,
-      });
-    }
-  }, [lat, lng]);
-
-  return (
-    <div className="mt-4 rounded-[2rem] overflow-hidden border border-slate-200 dark:border-slate-800 shadow-inner">
-      <div ref={mapRef} className="h-48 w-full" />
-    </div>
-  );
-}
+import LocationPicker from "../layouts/LocationPicker";
 
 const AiScan = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -390,6 +335,7 @@ const AiScan = () => {
   };
 
   return (
+
     <div className=" max-h-screen py-4 lg:py-0 max-w-screen bg-slate-50/10 dark:bg-transparent text-slate-900 dark:text-slate-200 font-['Plus_Jakarta_Sans'] flex flex-col overflow-y-auto lg:overflow-hidden transition-colors duration-300">
       {/* Hidden Inputs for specific triggers */}
       <input
@@ -652,30 +598,11 @@ const AiScan = () => {
                             Confidence Score
                           </span>
                         </div>
-                        {isEditingAI ? (
-                          <div className="flex items-center gap-1">
-                            <input
-                              type="number"
-                              min="0"
-                              max="100"
-                              value={formData.confidence}
-                              onChange={(e) =>
-                                setFormData((p) => ({
-                                  ...p,
-                                  confidence: parseInt(e.target.value) || 0,
-                                }))
-                              }
-                              className="w-16 bg-white dark:bg-slate-900 border border-emerald-500/30 rounded-lg text-xl font-black text-emerald-600 text-center outline-none"
-                            />
-                            <span className="text-xl font-black text-emerald-600">
-                              %
-                            </span>
-                          </div>
-                        ) : (
+                        
                           <span className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
                             {formData.confidence}%
                           </span>
-                        )}
+                      
                       </div>
                       <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-900 rounded-full overflow-hidden">
                         <motion.div
@@ -894,6 +821,7 @@ const AiScan = () => {
         }}
       />
     </div>
+
   );
 };
 

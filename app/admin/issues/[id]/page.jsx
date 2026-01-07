@@ -32,6 +32,8 @@ import ConfirmIssueDeleteModal from "@/components/modals/confirmdeletIssueModal"
 import Image from "next/image";
 import { toast } from "sonner";
 
+import useSWR from "swr";
+
 const CATEGORIES = [
   "infrastructure",
   "utilities",
@@ -44,11 +46,33 @@ const CATEGORIES = [
 const STATUSES = ["pending", "in-progress", "resolved"];
 const PRIORITIES = ["Low", "Medium", "High", "Critical"];
 
+const fetcher = (url) =>
+  fetch(url).then((res) => {
+    if (!res.ok) throw new Error("Failed to fetch");
+    return res.json();
+  });
+
+function IssueSkeleton() {
+  return (
+    <div className="h-screen w-full p-6 animate-pulse bg-slate-50 dark:bg-slate-950">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="h-10 w-1/3 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+        <div className="h-6 w-1/2 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="h-24 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
+          <div className="h-24 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
+        </div>
+
+        <div className="h-40 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
+      </div>
+    </div>
+  );
+}
+
 export default function IssueDetail() {
-  const [issue, setIssue] = useState(null);
   const [commentText, setCommentText] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -57,57 +81,46 @@ export default function IssueDetail() {
   const router = useRouter();
   const { data: session } = useSession();
 
-  useEffect(() => {
-    const fetchIssue = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(`/api/admin/issues/${id}`);
-        if (!res.ok) throw new Error("Failed to fetch");
-        const data = await res.json();
-        setIssue(data);
-      } catch (err) {
-        console.error("Fetch Error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (id) fetchIssue();
-  }, [id]);
+  const {
+    data: issue,
+    isLoading,
+    mutate,
+  } = useSWR(id ? `/api/admin/issues/${id}` : null, fetcher, {
+    revalidateOnFocus: false,
+  });
 
   const handleUpdateLocal = (field, value) => {
-    setIssue((prev) => ({ ...prev, [field]: value }));
+    mutate(
+      (current) => ({ ...current, [field]: value }),
+      false // ❗ do not revalidate yet
+    );
   };
 
   const addComment = async () => {
-    if (!commentText.trim() || !issue) return;
-    const adminId = session?.user?.id;
-    try {
-      const res = await fetch(`/api/admin/issues/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          comment: {
-            text: commentText,
-            createdBy: adminId,
-            createdAt: new Date(),
-          },
-        }),
-      });
-      if (res.ok) {
-        const updatedData = await res.json();
-        setIssue(updatedData);
-        setCommentText("");
-        toast.success('Comment Added Successfully');
-      }
-    } catch (err) {
-      console.error("Comment Error:", err);
-    }
+    if (!commentText.trim()) return;
+
+    await fetch(`/api/admin/issues/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        comment: {
+          text: commentText,
+          createdBy: session?.user?.id,
+          createdAt: new Date(),
+        },
+      }),
+    });
+
+    mutate(); // 🔥 instant refresh
+    setCommentText("");
+    toast.success("Comment added");
   };
 
   const handleSave = async () => {
     try {
       setIsSaving(true);
-      const res = await fetch(`/api/admin/issues/${id}`, {
+
+      await fetch(`/api/admin/issues/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -118,10 +131,11 @@ export default function IssueDetail() {
           isArchived: issue.isArchived,
         }),
       });
-      if (!res.ok) throw new Error("Update failed");
-      toast.success("Database synced successfully");
-    } catch (err) {
-      toast.error("Error updating record");
+
+      mutate(); // 🔥 re-sync cache
+      toast.success("Database synced");
+    } catch {
+      toast.error("Update failed");
     } finally {
       setIsSaving(false);
     }
@@ -139,17 +153,7 @@ export default function IssueDetail() {
     }
   };
 
-  if (loading)
-    return (
-      <div className="h-screen w-full flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 rounded-full border-4 border-emerald-500/10 border-t-emerald-500 animate-spin" />
-          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">
-            Loading Intelligence
-          </p>
-        </div>
-      </div>
-    );
+  if (isLoading) return <IssueSkeleton />;
 
   if (!issue)
     return (

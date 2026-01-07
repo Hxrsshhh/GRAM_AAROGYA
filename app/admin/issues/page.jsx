@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
+import useSWR from "swr";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -10,8 +11,14 @@ import {
   ChevronRight,
   ShieldAlert,
 } from "lucide-react";
+import Link from "next/link";
+import { toast } from "sonner";
 
 import ConfirmIssueDeleteModal from "@/components/modals/confirmdeletIssueModal";
+import { IncidentCard } from "@/components/layouts/IncidentCard";
+import { getAllIssues } from "@/app/api/issues";
+
+/* -------------------------------- constants -------------------------------- */
 
 const CATEGORIES = [
   "All",
@@ -23,54 +30,57 @@ const CATEGORIES = [
   "traffic",
   "other",
 ];
+
 const STATUSES = ["All", "pending", "in-progress", "resolved"];
 
-import { IncidentCard } from "@/components/layouts/IncidentCard";
-import { getAllIssues } from "@/app/api/issues";
-import Link from "next/link";
-import { toast } from "sonner";
+/* ------------------------------- swr fetcher ------------------------------- */
 
-IncidentCard.displayName = "IncidentCard";
+const fetcher = async () => {
+  const res = await getAllIssues();
+  if (!res) throw new Error("Failed to fetch issues");
+  return res.data;
+};
+
+/* -------------------------------- component -------------------------------- */
 
 export default function Issues() {
   const [search, setSearch] = useState("");
   const [filterCat, setFilterCat] = useState("All");
   const [filterStat, setFilterStat] = useState("All");
-  const [issues, setIssues] = useState([]);
-  const [loading, setLoading] = useState(true); // New Loading State
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    const fetchIssues = async () => {
-      try {
-        setLoading(true);
-        const data = await getAllIssues();
-        if (!data) throw new Error("Failed to fetch issues");
-        setIssues(data.data);
-      } catch (err) {
-        console.error(err);
-        toast.error("Failed to establish uplink with data vault.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchIssues();
-  }, []);
+  /* ------------------------------ SWR (LIVE) ------------------------------ */
+
+  const {
+    data: issues = [],
+    isLoading,
+    mutate,
+  } = useSWR("/api/issues", fetcher, {
+    refreshInterval: 5000, // 🔥 live DB sync
+    revalidateOnFocus: true,
+    keepPreviousData: true,
+  });
+
+  /* ------------------------------ filtering ------------------------------ */
 
   const filtered = useMemo(() => {
     return issues.filter((i) => {
       const title = i.title?.toLowerCase() || "";
-      const id = (i.id || i._id || "").toString().toLowerCase();
-      const searchTerm = search.toLowerCase();
-      const matchSearch = title.includes(searchTerm) || id.includes(searchTerm);
-      const matchCat = filterCat === "All" || i.category === filterCat;
-      const matchStat = filterStat === "All" || i.status === filterStat;
-      return matchSearch && matchCat && matchStat;
+      const id = (i._id || "").toLowerCase();
+      const q = search.toLowerCase();
+
+      return (
+        (title.includes(q) || id.includes(q)) &&
+        (filterCat === "All" || i.category === filterCat) &&
+        (filterStat === "All" || i.status === filterStat)
+      );
     });
-  }, [search, filterCat, filterStat, issues]);
+  }, [issues, search, filterCat, filterStat]);
+
+  /* ------------------------------ delete flow ------------------------------ */
 
   const handleDeleteClick = (issue) => {
     setSelectedIssue(issue);
@@ -79,27 +89,22 @@ export default function Issues() {
 
   const handleConfirmDelete = async () => {
     if (!selectedIssue) return;
-
     setIsDeleting(true);
+
     try {
       const res = await fetch(`/api/admin/issues/${selectedIssue._id}`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
       });
 
-      if (res.ok) {
-        setIssues((prevIssues) =>
-          prevIssues.filter((issue) => issue._id !== selectedIssue._id)
-        );
-        setDeleteModalOpen(false);
-        toast.success("Issue deleted Successfully");
-      } else {
-        const errorData = await res.json();
-        toast.error(`Error: ${errorData.message || "Failed to delete"}`);
-      }
+      if (!res.ok) throw new Error("Delete failed");
+
+      // 🔥 instant UI update (no refetch delay)
+      mutate((prev) => prev.filter((i) => i._id !== selectedIssue._id), false);
+
+      toast.success("Issue deleted successfully");
+      setDeleteModalOpen(false);
     } catch (err) {
-      console.error("Delete Error:", err);
-      toast.error("System communication failure during purge.");
+      toast.error("Failed to delete issue");
     } finally {
       setIsDeleting(false);
       setSelectedIssue(null);
@@ -227,8 +232,8 @@ export default function Issues() {
         <main className="p-2 px-6 max-w-7xl mx-auto w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <AnimatePresence mode="popLayout">
-              {loading
-                ? // LOADING SKELETON UI
+              {isLoading
+                ? // isLoading SKELETON UI
                   [...Array(6)].map((_, i) => (
                     <div
                       key={`skeleton-${i}`}
@@ -268,13 +273,13 @@ export default function Issues() {
                 open={deleteModalOpen}
                 onClose={() => setDeleteModalOpen(false)}
                 onConfirm={handleConfirmDelete}
-                loading={isDeleting}
+                isLoading={isDeleting}
                 issueTitle={selectedIssue?.title}
               />
             </AnimatePresence>
           </div>
 
-          {!loading && filtered.length === 0 && (
+          {!isLoading && filtered.length === 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -297,12 +302,12 @@ export default function Issues() {
               <div className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em]">
                 Active Archive:{" "}
                 <span className="text-emerald-500">
-                  {loading ? "..." : filtered.length}
+                  {isLoading ? "..." : filtered.length}
                 </span>
               </div>
               <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-800" />
               <div className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em]">
-                Total: {loading ? "..." : issues.length}
+                Total: {isLoading ? "..." : issues.length}
               </div>
             </div>
 

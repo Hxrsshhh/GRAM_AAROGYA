@@ -63,6 +63,7 @@ export const authOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
+          status: user.status,
           onboardingStatus: user.onboardingStatus,
         };
       },
@@ -73,22 +74,35 @@ export const authOptions = {
     async signIn({ user, account }) {
       await connectDB();
 
+      // 1. For credentials, you should handle the block check in your Authorize function,
+      // but we can add a safety check here too if needed.
       if (account.provider === "credentials") {
+        if (user.status === "blocked") {
+          return `/auth/error?error=ACCESS_DENIED_BLOCKED`;
+        }
+
+        // If deleted, send to custom error page
+        if (user.status === "deleted") {
+          return `/auth/error?error=USER_DELETED`;
+        }
+         console.log("I am in credential provider ");
         return true;
       }
+
       const email = user.email;
       if (!email) return false;
 
       let dbUser = await User.findOne({ email });
 
       if (!dbUser) {
+        // New User Creation
         dbUser = await User.create({
           name: user.name || "New User",
           email,
           avatar: user.image,
           emailVerified: true,
           role: "citizen",
-          status: "active",
+          status: "active", // Default status
           authProviders: [
             {
               provider: account.provider,
@@ -98,6 +112,16 @@ export const authOptions = {
           lastLoginAt: new Date(),
         });
       } else {
+        // --- BLOCK/DELETE CHECK START ---
+        // If the user exists, check if they are blocked or deleted
+        if (dbUser.status === "blocked") {
+          throw new Error("ACCESS_DENIED_BLOCKED"); // This stops the sign-in
+        }
+        if (dbUser.status === "deleted") {
+          throw new Error("ACCESS_DENIED_DELETED"); // This stops the sign-in
+        }
+        // --- BLOCK/DELETE CHECK END ---
+
         const isLinked = dbUser.authProviders.some(
           (p) =>
             p.provider === account.provider &&
@@ -117,6 +141,7 @@ export const authOptions = {
 
       user.id = dbUser._id.toString();
       user.role = dbUser.role;
+      user.status = dbUser.status; // Add status to the user object
 
       return true;
     },
@@ -125,6 +150,7 @@ export const authOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.status = user.status;
       }
       if (token?.id) {
         await connectDB();
@@ -138,6 +164,11 @@ export const authOptions = {
       session.user.id = token.id;
       session.user.role = token.role;
       session.user.onboardingStatus = token.onboardingStatus;
+      session.user.status = token.status;
+
+      if (token.status === "blocked") {
+        return null; // This destroys the session on the next request
+      }
 
       return session;
     },
@@ -145,6 +176,7 @@ export const authOptions = {
 
   pages: {
     signIn: "/signin",
+    error: "/auth/error",
   },
 
   secret: process.env.NEXTAUTH_SECRET,

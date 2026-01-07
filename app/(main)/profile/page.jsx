@@ -26,64 +26,79 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
+import useSWR, { mutate } from "swr";
+
 
 export default function Profile() {
-  const [loading, setLoading] = useState(false);
+
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState(null);
 
   const router = useRouter();
-
   const { data: session, status } = useSession();
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      return;
+  const fetchProfile = async () => {
+  const res = await fetch("/api/user/profile");
+  if (!res.ok) throw new Error("Failed to load profile");
+  return res.json();
+};
+
+const {
+  data: profile,
+  error,
+  isLoading,
+} = useSWR(
+  status === "authenticated" ? "/api/user/profile" : null,
+  fetchProfile,
+  {
+    revalidateOnFocus: false,   // 🔥 avoid refetch on tab switch
+    dedupingInterval: 5 * 60_000, // 🔥 cache for 5 minutes
+  }
+);
+
+useEffect(() => {
+  if (profile) {
+    setFormData(profile);
+  }
+}, [profile]);
+
+
+ const handleSave = async () => {
+  setSaving(true);
+
+  try {
+    const response = await fetch("/api/user/profile", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to update profile");
     }
 
-    if (status === "authenticated") {
-      const loadProfile = async () => {
-        try {
-          const res = await fetch("/api/user/profile");
-          const data = await res.json();
-          setFormData(data);
-          console.log(data);
-        } catch (error) {
-          console.error("Failed to fetch profile", error);
-        }
-      };
-      loadProfile();
-    }
-  }, [session, status]);
+    const updatedUser = await response.json();
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const response = await fetch("/api/user/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+    // 🔥 SWR cache update (NO refetch)
+    mutate("/api/user/profile", updatedUser, false);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to update profile");
-      }
+    // local form sync (for editing UX)
+    setFormData(updatedUser);
 
-      const updatedUser = await response.json();
-      setFormData(updatedUser);
-      toast.success("User Updated successfullt");
-      setEditing(false);
-    } catch (error) {
-      console.error("Save failed:", error.message);
-      toast.error(error.message);
-    } finally {
-      setSaving(false);
-    }
-  };
+    toast.success("User updated successfully");
+    setEditing(false);
+  } catch (error) {
+    console.error("Save failed:", error.message);
+    toast.error(error.message || "Update failed");
+  } finally {
+    setSaving(false);
+  }
+};
 
-  if (status === "loading" || !formData) {
+
+  if (status === "loading" || isLoading || !formData) {
     return (
       <div className="flex flex-col items-center justify-center h-screen gap-4 bg-white dark:bg-slate-950">
         <div className="relative flex items-center justify-center">
@@ -96,6 +111,14 @@ export default function Profile() {
       </div>
     );
   }
+
+  if (error) {
+  return (
+    <div className="h-screen flex items-center justify-center text-red-500 font-bold">
+      Failed to load profile
+    </div>
+  );
+}
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 py-12">

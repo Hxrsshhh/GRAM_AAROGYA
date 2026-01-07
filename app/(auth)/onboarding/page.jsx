@@ -67,7 +67,7 @@ const App = () => {
 
   const isStepValid = () => {
     if (step === 1) {
-      return formData.username.trim().length >= 3 && formData.avatar !== null;
+      return formData.username.trim().length >= 3;
     }
     if (step === 2) {
       return (

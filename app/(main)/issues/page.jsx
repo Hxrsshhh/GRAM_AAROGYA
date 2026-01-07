@@ -18,31 +18,25 @@ import Link from "next/link";
 import { getAllIssues } from "@/app/api/issues";
 import Image from "next/image";
 import { fireOneTimeToast } from "@/lib/oneTimeToast";
+import useSWR from "swr";
 
 export default function App() {
-  const [issues, setIssues] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const fetcher = () => getAllIssues();
+
+  const { data, error, isLoading } = useSWR("/api/issues", fetcher, {
+    refreshInterval: 15000, // auto refresh every 15s
+    revalidateOnFocus: true,
+    shouldRetryOnError: false,
+  });
 
   useEffect(() => {
     fireOneTimeToast("IssueAdded", "Issue Added Successfully");
-
-    async function loadIssues() {
-      try {
-        setLoading(true);
-        const res = await getAllIssues();
-        setIssues(res.data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadIssues();
   }, []);
+
+  const issues = data?.data || [];
 
   const filteredIssues = issues.filter((issue) => {
     const matchesSearch =
@@ -67,23 +61,72 @@ export default function App() {
     "traffic",
   ];
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-slate-950">
-        <div className="flex flex-col items-center gap-6">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-emerald-500/20 rounded-full"></div>
-            <div className="absolute top-0 w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 overflow-hidden">
+        {/* Header Skeleton */}
+        <header className="hidden pt-16 md:block w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-900">
+          <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 flex justify-between items-end">
+            <div className="space-y-3">
+              <div className="h-3 w-32 bg-emerald-500/10 rounded animate-pulse" />
+              <div className="h-8 w-64 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
+            </div>
+            <div className="flex gap-3">
+              <div className="h-14 w-24 bg-slate-100 dark:bg-slate-900 rounded-xl animate-pulse" />
+              <div className="h-14 w-24 bg-slate-100 dark:bg-slate-900 rounded-xl animate-pulse" />
+            </div>
           </div>
-          <div className="text-center">
-            <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">
-              Syncing Pulse
-            </h2>
-            <p className="text-slate-500 text-sm font-bold uppercase tracking-widest mt-1">
-              Accessing Community Data...
-            </p>
+        </header>
+
+        <main className="flex-1 max-w-7xl mx-auto w-full px-4 md:px-6 mt-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
+            {/* Sidebar Skeleton */}
+            <aside className="lg:col-span-4">
+              <div className="h-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-6">
+                <div className="h-4 w-1/3 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
+                <div className="h-12 w-full bg-slate-50 dark:bg-slate-800/50 rounded-xl animate-pulse" />
+                <div className="space-y-3 pt-4">
+                  <div className="h-3 w-20 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
+                  <div className="h-10 w-full bg-slate-50 dark:bg-slate-800/50 rounded-xl animate-pulse" />
+                </div>
+              </div>
+            </aside>
+
+            {/* Feed Skeleton */}
+            <section className="lg:col-span-8 space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 flex gap-6"
+                >
+                  <div className="w-32 h-32 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse shrink-0" />
+                  <div className="flex-1 space-y-4 py-2">
+                    <div className="flex justify-between">
+                      <div className="h-6 w-1/2 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
+                      <div className="h-6 w-20 bg-emerald-500/10 rounded-full animate-pulse" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-3 w-full bg-slate-100 dark:bg-slate-800/50 rounded animate-pulse" />
+                      <div className="h-3 w-2/3 bg-slate-100 dark:bg-slate-800/50 rounded animate-pulse" />
+                    </div>
+                    <div className="flex justify-between pt-2">
+                      <div className="h-5 w-24 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
+                      <div className="h-5 w-16 bg-emerald-500/10 rounded animate-pulse" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </section>
           </div>
-        </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="pt-24 text-center text-red-500 font-bold">
+        Failed to load issues
       </div>
     );
   }

@@ -41,7 +41,7 @@ export default function SignInPage() {
       });
 
       if (res?.error) {
-        setError("Invalid email or password");
+        setError(`${res.error}`);
         setIsLoading(false);
         return;
       }

@@ -20,6 +20,7 @@ export async function DELETE(req, { params }) {
       return NextResponse.json({ error: "User ID missing" }, { status: 400 });
     }
 
+    // 1. Prevent admin from self-deletion
     if (session.user.id.toString() === userId.toString()) {
       return NextResponse.json(
         { error: "Admin cannot delete own account" },
@@ -32,6 +33,7 @@ export async function DELETE(req, { params }) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
     
+    // 2. Prevent deleting other admins
     if (user.role === "admin") {
       return NextResponse.json(
         { error: "Cannot delete another admin" },
@@ -39,9 +41,19 @@ export async function DELETE(req, { params }) {
       );
     }
 
-    await User.findByIdAndDelete(userId);
+    // 3. UPDATED LOGIC: Soft delete instead of findByIdAndDelete
+    await User.findByIdAndUpdate(userId, {
+      $set: { 
+        status: 'deleted',
+        deletedAt: new Date() 
+      }
+    });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true, 
+      message: "User status updated to deleted" 
+    });
+    
   } catch (err) {
     console.error("Delete user error:", err);
     return NextResponse.json(

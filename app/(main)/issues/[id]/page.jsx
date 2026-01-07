@@ -37,75 +37,61 @@ import Button from "@/components/ui/Button";
 import Image from "next/image";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
+import useSWR, { mutate } from "swr";
+
+const STATUS_STEPS = [
+  {
+    id: "pending",
+    label: "Case Acknowledged",
+    sub: "Verified by authorities",
+    icon: CheckCircle2,
+  },
+  {
+    id: "in-progress",
+    label: "Operational Phase",
+    sub: "Work in progress",
+    icon: Clock,
+  },
+  {
+    id: "resolved",
+    label: "Issue Resolved",
+    sub: "Case successfully closed",
+    icon: CheckCircle2,
+  },
+];
 
 export default function App() {
-  const [issue, setIssue] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasUpvoted, setHasUpvoted] = useState(false);
   const [comment, setComment] = useState("");
-  const [localComments, setLocalComments] = useState([]);
   const audioRef = React.useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const fetcher = () => getIssueById(id);
   const router = useRouter();
-
   const { data: session } = useSession();
-
-  const STATUS_STEPS = [
-    {
-      id: "pending",
-      label: "Case Acknowledged",
-      sub: "Verified by authorities",
-      icon: CheckCircle2,
-    },
-    {
-      id: "in-progress",
-      label: "Operational Phase",
-      sub: "Work in progress",
-      icon: Clock,
-    },
-    {
-      id: "resolved",
-      label: "Issue Resolved",
-      sub: "Case successfully closed",
-      icon: CheckCircle2,
-    },
-  ];
 
   const params = useParams();
   const id = params?.id;
 
-  const syncIssueData = async () => {
-    if (!id) return;
-    try {
-      const data = await getIssueById(id);
-      setIssue(data);
+  const {
+    data: issue,
+    error,
+    isLoading,
+  } = useSWR(id ? `/api/issues/${id}` : null, fetcher, {
+    refreshInterval: 10000, // 🔄 every 10s (DB polling)
+    revalidateOnFocus: true, // 🔁 tab focus
+    revalidateOnReconnect: true, // 🌐 network back
+  });
 
-      if (session?.user?.id && data.upvotedBy) {
-        setHasUpvoted(data.upvotedBy.includes(session.user.id));
-      }
-
-      const formattedComments = (data.comments || []).map((c) => ({
-        id: c._id,
-        name: c.createdBy?.name || "Anonymous Citizen",
-        text: c.text,
-        time: new Date(c.createdAt).toLocaleDateString(),
-        image: c.createdBy?.image,
-      }));
-
-      setLocalComments(formattedComments);
-    } catch (err) {
-      console.error("Sync Error:", err);
-    }
-  };
-
-  useEffect(() => {
-    setLoading(true);
-    syncIssueData().finally(() => setLoading(false));
-  }, [id]);
+  const localComments =
+    issue?.comments?.map((c) => ({
+      id: c._id,
+      name: c.createdBy?.name || "Anonymous Citizen",
+      text: c.text,
+      time: new Date(c.createdAt).toLocaleDateString(),
+      image: c.createdBy?.image,
+    })) || [];
 
   const handlePostComment = async () => {
     if (!comment.trim()) return;
@@ -113,13 +99,12 @@ export default function App() {
     setIsSubmitting(true);
     try {
       await createComment(issue._id, comment);
-
       setComment("");
-      toast.success("Comment Added successfully ");
-      await syncIssueData();
+      toast.success("Comment added");
+
+      mutate(`/api/issues/${id}`); // 🔥 instant refresh
     } catch (err) {
-      console.error("Post Comment Error:", err);
-      toast.error("Failed to post: " + err.message);
+      toast.error(err.message || "Failed to post");
     } finally {
       setIsSubmitting(false);
     }
@@ -161,64 +146,169 @@ export default function App() {
       return;
     }
 
-    const previousUpvotes = issue.upvotes;
-    const previousHasUpvoted = hasUpvoted;
+    const key = `/api/issues/${id}`;
 
-    // optimistic UI
-    setHasUpvoted(!previousHasUpvoted);
-    setIssue((prev) => ({
-      ...prev,
-      upvotes: Math.max((prev.upvotes ?? 0) + (previousHasUpvoted ? -1 : 1), 0),
-    }));
+    // 🔥 Optimistic update
+    mutate(
+      key,
+      (prev) => {
+        if (!prev) return prev;
+
+        const alreadyUpvoted = prev.upvotedBy?.includes(session.user.id);
+
+        return {
+          ...prev,
+          upvotes: Math.max((prev.upvotes ?? 0) + (alreadyUpvoted ? -1 : 1), 0),
+          upvotedBy: alreadyUpvoted
+            ? prev.upvotedBy.filter((u) => u !== session.user.id)
+            : [...(prev.upvotedBy || []), session.user.id],
+        };
+      },
+      false // ❗ don't revalidate yet
+    );
 
     try {
-      const res = await toggleUpvote(issue._id);
-
-      // sync with backend (SOURCE OF TRUTH)
-      setHasUpvoted(res.hasUpvoted);
-      setIssue((prev) => ({
-        ...prev,
-        upvotes: res.upvotes,
-      }));
+      const res = await toggleUpvote(id);
 
       toast.success(res.hasUpvoted ? "Upvoted" : "Upvote removed");
-    } catch (err) {
-      // rollback
-      setHasUpvoted(previousHasUpvoted);
-      setIssue((prev) => ({
-        ...prev,
-        upvotes: previousUpvotes,
-      }));
 
+      // ✅ sync with DB (source of truth)
+      mutate(key);
+    } catch (err) {
       toast.error(err.message || "Unable to upvote");
+
+      // 🔁 rollback by revalidating
+      mutate(key);
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-          Syncing Civic Data...
-        </p>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-20 pb-20 px-6">
+        <style>{`
+          @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+          }
+          .shimmer-wrapper {
+            position: relative;
+            overflow: hidden;
+          }
+          .shimmer-wrapper::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            transform: translateX(-100%);
+            background: linear-gradient(
+              90deg,
+              transparent,
+              rgba(255, 255, 255, 0.08),
+              transparent
+            );
+            animation: shimmer 2s infinite;
+          }
+        `}</style>
+        <div className="max-w-332 mx-auto">
+          <div className="mb-8 mt-6 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 shimmer-wrapper" />
+            <div className="space-y-2">
+              <div className="h-2 w-16 bg-slate-200 dark:bg-slate-800 rounded shimmer-wrapper" />
+              <div className="h-3 w-24 bg-slate-300 dark:bg-slate-700 rounded shimmer-wrapper" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            <div className="lg:col-span-8 space-y-8">
+              <div className="space-y-6">
+                <div className="flex gap-3">
+                  <div className="h-6 w-20 bg-emerald-500/10 rounded-full shimmer-wrapper" />
+                  <div className="h-6 w-20 bg-slate-200 dark:bg-slate-800 rounded-full shimmer-wrapper" />
+                </div>
+                <div className="space-y-4">
+                  <div className="h-14 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-2xl shimmer-wrapper" />
+                  <div className="h-14 w-1/2 bg-slate-200 dark:bg-slate-800 rounded-2xl shimmer-wrapper" />
+                </div>
+                <div className="h-14 w-full border-y border-slate-200 dark:border-slate-800 flex items-center gap-8">
+                  <div className="h-3 w-24 bg-slate-100 dark:bg-slate-800 rounded shimmer-wrapper" />
+                  <div className="h-3 w-24 bg-slate-100 dark:bg-slate-800 rounded shimmer-wrapper" />
+                </div>
+              </div>
+
+              <div className="aspect-[16/9] w-full bg-slate-200 dark:bg-slate-900 rounded-[3rem] shimmer-wrapper shadow-2xl shadow-emerald-900/5" />
+
+              <div className="space-y-4 pl-6 border-l-2 border-slate-200 dark:border-slate-800">
+                <div className="h-4 w-full bg-slate-200 dark:bg-slate-800 rounded-lg shimmer-wrapper" />
+                <div className="h-4 w-full bg-slate-200 dark:bg-slate-800 rounded-lg shimmer-wrapper" />
+                <div className="h-4 w-2/3 bg-slate-200 dark:bg-slate-800 rounded-lg shimmer-wrapper" />
+              </div>
+            </div>
+
+            <div className="lg:col-span-4 space-y-6">
+              <div className="h-[340px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-6 flex flex-col gap-6">
+                <div className="h-4 w-1/3 bg-slate-100 dark:bg-slate-800 rounded shimmer-wrapper" />
+                <div className="flex-1 w-full bg-slate-50 dark:bg-slate-800/40 rounded-[2rem] shimmer-wrapper" />
+              </div>
+
+              <div className="h-[420px] bg-emerald-600 rounded-[2.5rem] p-8 space-y-10 relative overflow-hidden">
+                <div className="h-3 w-24 bg-emerald-400/30 rounded shimmer-wrapper" />
+                <div className="space-y-8">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex gap-4 items-center">
+                      <div className="w-6 h-6 rounded-full bg-emerald-400/20 shimmer-wrapper" />
+                      <div className="space-y-2">
+                        <div className="h-3 w-32 bg-emerald-400/20 rounded shimmer-wrapper" />
+                        <div className="h-2 w-20 bg-emerald-400/10 rounded shimmer-wrapper" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error || !issue) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-6">
-        <Card className="text-center max-w-md border-rose-500/20">
-          <AlertTriangle className="w-12 h-12 text-rose-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-black uppercase tracking-tighter mb-2">
-            Report Not Found
-          </h2>
-          <p className="text-slate-500 text-sm font-medium mb-8 leading-relaxed">
-            {error}
-          </p>
-          <Link href="/issues">
-            <Button variant="primary">Return to Feed</Button>
-          </Link>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-6 relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-rose-500/10 blur-[120px] rounded-full pointer-events-none" />
+        <Card className="relative text-center max-w-lg border-2 border-rose-500/10 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl p-12! rounded-[3rem] shadow-2xl shadow-rose-500/5">
+          <div className="relative inline-block mb-8">
+            <div className="absolute inset-0 bg-rose-500 blur-2xl opacity-20 animate-pulse" />
+            <div className="relative w-20 h-20 rounded-3xl bg-rose-500/10 border-2 border-rose-500/20 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-10 h-10 text-rose-500" />
+            </div>
+          </div>
+          <div className="space-y-4 mb-10">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-rose-500">
+              System Error: 404
+            </h3>
+            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-slate-900 dark:text-white leading-none">
+              Report Not <br /> Found
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-bold max-w-[280px] mx-auto leading-relaxed uppercase tracking-tight">
+              {error ||
+                "The requested civic incident record is missing or has been restricted by authorities."}
+            </p>
+          </div>
+          <div className="flex flex-col items-center gap-4">
+            <Link href="/issues" className="w-full">
+              <Button
+                variant="primary"
+                className="w-full h-14 rounded-2xl bg-rose-500 hover:bg-rose-600 border-none shadow-lg shadow-rose-500/20 text-[11px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95"
+              >
+                Return to Incident Feed
+              </Button>
+            </Link>
+            <button
+              onClick={() => window.location.reload()}
+              className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-emerald-500 transition-colors"
+            >
+              Re-attempt Connection
+            </button>
+          </div>
         </Card>
       </div>
     );
@@ -289,12 +379,13 @@ export default function App() {
                   className="flex items-center gap-2 hover:opacity-70 transition-opacity"
                 >
                   <ThumbsUp
-                    className={`w-4 h-4 ${
-                      hasUpvoted
-                        ? "text-emerald-500 fill-emerald-500"
-                        : "text-emerald-500"
+                    className={`w-4 h-4 transition-all ${
+                      hasUpvoted ? "text-emerald-500" : "text-emerald-500"
                     }`}
+                    fill={hasUpvoted ? "currentColor" : "none"}
+                    strokeWidth={hasUpvoted ? 0 : 2}
                   />
+
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                     {issue?.upvotes ?? 0} Upvotes
                   </span>
@@ -309,7 +400,6 @@ export default function App() {
               </div>
             </header>
 
-            {/* IMAGE SLIDER */}
             {issue.images?.length > 0 && (
               <div className="relative group overflow-hidden rounded-[3rem] shadow-2xl shadow-emerald-900/10 bg-slate-200 dark:bg-slate-900 aspect-[16/9]">
                 <div className="relative w-full h-full overflow-hidden">
@@ -390,7 +480,7 @@ export default function App() {
                       className=" h-12 w-full disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSubmitting ? (
-                        <Loader2 className="w-4 h-4 animate-spin" /> // Assuming Lucide-react
+                        <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
                         "Post Comment"
                       )}
@@ -412,7 +502,6 @@ export default function App() {
               <p className="text-sm font-black uppercase tracking-tighter mb-4">
                 {issue.address}
               </p>
-
               <div className="h-56 w-full rounded-[2rem] overflow-hidden">
                 <IssueMap lat={issue.location?.lat} lng={issue.location?.lng} />
               </div>
@@ -426,20 +515,16 @@ export default function App() {
                   </h3>
                   <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400 opacity-50" />
                 </div>
-
                 <div className="space-y-8 relative">
                   <div className="absolute left-2.75 top-2 bottom-2 w-0.5 bg-white/10" />
-
                   {(() => {
                     const currentIdx = STATUS_STEPS.findIndex(
                       (s) => s.id === issue.status
                     );
-
                     return STATUS_STEPS.map((step, index) => {
                       const isCompleted = index <= currentIdx;
                       const isCurrent = index === currentIdx;
                       const Icon = step.icon;
-
                       return (
                         <div
                           key={step.id}
@@ -449,9 +534,13 @@ export default function App() {
                         >
                           <div
                             className={`
-                  w-6 h-6 rounded-full flex items-center justify-center z-10 ring-4 ring-emerald-600 transition-all duration-500
-                  ${isCompleted ? "bg-white scale-110" : "bg-emerald-700"}
-                `}
+                              w-6 h-6 rounded-full flex items-center justify-center z-10 ring-4 ring-emerald-600 transition-all duration-500
+                              ${
+                                isCompleted
+                                  ? "bg-white scale-110"
+                                  : "bg-emerald-700"
+                              }
+                            `}
                           >
                             <Icon
                               className={`w-3.5 h-3.5 ${
@@ -460,12 +549,10 @@ export default function App() {
                                   : "text-emerald-400"
                               }`}
                             />
-
                             {isCurrent && issue.status !== "resolved" && (
                               <span className="absolute inset-0 rounded-full bg-white animate-ping opacity-40" />
                             )}
                           </div>
-
                           <div className="flex-1 pt-0.5">
                             <p
                               className={`text-xs font-black uppercase tracking-tight ${
@@ -492,7 +579,6 @@ export default function App() {
                   })()}
                 </div>
               </div>
-
               <div className="bg-emerald-700/50 p-3 sm:p-4 text-center">
                 <p className="text-[8px] font-black uppercase tracking-[0.2em] text-emerald-200/60 flex items-center justify-center gap-2">
                   <span className="w-1 h-1 rounded-full bg-emerald-400" />
@@ -555,13 +641,11 @@ export default function App() {
                       Citizen Audio
                     </span>
                   </div>
-
                   <audio
                     ref={audioRef}
                     src={issue.voiceNote}
                     onEnded={() => setIsPlaying(false)}
                   />
-
                   <div className="flex items-center gap-3 sm:gap-5">
                     <button
                       onClick={toggleAudio}
@@ -574,7 +658,6 @@ export default function App() {
                         <Play className="w-4 h-4 sm:w-5 sm:h-5 text-white ml-0.5" />
                       )}
                     </button>
-
                     <div className="flex-1 h-8 sm:h-10 flex items-end gap-0.5 sm:gap-1 overflow-hidden">
                       {[...Array(40)].map((_, i) => (
                         <div
@@ -583,8 +666,6 @@ export default function App() {
                             isPlaying
                               ? "animate-pulse bg-emerald-500"
                               : "bg-slate-300 dark:bg-slate-700"
-                          } ${i > 20 ? "hidden xs:block" : ""} ${
-                            i > 30 ? "hidden md:block" : ""
                           }`}
                           style={{
                             height: `${25 + (Math.sin(i * 1.5) * 20 + 20)}%`,
