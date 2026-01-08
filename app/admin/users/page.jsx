@@ -22,8 +22,8 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import ConfirmDeleteModal from "@/components/modals/confirmDeleteModal";
+import ErrorHandle from "@/components/layouts/ErrorHandle";
 
-/* ---------------- SWR FETCHER ---------------- */
 const fetcher = async (url) => {
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch users");
@@ -31,7 +31,6 @@ const fetcher = async (url) => {
 };
 
 export default function UserManagement() {
-  /* ---------------- SWR (LIVE DB) ---------------- */
   const {
     data: users = [],
     error,
@@ -44,7 +43,6 @@ export default function UserManagement() {
 
   const initialFetch = isLoading;
 
-  /* ---------------- UI STATE ---------------- */
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [open, setOpen] = useState(false);
@@ -59,7 +57,6 @@ export default function UserManagement() {
 
   const MAX_BIO_LENGTH = 100;
 
-  /* ---------------- DERIVED DATA ---------------- */
   const filteredUsers = useMemo(() => {
     return users.filter(
       (u) =>
@@ -99,12 +96,10 @@ export default function UserManagement() {
     [users]
   );
 
-  /* ---------------- HELPERS ---------------- */
   const updateDraft = (key, value) => {
     setEditDraft((prev) => ({ ...prev, [key]: value }));
   };
 
-  /* ---------------- UPDATE USER (LIVE) ---------------- */
   const handleFinalUpdate = async () => {
     if (!selectedUser) return;
 
@@ -137,7 +132,6 @@ export default function UserManagement() {
     }
   };
 
-  /* ---------------- DELETE USER (LIVE) ---------------- */
   const handleDelete = async (id) => {
     try {
       setLoading(true);
@@ -164,7 +158,7 @@ export default function UserManagement() {
   };
 
   if (error) {
-    toast.error("Could not load users");
+    <ErrorHandle />;
   }
 
   return (
@@ -208,7 +202,7 @@ export default function UserManagement() {
                 />
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 mx-2 hidden xs:block" />
+                <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-2 hidden xs:block" />
                 <button className="p-2.5 text-slate-400 hover:text-emerald-500 hover:bg-emerald-500/5 rounded-xl transition-all active:scale-90">
                   <LayoutGrid size={18} />
                 </button>
@@ -427,7 +421,7 @@ export default function UserManagement() {
                   </button>
                 </div>
 
-                <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-950/50 dark:to-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 p-8 mb-6 shadow-sm">
+                <div className=" bg-linear-to-br from-slate-50 to-white dark:from-slate-950/50 dark:to-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 p-8 mb-6 shadow-sm">
                   <div className="flex items-center gap-6 mb-8">
                     <div className="relative group">
                       <div className="w-24 h-24 rounded-3xl overflow-hidden relative shrink-0 ring-4 ring-white dark:ring-slate-800 shadow-xl">
@@ -631,7 +625,6 @@ export default function UserManagement() {
   );
 }
 
-// --- Loading Skeleton Component ---
 const SkeletonCard = () => (
   <div className="p-6 rounded-[2rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 animate-pulse">
     <div className="flex justify-between items-start mb-6">

@@ -8,6 +8,7 @@ import {
   ShieldAlert,
   Sun,
   Moon,
+  Home,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
@@ -24,20 +25,20 @@ const AdminNavbar = () => {
       idx: 0,
       path: "/admin",
     },
-    // {
-    //   Icon: Map,
-    //   idx: 1,
-    //   path: "/map",
-    // },
     {
       Icon: ShieldAlert,
-      idx: 2,
+      idx: 1,
       path: "/admin/issues",
     },
     {
       Icon: Users,
-      idx: 3,
+      idx: 2,
       path: "/admin/users",
+    },
+    {
+      Icon: Home,
+      idx: 3,
+      path: "/admin/communityhub",
     },
   ];
 

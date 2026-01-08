@@ -6,7 +6,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import mongoose from "mongoose";
 
 export async function POST(request, context) {
-  // ✅ FIX: await params FIRST
+
   const { id } = await context.params;
 
   try {
@@ -24,7 +24,6 @@ export async function POST(request, context) {
       return NextResponse.json({ message: "Issue not found" }, { status: 404 });
     }
 
-    // ❌ prevent self-upvote
     if (issue.reportedBy?.toString() === userId.toString()) {
       return NextResponse.json(
         { message: "Cannot upvote your own issue" },

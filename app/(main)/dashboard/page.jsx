@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   TrendingUp,
@@ -34,6 +34,7 @@ import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { fireOneTimeToast } from "@/lib/oneTimeToast";
 import useSWR from "swr";
+import ErrorHandle from "@/components/layouts/ErrorHandle";
 
 export default function Dashboard() {
   const { data: session } = useSession();
@@ -42,9 +43,10 @@ export default function Dashboard() {
   const fetcher = () => getDashboardData();
 
   const { data, error, isLoading } = useSWR("/api/dashboard", fetcher, {
-    refreshInterval: 15000,
+    refreshInterval: 5000,
     revalidateOnFocus: true,
     shouldRetryOnError: false,
+    dedupingInterval: 5000,
   });
 
   useEffect(() => {
@@ -142,11 +144,7 @@ export default function Dashboard() {
   }
 
   if (error) {
-    return (
-      <div className="pt-24 text-center text-red-500">
-        Failed to load dashboard
-      </div>
-    );
+    return <ErrorHandle />;
   }
 
   return (
@@ -445,7 +443,7 @@ export default function Dashboard() {
                   <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest mb-2">
                     Zero Transmissions Detected
                   </h3>
-                  <p className="text-[11px] font-bold text-slate-400 max-w-[240px] leading-relaxed mb-8">
+                  <p className="text-[11px] font-bold text-slate-400 max-w-60 leading-relaxed mb-8">
                     The network is currently clear. No anomalies have been
                     reported in your sector.
                   </p>

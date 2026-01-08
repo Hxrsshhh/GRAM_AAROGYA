@@ -18,8 +18,6 @@ import ConfirmIssueDeleteModal from "@/components/modals/confirmdeletIssueModal"
 import { IncidentCard } from "@/components/layouts/IncidentCard";
 import { getAllIssues } from "@/app/api/issues";
 
-/* -------------------------------- constants -------------------------------- */
-
 const CATEGORIES = [
   "All",
   "infrastructure",
@@ -33,15 +31,11 @@ const CATEGORIES = [
 
 const STATUSES = ["All", "pending", "in-progress", "resolved"];
 
-/* ------------------------------- swr fetcher ------------------------------- */
-
 const fetcher = async () => {
   const res = await getAllIssues();
   if (!res) throw new Error("Failed to fetch issues");
   return res.data;
 };
-
-/* -------------------------------- component -------------------------------- */
 
 export default function Issues() {
   const [search, setSearch] = useState("");
@@ -52,19 +46,15 @@ export default function Issues() {
   const [selectedIssue, setSelectedIssue] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  /* ------------------------------ SWR (LIVE) ------------------------------ */
-
   const {
     data: issues = [],
     isLoading,
     mutate,
   } = useSWR("/api/issues", fetcher, {
-    refreshInterval: 5000, // 🔥 live DB sync
+    refreshInterval: 30000, 
     revalidateOnFocus: true,
     keepPreviousData: true,
   });
-
-  /* ------------------------------ filtering ------------------------------ */
 
   const filtered = useMemo(() => {
     return issues.filter((i) => {
@@ -79,8 +69,6 @@ export default function Issues() {
       );
     });
   }, [issues, search, filterCat, filterStat]);
-
-  /* ------------------------------ delete flow ------------------------------ */
 
   const handleDeleteClick = (issue) => {
     setSelectedIssue(issue);
@@ -164,7 +152,7 @@ export default function Issues() {
             </div>
           </header>
 
-          <div className="w-full h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-800 to-transparent mt-8 opacity-50" />
+          <div className="w-full h-px bg-linear-to-r from-transparent via-slate-200 dark:via-slate-800 to-transparent mt-8 opacity-50" />
         </div>
 
         <div className="sticky top-14 lg:top-0 z-50 py-4 px-6 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-transparent transition-all duration-300">
@@ -186,7 +174,7 @@ export default function Issues() {
                 </div>
 
                 <div className="hidden lg:flex flex-wrap items-center gap-4">
-                  <div className="flex flex-col gap-1.5 min-w-[140px]">
+                  <div className="flex flex-col gap-1.5 min-w-35">
                     <span className="text-[8px] font-black uppercase text-slate-400 px-1 ml-1 tracking-wider">
                       Asset Domain
                     </span>
@@ -305,7 +293,7 @@ export default function Issues() {
                   {isLoading ? "..." : filtered.length}
                 </span>
               </div>
-              <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-800" />
+              <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
               <div className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em]">
                 Total: {isLoading ? "..." : issues.length}
               </div>

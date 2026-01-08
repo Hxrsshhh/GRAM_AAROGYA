@@ -31,8 +31,6 @@ import { fireOneTimeToast } from "@/lib/oneTimeToast";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
 
-/* -------------------- CONSTANTS -------------------- */
-
 const CATEGORY_COLORS = {
   infrastructure: "#3b82f6",
   utilities: "#8b5cf6",
@@ -43,7 +41,23 @@ const CATEGORY_COLORS = {
   other: "#64748b",
 };
 
-/* -------------------- FETCHER -------------------- */
+const EmptyState = () => (
+  <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+    <div className="relative mb-6">
+      <div className="absolute inset-0 bg-emerald-500/20 blur-3xl rounded-full" />
+      <Inbox
+        size={48}
+        className="relative text-slate-300 dark:text-slate-700"
+      />
+    </div>
+    <h3 className="text-lg font-black italic text-slate-900 dark:text-white mb-2">
+      Clear <span className="text-emerald-500 not-italic">Horizon</span>
+    </h3>
+    <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 max-w-xs">
+      No active protocol logs detected in the current cycle.
+    </p>
+  </div>
+);
 
 const fetcher = async (url) => {
   const res = await fetch(url, { cache: "no-store" });
@@ -54,8 +68,6 @@ const fetcher = async (url) => {
 export default function AdminDashboard() {
   const router = useRouter();
   const [barSize, setBarSize] = useState(24);
-
-  /* -------------------- SWR LIVE DATA -------------------- */
 
   const {
     data: dashboard,
@@ -68,8 +80,6 @@ export default function AdminDashboard() {
     revalidateOnReconnect: true,
     keepPreviousData: true,
   });
-
-  /* -------------------- EFFECTS -------------------- */
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -86,8 +96,6 @@ export default function AdminDashboard() {
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
   }, []);
-
-  /* -------------------- DERIVED DATA -------------------- */
 
   const categoriesWithColors =
     dashboard?.charts?.categories?.map((cat) => ({
@@ -131,28 +139,10 @@ export default function AdminDashboard() {
     );
   }
 
-  const EmptyState = () => (
-    <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-      <div className="relative mb-6">
-        <div className="absolute inset-0 bg-emerald-500/20 blur-3xl rounded-full" />
-        <Inbox
-          size={48}
-          className="relative text-slate-300 dark:text-slate-700"
-        />
-      </div>
-      <h3 className="text-lg font-black italic text-slate-900 dark:text-white mb-2">
-        Clear <span className="text-emerald-500 not-italic">Horizon</span>
-      </h3>
-      <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 max-w-xs">
-        No active protocol logs detected in the current cycle.
-      </p>
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-500 font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
       <div className="fixed inset-0 pointer-events-none opacity-30">
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:32px_32px]" />
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] bg-size-[32px_32px] " />
       </div>
 
       <div className="relative z-10 flex flex-col lg:flex-row">
@@ -260,7 +250,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               </div>
-              <div className="w-full h-[320px] md:h-[380px]">
+              <div className="w-full h-80 md:h-95">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={dashboard.charts.monthly}
@@ -329,7 +319,7 @@ export default function AdminDashboard() {
                 Incident{" "}
                 <span className="text-emerald-500 not-italic">Domains</span>
               </h2>
-              <div className="flex-1 min-h-[220px]">
+              <div className="flex-1 min-h-55">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie

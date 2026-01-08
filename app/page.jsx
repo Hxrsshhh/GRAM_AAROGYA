@@ -140,7 +140,7 @@ export default function App() {
 
       {/* Navigation */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-100 transition-all duration-300 ${
           scrolled || isOpen
             ? "bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl py-4 border-b border-slate-200 dark:border-slate-800"
             : "bg-transparent py-4 md:py-8"
@@ -241,9 +241,9 @@ export default function App() {
 
       {/* Hero Section */}
       <section className="relative pt-28 md:pt-60 pb-20 md:pb-28 overflow-hidden bg-white dark:bg-slate-950 transition-colors duration-500">
-        {/* 1. Refined Ambient Lighting - Adjusted for both modes */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[450px] bg-emerald-500/10 dark:bg-emerald-500/10 blur-[120px] rounded-full opacity-60 pointer-events-none" />
-        <div className="absolute top-20 right-[10%] w-[300px] h-[300px] bg-cyan-500/10 dark:bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none" />
+       
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-112.5 bg-emerald-500/10 dark:bg-emerald-500/10 blur-[120px] rounded-full opacity-60 pointer-events-none" />
+        <div className="absolute top-20 right-[10%] w-75 h-75 bg-cyan-500/10 dark:bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <motion.div
@@ -284,7 +284,7 @@ export default function App() {
                 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-[0.95] md:leading-[0.9] tracking-tighter mb-8 text-slate-900 dark:text-white"
               >
                 Powering Transparent <br className="hidden sm:block" />
-                <span className="text-transparent bg-clip-text bg-gradient-to-br from-emerald-600 via-emerald-500 to-cyan-500 dark:from-emerald-500 dark:via-emerald-300 dark:to-cyan-400 drop-shadow-sm">
+                <span className="text-transparent bg-clip-text bg-linear-to-br from-emerald-600 via-emerald-500 to-cyan-500 dark:from-emerald-500 dark:via-emerald-300 dark:to-cyan-400 drop-shadow-sm">
                   City Governance.
                 </span>
               </motion.h1>
@@ -307,7 +307,7 @@ export default function App() {
                     Real change.
                   </span>
                 </p>
-                <div className="h-[1px] flex-grow bg-gradient-to-r from-emerald-500/30 via-emerald-500/5 to-transparent hidden md:block" />
+                <div className="h-px grow bg-linear-to-r from-emerald-500/30 via-emerald-500/5 to-transparent hidden md:block" />
               </motion.div>
 
               {/* 5. Supporting Description */}
@@ -468,7 +468,7 @@ export default function App() {
                   CivicPulse
                 </span>
               </div>
-              <p className="text-slate-500 dark:text-slate-400 font-medium leading-tight max-w-[250px] text-center lg:text-left text-[11px] md:text-sm">
+              <p className="text-slate-500 dark:text-slate-400 font-medium leading-tight max-w-62.5 text-center lg:text-left text-[11px] md:text-sm">
                 Building the digital trust layer for the physical world.
               </p>
             </div>

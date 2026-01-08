@@ -1,7 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
-// Initialize the SDK
 const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY);
 
 export async function POST(req) {
@@ -52,34 +51,31 @@ export async function POST(req) {
     const text = result.response.text();
 
     return NextResponse.json(JSON.parse(text));
-  }  catch (error) {
-  console.error("Gemini Error:", error);
+  } catch (error) {
+    console.error("Gemini Error:", error);
 
-  const message = error?.message || "";
+    const message = error?.message || "";
 
-  // 🎯 QUOTA / LIMIT
-  if (
-    message.includes("quota") ||
-    message.includes("Too Many Requests") ||
-    message.includes("429")
-  ) {
+    if (
+      message.includes("quota") ||
+      message.includes("Too Many Requests") ||
+      message.includes("429")
+    ) {
+      return NextResponse.json(
+        {
+          error: "AI daily limit reached",
+          code: "AI_QUOTA_EXCEEDED",
+        },
+        { status: 429 }
+      );
+    }
+
     return NextResponse.json(
       {
-        error: "AI daily limit reached",
-        code: "AI_QUOTA_EXCEEDED",
+        error: "AI model unavailable",
+        code: "AI_MODEL_ERROR",
       },
-      { status: 429 }
+      { status: 500 }
     );
   }
-
-  // ❌ MODEL / CONFIG ERROR
-  return NextResponse.json(
-    {
-      error: "AI model unavailable",
-      code: "AI_MODEL_ERROR",
-    },
-    { status: 500 }
-  );
-}
-
 }

@@ -27,10 +27,9 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
-
+import ErrorHandle from "@/components/layouts/ErrorHandle";
 
 export default function Profile() {
-
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState(null);
@@ -39,64 +38,62 @@ export default function Profile() {
   const { data: session, status } = useSession();
 
   const fetchProfile = async () => {
-  const res = await fetch("/api/user/profile");
-  if (!res.ok) throw new Error("Failed to load profile");
-  return res.json();
-};
+    const res = await fetch("/api/user/profile");
+    if (!res.ok) throw new Error("Failed to load profile");
+    return res.json();
+  };
 
-const {
-  data: profile,
-  error,
-  isLoading,
-} = useSWR(
-  status === "authenticated" ? "/api/user/profile" : null,
-  fetchProfile,
-  {
-    revalidateOnFocus: false,   // 🔥 avoid refetch on tab switch
-    dedupingInterval: 5 * 60_000, // 🔥 cache for 5 minutes
-  }
-);
-
-useEffect(() => {
-  if (profile) {
-    setFormData(profile);
-  }
-}, [profile]);
-
-
- const handleSave = async () => {
-  setSaving(true);
-
-  try {
-    const response = await fetch("/api/user/profile", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Failed to update profile");
+  const {
+    data: profile,
+    error,
+    isLoading,
+  } = useSWR(
+    status === "authenticated" ? "/api/user/profile" : null,
+    fetchProfile,
+    {
+      revalidateOnFocus: false, 
+      dedupingInterval: 5 * 60_000,
     }
+  );
 
-    const updatedUser = await response.json();
+  useEffect(() => {
+    if (profile) {
+      setFormData(profile);
+    }
+  }, [profile]);
 
-    // 🔥 SWR cache update (NO refetch)
-    mutate("/api/user/profile", updatedUser, false);
+  const handleSave = async () => {
+    setSaving(true);
 
-    // local form sync (for editing UX)
-    setFormData(updatedUser);
+    try {
+      const response = await fetch("/api/user/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
-    toast.success("User updated successfully");
-    setEditing(false);
-  } catch (error) {
-    console.error("Save failed:", error.message);
-    toast.error(error.message || "Update failed");
-  } finally {
-    setSaving(false);
-  }
-};
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update profile");
+      }
 
+      const updatedUser = await response.json();
+
+      // 🔥 SWR cache update (NO refetch)
+      mutate("/api/user/profile", updatedUser, false);
+
+      // local form sync (for editing UX)
+      setFormData(updatedUser);
+
+      toast.success("User updated successfully");
+      setEditing(false);
+    } catch (error) {
+      console.error("Save failed:", error.message);
+      toast.error(error.message || "Update failed");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (status === "loading" || isLoading || !formData) {
     return (
@@ -113,12 +110,10 @@ useEffect(() => {
   }
 
   if (error) {
-  return (
-    <div className="h-screen flex items-center justify-center text-red-500 font-bold">
-      Failed to load profile
-    </div>
-  );
-}
+    return (
+     <ErrorHandle />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 py-12">
@@ -138,7 +133,6 @@ useEffect(() => {
           </div>
 
           <div className="flex gap-3">
-
             {formData?.onboardingStatus === "skipped" && (
               <Button
                 onClick={() => router.push("/onboarding")}
@@ -329,7 +323,7 @@ useEffect(() => {
                     Professional Bio
                   </label>
                   <textarea
-                    className={`w-full min-h-[140px] p-5 rounded-2xl border transition-all outline-none leading-relaxed text-sm font-medium
+                    className={`w-full min-h-35 p-5 rounded-2xl border transition-all outline-none leading-relaxed text-sm font-medium
                       ${
                         editing
                           ? "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:border-slate-900 dark:focus:border-emerald-500 shadow-sm"

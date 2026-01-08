@@ -10,7 +10,6 @@ import Image from "next/image";
 
 export default function App() {
   const [isAiMode, setIsAiMode] = useState(true);
-
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleRefresh = () => {
@@ -19,7 +18,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-500 selection:bg-emerald-500 selection:text-white font-['Plus_Jakarta_Sans'] overflow-hidden flex flex-col">
-      {/* Dynamic Background Elements */}
+     
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[15%] -right-[5%] w-[40%] h-[40%] bg-emerald-500/10 blur-[100px] rounded-full animate-pulse" />
         <div className="absolute bottom-[15%] -left-[5%] w-[30%] h-[30%] bg-blue-500/10 blur-[100px] rounded-full" />

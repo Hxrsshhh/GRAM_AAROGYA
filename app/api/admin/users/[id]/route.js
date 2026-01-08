@@ -4,7 +4,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { NextResponse } from "next/server";
 
-
 export async function DELETE(req, { params }) {
   try {
     await connectDB();
@@ -32,7 +31,7 @@ export async function DELETE(req, { params }) {
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-    
+
     // 2. Prevent deleting other admins
     if (user.role === "admin") {
       return NextResponse.json(
@@ -43,17 +42,16 @@ export async function DELETE(req, { params }) {
 
     // 3. UPDATED LOGIC: Soft delete instead of findByIdAndDelete
     await User.findByIdAndUpdate(userId, {
-      $set: { 
-        status: 'deleted',
-        deletedAt: new Date() 
-      }
+      $set: {
+        status: "deleted",
+        deletedAt: new Date(),
+      },
     });
 
-    return NextResponse.json({ 
-      success: true, 
-      message: "User status updated to deleted" 
+    return NextResponse.json({
+      success: true,
+      message: "User status updated to deleted",
     });
-    
   } catch (err) {
     console.error("Delete user error:", err);
     return NextResponse.json(
@@ -63,15 +61,13 @@ export async function DELETE(req, { params }) {
   }
 }
 
-
 export async function PATCH(req, { params }) {
   try {
-  
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== "admin") {
-      return new Response(JSON.stringify({ error: "Unauthorized access" }), { 
+      return new Response(JSON.stringify({ error: "Unauthorized access" }), {
         status: 403,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { "Content-Type": "application/json" },
       });
     }
 
@@ -80,7 +76,9 @@ export async function PATCH(req, { params }) {
     const { id } = await params;
 
     if (!id) {
-      return new Response(JSON.stringify({ error: "User ID is required" }), { status: 400 });
+      return new Response(JSON.stringify({ error: "User ID is required" }), {
+        status: 400,
+      });
     }
 
     const updatedUser = await User.findByIdAndUpdate(id, updates, {
@@ -89,15 +87,16 @@ export async function PATCH(req, { params }) {
     });
 
     if (!updatedUser) {
-      return new Response(JSON.stringify({ error: "User not found" }), { status: 404 });
+      return new Response(JSON.stringify({ error: "User not found" }), {
+        status: 404,
+      });
     }
 
     return Response.json(updatedUser);
-
   } catch (error) {
     console.error("User Update Error:", error);
-    return new Response(JSON.stringify({ error: "Internal Server Error" }), { 
-      status: 500 
+    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
+      status: 500,
     });
   }
 }

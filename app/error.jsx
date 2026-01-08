@@ -6,14 +6,12 @@ import MouseGlow from "@/components/ui/MouseGlow";
 import Button from "@/components/ui/Button";
 
 const ErrorPage = () => {
-
   const handleReload = () => {
     window.location.reload();
   };
 
   return (
-
-   <div className="h-screen w-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white selection:bg-emerald-500/30 overflow-hidden font-sans flex flex-col">
+    <div className="h-screen w-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white selection:bg-emerald-500/30 overflow-hidden font-sans flex flex-col">
       <MouseGlow />
 
       {/* Header - Scaled padding for mobile */}
@@ -32,7 +30,6 @@ const ErrorPage = () => {
 
       {/* Main Content */}
       <main className="relative grow flex items-center justify-center px-6 overflow-hidden">
-       
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm md:max-w-2xl aspect-square bg-emerald-500/10 blur-[80px] md:blur-[120px] rounded-full" />
         </div>
@@ -44,7 +41,6 @@ const ErrorPage = () => {
             transition={{ type: "spring", damping: 20 }}
             className="relative inline-block mb-4 md:mb-12"
           >
-        
             <div className="text-[18vw] md:text-[clamp(6rem,20vh,15rem)] font-black leading-none tracking-tighter text-slate-100 dark:text-slate-900/50 select-none drop-shadow-sm uppercase">
               Error
             </div>
@@ -106,7 +102,6 @@ const ErrorPage = () => {
         </p>
       </footer>
     </div>
-
   );
 };
 

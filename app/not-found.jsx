@@ -1,10 +1,7 @@
-'use client'
+"use client";
 
 import { motion } from "framer-motion";
 import { Search, Home, Activity, ArrowLeft } from "lucide-react";
-import MouseGlow from "@/components/ui/MouseGlow";
-
-import Button from "@/components/ui/Button";
 
 const NotFoundPage = () => {
   const handleBack = () => {
@@ -16,11 +13,7 @@ const NotFoundPage = () => {
   };
 
   return (
-
-
     <div className="h-screen w-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white selection:bg-emerald-500/30 overflow-hidden font-sans flex flex-col">
-     
-
       <nav className="shrink-0 z-50 p-4 md:p-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2 md:gap-3">
@@ -35,8 +28,7 @@ const NotFoundPage = () => {
       </nav>
 
       {/* Main Content */}
-      <main className="relative flex-grow flex items-center justify-center px-4 md:px-6 overflow-hidden">
-      
+      <main className="relative grow flex items-center justify-center px-4 md:px-6 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm md:max-w-2xl aspect-square bg-emerald-500/5 blur-[80px] md:blur-[100px] rounded-full" />
         </div>
@@ -48,12 +40,11 @@ const NotFoundPage = () => {
             transition={{ type: "spring", damping: 20 }}
             className="relative inline-block mb-2 md:mb-6"
           >
-          
             <div className="text-[25vw] md:text-[clamp(8rem,25vh,18rem)] font-black leading-none tracking-tighter text-slate-100 dark:text-slate-900/60 select-none drop-shadow-sm">
               404
             </div>
-            
-            <motion.div 
+
+            <motion.div
               animate={{ y: [0, -8, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
               className="absolute inset-0 flex items-center justify-center"
@@ -75,21 +66,21 @@ const NotFoundPage = () => {
             </h1>
 
             <p className="text-sm md:text-lg text-slate-500 dark:text-slate-400 mb-6 md:mb-8 font-medium leading-relaxed">
-              We've scanned the urban grid, but this sector doesn't exist. 
-              It may have been rerouted or scheduled for demolition.
+              We&#39;ve scanned the urban grid, but this sector doesn&#39;t exist. It
+              may have been rerouted or scheduled for demolition.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center px-4 sm:px-0">
-              <button 
-                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-bold transition-all text-sm md:text-base shadow-lg shadow-emerald-600/20" 
-                onClick={() => window.location.href = "/"}
+              <button
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-bold transition-all text-sm md:text-base shadow-lg shadow-emerald-600/20"
+                onClick={() => (window.location.href = "/")}
               >
                 <Home size={18} />
                 Return Home
               </button>
-              <button 
-                className="w-full sm:w-auto flex items-center justify-center gap-2 border-2 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 px-6 py-3 rounded-xl font-bold transition-all text-sm md:text-base" 
-                variant="outline" 
+              <button
+                className="w-full sm:w-auto flex items-center justify-center gap-2 border-2 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 px-6 py-3 rounded-xl font-bold transition-all text-sm md:text-base"
+                variant="outline"
                 onClick={handleBack}
               >
                 <ArrowLeft size={18} />
@@ -100,15 +91,12 @@ const NotFoundPage = () => {
         </div>
       </main>
 
-      {/* Footer - Reduced tracking on mobile for readability */}
       <footer className="shrink-0 pb-6 md:pb-8 text-center">
         <p className="text-[8px] md:text-[11px] font-black uppercase tracking-[0.2em] md:tracking-[0.4em] text-slate-400 dark:text-slate-700">
           Error Code: 0x404_CIVIC_PULSE_LOST
         </p>
       </footer>
     </div>
-
-
   );
 };
 

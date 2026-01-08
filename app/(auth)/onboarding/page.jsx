@@ -93,11 +93,7 @@ const App = () => {
       });
 
       if (!response.ok) throw new Error("Failed to update onboarding status");
-
-      // 🔥 Force NextAuth session refresh
       await fetch("/api/auth/session");
-
-      // 🔥 Replace, do not push
       router.replace("/dashboard");
     } catch (err) {
       console.error("Skip failed:", err);
@@ -161,7 +157,6 @@ const App = () => {
     <div className="min-h-screen w-full bg-white dark:bg-slate-950 text-slate-900 dark:text-white overflow-x-hidden font-sans flex flex-col">
       <MouseGlow />
 
-      {/* Responsive Navigation */}
       <nav className="shrink-0 z-50 p-4 md:p-8">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -188,8 +183,7 @@ const App = () => {
         </div>
       </nav>
 
-      {/* Main Content Area */}
-      <main className="flex-grow flex items-center justify-center px-4 md:px-6 py-8 relative">
+      <main className="grow flex items-center justify-center px-4 md:px-6 py-8 relative">
         <div className="w-full max-w-xl">
           <div className="flex items-center justify-center gap-2 md:gap-4 mb-8 md:mb-12">
             {steps.map((s, idx) => (
@@ -307,7 +301,6 @@ const App = () => {
                 </div>
               )}
 
-              {/* Step 2: District - Grid stacks on mobile */}
               {step === 2 && (
                 <div className="space-y-6">
                   <div className="text-center mb-6">
@@ -351,7 +344,6 @@ const App = () => {
                 </div>
               )}
 
-              {/* Step 3: Verification */}
               {step === 3 && (
                 <div className="space-y-6">
                   <div className="text-center mb-6">
@@ -400,7 +392,7 @@ const App = () => {
                 <button
                   onClick={step === 3 ? handleComplete : handleNext}
                   disabled={!isStepValid() || isUploading || isSubmitting}
-                  className={`flex-grow font-bold py-3 md:py-4 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm md:text-base
+                  className={`grow font-bold py-3 md:py-4 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm md:text-base
                 ${
                   !isStepValid() || isUploading || isSubmitting
                     ? "bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed border border-slate-200 dark:border-slate-700 shadow-none"

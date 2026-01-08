@@ -4,7 +4,7 @@ import Issues from "@/models/Issues";
 
 export async function GET(req, { params }) {
   try {
-    const { id } = await params; 
+    const { id } = await params;
     await connectDB();
 
     const issue = await Issues.findById(id)
@@ -21,7 +21,6 @@ export async function GET(req, { params }) {
   }
 }
 
-
 export async function PATCH(req, { params }) {
   try {
     const { id } = await params;
@@ -31,19 +30,18 @@ export async function PATCH(req, { params }) {
     let updateQuery = { ...body, updatedAt: new Date() };
 
     if (body.comment) {
-      updateQuery = { 
-        $push: { comments: body.comment }, 
-        updatedAt: new Date() 
+      updateQuery = {
+        $push: { comments: body.comment },
+        updatedAt: new Date(),
       };
     }
 
-    const updatedIssue = await Issues.findByIdAndUpdate(
-      id,
-      updateQuery,
-      { new: true, runValidators: true }
-    )
-    .populate("reportedBy", "name email")
-    .populate("comments.createdBy", "name"); 
+    const updatedIssue = await Issues.findByIdAndUpdate(id, updateQuery, {
+      new: true,
+      runValidators: true,
+    })
+      .populate("reportedBy", "name email")
+      .populate("comments.createdBy", "name");
 
     if (!updatedIssue) {
       return NextResponse.json({ error: "Issue not found" }, { status: 404 });
@@ -56,11 +54,10 @@ export async function PATCH(req, { params }) {
   }
 }
 
-
 export async function DELETE(req, { params }) {
   try {
     const { id } = await params;
-    await connectDB(); 
+    await connectDB();
 
     const deleted = await Issues.findByIdAndDelete(id);
 
@@ -68,7 +65,10 @@ export async function DELETE(req, { params }) {
       return NextResponse.json({ error: "Issue not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ message: "Deleted successfully" }, { status: 200 });
+    return NextResponse.json(
+      { message: "Deleted successfully" },
+      { status: 200 }
+    );
   } catch (err) {
     return NextResponse.json({ error: "Delete failed" }, { status: 500 });
   }

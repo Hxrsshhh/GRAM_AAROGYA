@@ -14,7 +14,6 @@ export async function POST(req) {
   const body = await req.json();
   await connectDB();
 
-  // 🔥 NORMALIZE INPUT (IMPORTANT)
   const title = body.title?.trim();
   const description =
     body.description?.trim() ||

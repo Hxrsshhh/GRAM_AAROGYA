@@ -188,7 +188,7 @@ const App = () => {
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
-            className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-white dark:bg-slate-950"
+            className="absolute inset-0 z-100 flex flex-col items-center justify-center bg-white dark:bg-slate-950"
           >
             <div className="flex flex-col items-center gap-6">
               <div className="relative">
@@ -232,7 +232,7 @@ const App = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="absolute top-4 left-4 md:top-6 md:left-6 z-[60]"
+            className="absolute top-4 left-4 md:top-6 md:left-6 z-60"
           >
             <button
               onClick={() => setIsSidebarCollapsed(false)}
@@ -263,7 +263,6 @@ const App = () => {
         initial={false}
         animate={{
           x: isSidebarCollapsed ? -500 : 0,
-          // Sidebar takes full width on mobile, 384px on desktop
           width:
             typeof window !== "undefined" && window.innerWidth < 768
               ? "calc(100% - 32px)"
@@ -331,7 +330,7 @@ const App = () => {
                       : "bg-slate-50/20 dark:bg-slate-900/20 hover:bg-slate-100/40 dark:hover:bg-slate-800/20"
                   }`}
                 >
-                  <div className="relative w-14 h-14 flex-shrink-0 rounded-2xl overflow-hidden bg-slate-300">
+                  <div className="relative w-14 h-14 shrink-0 rounded-2xl overflow-hidden bg-slate-300">
                     <Image
                       src={
                         issue.images?.[0] ||
@@ -380,7 +379,7 @@ const App = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
             className={`absolute bottom-6 left-4 right-4 md:bottom-8 md:right-6 z-40 transition-all ${
-              isSidebarCollapsed ? "md:left-28" : "md:left-[26.5rem]"
+              isSidebarCollapsed ? "md:left-28" : "md:left-106"
             }`}
           >
             <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-3xl rounded-[2.5rem] overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col md:flex-row max-w-3xl">

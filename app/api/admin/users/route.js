@@ -1,10 +1,9 @@
-import  connectDB  from "@/lib/db";
+import connectDB from "@/lib/db";
 import User from "@/models/User";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
 
 export async function GET() {
-  // 🔐 Admin-only
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "admin") {
     return new Response("Forbidden", { status: 403 });
@@ -38,5 +37,3 @@ export async function GET() {
 
   return Response.json(formattedUsers);
 }
-
-

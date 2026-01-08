@@ -5,10 +5,7 @@ export async function GET(request) {
   const address = searchParams.get("address");
 
   if (!address) {
-    return NextResponse.json(
-      { error: "Address is required" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Address is required" }, { status: 400 });
   }
 
   const response = await fetch(
@@ -27,10 +24,7 @@ export async function GET(request) {
   const data = await response.json();
 
   if (!data.length) {
-    return NextResponse.json(
-      { error: "No location found" },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: "No location found" }, { status: 404 });
   }
 
   return NextResponse.json({
