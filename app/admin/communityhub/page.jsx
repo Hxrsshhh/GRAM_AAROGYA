@@ -29,6 +29,33 @@ const fetcher = async (url) => {
   return res.json();
 };
 
+const formatTime = (dateValue) => {
+  if (!dateValue) return "Pending...";
+
+  const d = new Date(dateValue);
+  
+  // If the date is still invalid, try parsing it as a number 
+  // (in case the server sends a Unix timestamp)
+  if (isNaN(d.getTime())) {
+    const numDate = new Date(Number(dateValue));
+    if (isNaN(numDate.getTime())) return "Recent"; // Final fallback
+    return numDate.toLocaleString(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+      day: "2-digit",
+      month: "short",
+    });
+  }
+
+  return d.toLocaleString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+    day: "2-digit",
+    month: "short",
+  });
+};
+
+
 const AdminCommandCenter = () => {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [postType, setPostType] = useState("post");
@@ -374,7 +401,7 @@ const AdminCommandCenter = () => {
                       </div>
                       <div className="text-[10px] font-bold text-slate-400 flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-xl">
                         <Clock size={12} className="opacity-70" />{" "}
-                        {msg.timestamp}
+                       {formatTime(msg.createdAt || msg.timestamp)}
                       </div>
                     </div>
 
