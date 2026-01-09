@@ -36,18 +36,43 @@ import { fireOneTimeToast } from "@/lib/oneTimeToast";
 import useSWR from "swr";
 import ErrorHandle from "@/components/layouts/ErrorHandle";
 
+const formatDate = (date) => {
+  try {
+    return new Date(date).toISOString().split("T")[0];
+  } catch {
+    return "N/A";
+  }
+};
+
+
 export default function Dashboard() {
-  const { data: session } = useSession();
-  const user = session?.user;
+  const { data: session, status } = useSession();
+const user = session?.user;
 
-  const fetcher = () => getDashboardData();
+// FETCHER
+const fetcher = () => getDashboardData();
 
-  const { data, error, isLoading } = useSWR("/api/dashboard", fetcher, {
-    refreshInterval: 5000,
-    revalidateOnFocus: true,
+// SWR (WAIT FOR AUTH)
+const {
+  data,
+  error,
+  isLoading,
+} = useSWR(
+  status === "authenticated" ? "/api/dashboard" : null,
+  fetcher,
+  {
+    revalidateOnFocus: false,
+    refreshInterval: 0,
+    dedupingInterval: 30000,
     shouldRetryOnError: false,
-    dedupingInterval: 5000,
-  });
+  }
+);
+
+const stats = data?.stats ?? {};
+const chartData = Array.isArray(data?.chartData) ? data.chartData : [];
+const recentIssues = Array.isArray(data?.recentIssues)
+  ? data.recentIssues
+  : [];
 
   useEffect(() => {
     fireOneTimeToast("googleLoginSuccess", "Signed in with Google 🚀");
@@ -92,10 +117,10 @@ export default function Dashboard() {
       ]
     : [];
 
-  const chartData = data?.chartData || [];
-  const recentIssues = data?.recentIssues || [];
+  // const chartData = data?.chartData || [];
+  // const recentIssues = data?.recentIssues || [];
 
-  if (isLoading) {
+  if (status === "loading" || isLoading) {
     return (
       <div className="min-h-screen bg-white dark:bg-slate-950 pt-24 pb-12 px-6">
         <div className="max-w-7xl mx-auto">
@@ -232,6 +257,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="h-75 w-full min-h-75 relative">
+              {chartData.length > 0 && (
               <ResponsiveContainer width="99%" height="100%">
                 <AreaChart
                   data={chartData}
@@ -288,6 +314,7 @@ export default function Dashboard() {
                   />
                 </AreaChart>
               </ResponsiveContainer>
+              )}
             </div>
           </DashboardCard>
 
@@ -417,7 +444,8 @@ export default function Dashboard() {
                           </span>
                           <span className="flex items-center gap-1.5 text-[9px] font-bold text-slate-400">
                             <Calendar className="w-3 h-3 text-emerald-500" />
-                            {new Date(issue.createdAt).toLocaleDateString()}
+                            {new Date(issue.createdAt).toISOString().split("T")[0]
+}
                           </span>
                         </div>
                       </div>

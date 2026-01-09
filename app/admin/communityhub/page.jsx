@@ -34,7 +34,7 @@ const AdminCommandCenter = () => {
   const [postType, setPostType] = useState("post");
   const [selectedLevel, setSelectedLevel] = useState("Normal");
   const [newContent, setNewContent] = useState("");
-  const [pollOptions, setPollOptions] = useState(["", ""]);
+  const [pollOptions, setPollOptions] = useState([]);
   const [linkedIssueId, setLinkedIssueId] = useState(null);
   const {
     data: messages = [],
@@ -86,7 +86,7 @@ const AdminCommandCenter = () => {
   ];
 
   const addPollOption = () => {
-    if (pollOptions.length < 6) {
+    if (pollOptions.length < 5) {
       setPollOptions([...pollOptions, ""]);
     }
   };
@@ -104,7 +104,7 @@ const AdminCommandCenter = () => {
 
     const payload = {
       content: newContent,
-      type: postType === "issue" ? "post" : "poll",
+      type: postType ,
       level: selectedLevel,
       linkedIssueId,
       ...(postType === "poll" && { options: filteredOptions }),
@@ -183,7 +183,7 @@ const AdminCommandCenter = () => {
 
                 <div className="relative z-10 space-y-6">
                   <div className="flex gap-1.5 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl w-fit">
-                    {["issue", "poll"].map((type) => (
+                    {["post", "poll"].map((type) => (
                       <button
                         key={type}
                         onClick={() => setPostType(type)}
