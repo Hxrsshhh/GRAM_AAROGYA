@@ -69,10 +69,7 @@ export async function GET() {
             }
           : null,
 
-        timestamp: new Date(item.createdAt).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+        timestamp: item.createdAt.toISOString(),
       };
     });
 

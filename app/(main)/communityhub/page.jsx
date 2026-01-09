@@ -42,6 +42,21 @@ const fetcher = async (url) => {
   }));
 };
 
+const formatTime = (dateValue) => {
+  if (!dateValue) return "Just now";
+  const d = new Date(dateValue);
+  
+  if (isNaN(d.getTime())) return "Recent";
+
+  return d.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true
+  });
+};
+
 const CommuniHubLoader = () => (
   <div className="flex flex-col items-center dark:bg-slate-950 h-screen justify-center py-20 w-full">
     <div className="relative flex items-center justify-center">
@@ -284,7 +299,7 @@ const CitizenNewsFeed = () => {
                       </div>
                       <div className="text-[10px] font-bold text-slate-400 flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-xl">
                         <Clock size={12} className="opacity-70" />{" "}
-                        {msg.timestamp}
+                       {formatTime(msg.timestamp)}
                       </div>
                     </div>
 
