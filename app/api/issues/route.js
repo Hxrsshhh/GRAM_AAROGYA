@@ -7,7 +7,7 @@ export async function GET(request) {
     await connectDB();
 
     const issues = await Issues.find({})
-      .populate("reportedBy", "name email")
+      .populate("reportedBy", "_id name email")
       .sort({ createdAt: -1 }); 
 
     return NextResponse.json(

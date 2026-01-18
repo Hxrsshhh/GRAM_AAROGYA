@@ -67,8 +67,8 @@ export const fetchCivicIssues = async () => {
           images: Array.isArray(issue.images)
             ? issue.images
             : issue.images
-            ? [issue.images]
-            : [],
+              ? [issue.images]
+              : [],
         };
       })
       .filter((issue) => issue !== null);
@@ -79,8 +79,8 @@ export const fetchCivicIssues = async () => {
 };
 
 const INITIAL_VIEW = {
-  center: [81.9629, 20.5937],
-  zoom: 4.5,
+  center: [87.855, 22.9868],
+  zoom: 6,
 };
 
 const MAP_STYLE = "https://api.maptiler.com/maps/streets-v2/style.json";
@@ -168,7 +168,7 @@ const App = () => {
 
   const filteredIssues = useMemo(() => {
     return issues.filter((issue) =>
-      issue.title.toLowerCase().includes(searchQuery.toLowerCase())
+      issue.title.toLowerCase().includes(searchQuery.toLowerCase()),
     );
   }, [searchQuery, issues]);
 

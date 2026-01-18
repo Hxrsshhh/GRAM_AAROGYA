@@ -20,11 +20,14 @@ import Image from "next/image";
 import { fireOneTimeToast } from "@/lib/oneTimeToast";
 import useSWR from "swr";
 import ErrorHandle from "@/components/layouts/ErrorHandle";
+import { useSession } from "next-auth/react";
+
 
 export default function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [showOnlyMine, setShowOnlyMine] = useState(false);
   const fetcher = () => getAllIssues();
 
   const { data, error, isLoading } = useSWR("/api/issues", fetcher, {
@@ -38,6 +41,9 @@ export default function App() {
   }, []);
 
   const issues = data?.data || [];
+  console.log(data?.data);
+  const { data: session , status } = useSession();
+  const currentUserId = session?.user?.id;
 
   const filteredIssues = issues.filter((issue) => {
     const matchesSearch =
@@ -47,7 +53,12 @@ export default function App() {
       selectedStatus === "all" || issue.status === selectedStatus;
     const matchesCategory =
       selectedCategory === "all" || issue.category === selectedCategory;
-    return matchesSearch && matchesStatus && matchesCategory;
+    const matchesOwnership =
+  !showOnlyMine || issue.reportedBy?._id === currentUserId;
+
+    return (
+      matchesSearch && matchesStatus && matchesCategory && matchesOwnership
+    );
   });
 
   const statuses = ["all", "pending", "in-progress", "resolved", "rejected"];
@@ -125,9 +136,7 @@ export default function App() {
   }
 
   if (error) {
-    return (
-     <ErrorHandle />
-    );
+    return <ErrorHandle />;
   }
 
   return (
@@ -232,6 +241,35 @@ export default function App() {
                       </select>
                       <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                     </div>
+                  </div>
+
+                  {/* Add this inside the "Refine Feed" sidebar, above the status buttons */}
+                  <div className="md:col-span-2 lg:col-span-1">
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">
+                      Privacy
+                    </label>
+                    <button
+                      onClick={() => setShowOnlyMine(!showOnlyMine)}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all duration-300 ${
+                        showOnlyMine
+                          ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-500/20"
+                          : "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
+                      }`}
+                    >
+                      <span className="text-xs font-black uppercase tracking-tight">
+                        {showOnlyMine
+                          ? "Showing My Reports"
+                          : "Show My Reports"}
+                      </span>
+                      <div
+                        className={`w-8 h-4 rounded-full relative transition-colors ${showOnlyMine ? "bg-white/20" : "bg-slate-300 dark:bg-slate-700"}`}
+                      >
+                        <motion.div
+                          animate={{ x: showOnlyMine ? 16 : 2 }}
+                          className={`absolute top-1 w-2 h-2 rounded-full ${showOnlyMine ? "bg-white" : "bg-slate-500"}`}
+                        />
+                      </div>
+                    </button>
                   </div>
 
                   <div className="md:col-span-2 lg:col-span-1">
@@ -348,8 +386,8 @@ export default function App() {
                         No Signals Detected
                       </h3>
                       <p className="text-slate-500 dark:text-slate-400 text-sm font-medium max-w-70 mx-auto leading-relaxed">
-                        We couldn&#39;t find any public issues matching your current
-                        filters or search criteria.
+                        We couldn&#39;t find any public issues matching your
+                        current filters or search criteria.
                       </p>
 
                       <button

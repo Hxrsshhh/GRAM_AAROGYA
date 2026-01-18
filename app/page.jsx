@@ -24,6 +24,8 @@ import {
   X,
   Sun,
   Moon,
+  UserCheck,
+  Monitor,
 } from "lucide-react";
 
 import MouseGlow from "@/components/ui/MouseGlow";
@@ -453,6 +455,49 @@ export default function App() {
           </div>
         </div>
       </section>
+
+       {/* NEW: Help Desk Teaser Section */}
+            <section className="py-24 px-6 border-y border-slate-100 dark:border-slate-900 bg-slate-50/50 dark:bg-slate-900/10">
+              <div className="max-w-7xl mx-auto">
+                <div className="bg-emerald-600 rounded-[3rem] p-8 md:p-16 flex flex-col lg:flex-row items-center justify-between gap-12 shadow-2xl shadow-emerald-600/20 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-12 opacity-10">
+                    <HelpCircle size={300} className="text-white" />
+                  </div>
+                  
+                  <div className="max-w-2xl relative z-10 text-center lg:text-left">
+                    <h2 className="text-white text-3xl md:text-5xl font-black tracking-tight mb-6">Need a hand finding <br /> your way around?</h2>
+                    <p className="text-emerald-50 text-lg md:text-xl font-medium opacity-90 leading-relaxed mb-8">
+                      Whether you&#39;re a first-time citizen user or a city administrator managing a large team, our Help Desk has comprehensive video guides to ensure you&#39;re getting the most out of CivicPulse.
+                    </p>
+                    <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
+                       <Link href='/helpdesk'>
+                       <Button 
+                        variant="secondary" 
+                        size="lg" 
+                        className="group"
+                       >
+                        Visit Help Desk 
+                        <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                       </Link>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-4 w-full max-w-xs relative z-10">
+                    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+                      <div className="flex items-center gap-4 text-white font-bold">
+                        <UserCheck size={24} /> User Guides
+                      </div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+                      <div className="flex items-center gap-4 text-white font-bold">
+                        <Monitor size={24} /> Admin Portals
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
 
       {/* Footer */}
       <footer className="pt-16 md:pt-32 pb-8 md:pb-16 px-4 sm:px-6 border-t border-slate-200 dark:border-slate-900 bg-white dark:bg-slate-950">
