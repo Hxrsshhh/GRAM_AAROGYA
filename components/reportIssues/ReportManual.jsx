@@ -32,7 +32,6 @@ import { toast } from "sonner";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
-/* ================= HELPERS & CONSTANTS ================= */
 const countWords = (text = "") =>
   text.trim().split(/\s+/).filter(Boolean).length;
 
@@ -56,7 +55,6 @@ const priorities = [
 
 import LocationPicker from "../layouts/LocationPicker";
 
-/* ================= MAIN REPORT COMPONENT ================= */
 export default function ReportIssue() {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -98,21 +96,24 @@ export default function ReportIssue() {
     return () => clearTimeout(delayDebounceFn);
   }, [formData.location.address, isManualUpdate]);
 
-  const updateLocationData = useCallback((lat, lng, address, fromPin = false) => {
-    if (fromPin) setIsManualUpdate(true);
-    setFormData((prev) => ({
-      ...prev,
-      location: {
-        ...prev.location,
-        address: address || prev.location.address,
-        lat: parseFloat(lat),
-        lng: parseFloat(lng),
-        coordinates: `${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(
-          6
-        )}`,
-      },
-    }));
-  }, []);
+  const updateLocationData = useCallback(
+    (lat, lng, address, fromPin = false) => {
+      if (fromPin) setIsManualUpdate(true);
+      setFormData((prev) => ({
+        ...prev,
+        location: {
+          ...prev.location,
+          address: address || prev.location.address,
+          lat: parseFloat(lat),
+          lng: parseFloat(lng),
+          coordinates: `${parseFloat(lat).toFixed(6)}, ${parseFloat(
+            lng
+          ).toFixed(6)}`,
+        },
+      }));
+    },
+    []
+  );
 
   const geocodeAddress = async (address) => {
     try {
@@ -182,13 +183,29 @@ export default function ReportIssue() {
     }
   };
 
+  const stopVoiceIfRecording = () => {
+    return new Promise((resolve) => {
+      if (isListening && mediaRecorderRef.current) {
+        mediaRecorderRef.current.onstop = () => {
+          const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+          setVoiceBlob(new File([blob], `voice-${Date.now()}.webm`));
+          setIsListening(false);
+          resolve();
+        };
+        mediaRecorderRef.current.stop();
+      } else {
+        resolve();
+      }
+    });
+  };
+
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files).slice(0, 5 - imageFiles.length);
     if (imageFiles.length >= 5) {
       toast.error("Maximum 5 images allowed");
       return;
     }
-    
+
     files.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () =>
@@ -200,7 +217,6 @@ export default function ReportIssue() {
   };
 
   const handleEvidenceClick = () => {
-    // Check if user is on mobile (width less than 768px)
     const isMobile = window.innerWidth < 768;
     if (isMobile) {
       setShowImageSourceModal(true);
@@ -245,7 +261,7 @@ export default function ReportIssue() {
   return (
     <div className="lg:h-[78vh] max-h-screen bg-transparent text-slate-900 dark:text-white transition-colors duration-700 selection:bg-emerald-500 selection:text-white">
       <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-10 dark:opacity-20">
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-emerald-500/10 blur-[80px] rounded-full" />
+        <div className="absolute top-0 right-0 w-100 h-100 bg-emerald-500/10 blur-[80px] rounded-full" />
       </div>
 
       <main className="relative z-10 max-w-3xl mx-auto px-6 py-4">
@@ -430,21 +446,23 @@ export default function ReportIssue() {
               >
                 <AnimatePresence>
                   {showImageSourceModal && (
-                    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4">
-                      <motion.div 
-                        initial={{ opacity: 0 }} 
-                        animate={{ opacity: 1 }} 
+                    <div className="fixed inset-0 z-100 flex items-end sm:items-center justify-center p-4">
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={() => setShowImageSourceModal(false)}
                         className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
                       />
-                      <motion.div 
-                        initial={{ y: 100, opacity: 0 }} 
-                        animate={{ y: 0, opacity: 1 }} 
+                      <motion.div
+                        initial={{ y: 100, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
                         exit={{ y: 100, opacity: 0 }}
                         className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl border border-slate-200 dark:border-slate-800"
                       >
-                        <h3 className="text-xl font-black mb-6 text-center">Capture Evidence</h3>
+                        <h3 className="text-xl font-black mb-6 text-center">
+                          Capture Evidence
+                        </h3>
                         <div className="grid grid-cols-2 gap-4">
                           <button
                             onClick={() => cameraInputRef.current?.click()}
@@ -453,20 +471,27 @@ export default function ReportIssue() {
                             <div className="p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-sm group-hover:scale-110 transition-transform">
                               <Camera className="text-emerald-500" size={24} />
                             </div>
-                            <span className="font-black text-[10px] uppercase tracking-widest text-emerald-600">Camera</span>
+                            <span className="font-black text-[10px] uppercase tracking-widest text-emerald-600">
+                              Camera
+                            </span>
                           </button>
-                          
+
                           <button
                             onClick={() => fileInputRef.current?.click()}
                             className="flex flex-col items-center gap-3 p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700 hover:border-emerald-500 transition-all group"
                           >
                             <div className="p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-sm group-hover:scale-110 transition-transform">
-                              <ImageIcon className="text-slate-500 group-hover:text-emerald-500" size={24} />
+                              <ImageIcon
+                                className="text-slate-500 group-hover:text-emerald-500"
+                                size={24}
+                              />
                             </div>
-                            <span className="font-black text-[10px] uppercase tracking-widest text-slate-500 group-hover:text-emerald-600">Gallery</span>
+                            <span className="font-black text-[10px] uppercase tracking-widest text-slate-500 group-hover:text-emerald-600">
+                              Gallery
+                            </span>
                           </button>
                         </div>
-                        <button 
+                        <button
                           onClick={() => setShowImageSourceModal(false)}
                           className="w-full mt-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                         >
@@ -477,7 +502,7 @@ export default function ReportIssue() {
                   )}
                 </AnimatePresence>
 
-                <div 
+                <div
                   onClick={handleEvidenceClick}
                   className="text-center p-8 rounded-2xl border-4 border-dashed border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30 group hover:border-emerald-500/30 transition-colors cursor-pointer"
                 >
@@ -556,20 +581,27 @@ export default function ReportIssue() {
             >
               <ChevronLeft size={16} /> Back
             </button>
+
             <button
-              onClick={
-                step === 3
-                  ? handleSubmit
-                  : async () => {
-                      if (
-                        step === 2 &&
-                        formData.location.address &&
-                        !formData.location.lat
-                      )
-                        await geocodeAddress(formData.location.address);
-                      setStep((s) => s + 1);
-                    }
-              }
+              onClick={async () => {
+                // 🔴 STOP VOICE RECORDING FIRST
+                await stopVoiceIfRecording();
+
+                if (step === 3) {
+                  handleSubmit();
+                  return;
+                }
+
+                if (
+                  step === 2 &&
+                  formData.location.address &&
+                  !formData.location.lat
+                ) {
+                  await geocodeAddress(formData.location.address);
+                }
+
+                setStep((s) => s + 1);
+              }}
               disabled={
                 isSubmitting ||
                 (step === 1 && !formData.category) ||

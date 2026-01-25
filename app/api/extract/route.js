@@ -9,7 +9,7 @@ export async function POST(req) {
 
     // Initialize Gemini 3 Flash
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-3-flash-preview", // Updated for 2026 model series
+      model: "gemini-3-flash-preview", 
       generationConfig: {
         // Gemini 3 special parameter: 'low', 'medium', or 'high'
         // 'low' is ultra-fast for simple scans

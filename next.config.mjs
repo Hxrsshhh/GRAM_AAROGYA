@@ -19,9 +19,13 @@ const nextConfig = {
         hostname: "api.dicebear.com", // ✅ ADD THIS
       },
       {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        pathname: '/**',
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "api.maptiler.com",
       },
     ],
   },

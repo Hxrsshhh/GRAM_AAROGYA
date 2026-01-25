@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   MapPin,
   Calendar,
@@ -24,12 +24,7 @@ import {
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import {
-  createComment,
-  getIssueById,
-  incrementView,
-  toggleUpvote,
-} from "@/app/api/issues";
+import { createComment, getIssueById, toggleUpvote } from "@/app/api/issues";
 import { IssueMap } from "@/components/layouts/MapComponent";
 import { Badge } from "@/components/ui/Issue-badge";
 import { Card } from "@/components/ui/Issue-card";
@@ -79,9 +74,9 @@ export default function App() {
     error,
     isLoading,
   } = useSWR(id ? `/api/issues/${id}` : null, fetcher, {
-    refreshInterval: 10000, // 🔄 every 10s (DB polling)
-    revalidateOnFocus: true, // 🔁 tab focus
-    revalidateOnReconnect: true, // 🌐 network back
+    refreshInterval: 30000,
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
   });
 
   const localComments =
@@ -102,7 +97,7 @@ export default function App() {
       setComment("");
       toast.success("Comment added");
 
-      mutate(`/api/issues/${id}`); // 🔥 instant refresh
+      mutate(`/api/issues/${id}`);
     } catch (err) {
       toast.error(err.message || "Failed to post");
     } finally {
@@ -147,8 +142,6 @@ export default function App() {
     }
 
     const key = `/api/issues/${id}`;
-
-    // 🔥 Optimistic update
     mutate(
       key,
       (prev) => {
@@ -164,20 +157,16 @@ export default function App() {
             : [...(prev.upvotedBy || []), session.user.id],
         };
       },
-      false // ❗ don't revalidate yet
+      false
     );
 
     try {
       const res = await toggleUpvote(id);
-
       toast.success(res.hasUpvoted ? "Upvoted" : "Upvote removed");
-
-      // ✅ sync with DB (source of truth)
       mutate(key);
     } catch (err) {
       toast.error(err.message || "Unable to upvote");
 
-      // 🔁 rollback by revalidating
       mutate(key);
     }
   };
@@ -288,7 +277,7 @@ export default function App() {
             <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-slate-900 dark:text-white leading-none">
               Report Not <br /> Found
             </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm font-bold max-w-[280px] mx-auto leading-relaxed uppercase tracking-tight">
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-bold max-w-70 mx-auto leading-relaxed uppercase tracking-tight">
               {error ||
                 "The requested civic incident record is missing or has been restricted by authorities."}
             </p>
@@ -401,7 +390,7 @@ export default function App() {
             </header>
 
             {issue.images?.length > 0 && (
-              <div className="relative group overflow-hidden rounded-[3rem] shadow-2xl shadow-emerald-900/10 bg-slate-200 dark:bg-slate-900 aspect-[16/9]">
+              <div className="relative group overflow-hidden rounded-[3rem] shadow-2xl shadow-emerald-900/10 bg-slate-200 dark:bg-slate-900 aspect-video ">
                 <div className="relative w-full h-full overflow-hidden">
                   <Image
                     src={issue.images[currentImgIndex]}

@@ -205,11 +205,11 @@ export default function SignUp() {
 
           {/* Divider */}
           <div className="flex items-center my-6 sm:my-8">
-            <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+            <div className="grow border-t border-slate-200 dark:border-slate-800"></div>
             <span className="mx-4 text-slate-400 text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
               Direct Access
             </span>
-            <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+            <div className="grow border-t border-slate-200 dark:border-slate-800"></div>
           </div>
 
           {/* Social Buttons */}

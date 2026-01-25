@@ -116,7 +116,6 @@ export const toggleUpvote = async (id) => {
 
   const data = await res.json();
 
-  // 🚨 THIS IS THE MISSING PART
   if (!res.ok) {
     throw new Error(data.message || "Upvote failed");
   }

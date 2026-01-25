@@ -50,7 +50,6 @@ const AiScan = () => {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [error, setError] = useState(null);
 
-  // New state for Source Selection Popup
   const [showSourceSelect, setShowSourceSelect] = useState(false);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
@@ -326,7 +325,6 @@ const AiScan = () => {
   };
 
   const handleTriggerUpload = () => {
-    // If laptop view (lg breakpoint), trigger file input directly
     if (window.innerWidth >= 1024) {
       fileInputRef.current.click();
     } else {
@@ -335,9 +333,7 @@ const AiScan = () => {
   };
 
   return (
-
     <div className=" max-h-screen py-4 lg:py-0 max-w-screen bg-slate-50/10 dark:bg-transparent text-slate-900 dark:text-slate-200 font-['Plus_Jakarta_Sans'] flex flex-col overflow-y-auto lg:overflow-hidden transition-colors duration-300">
-      {/* Hidden Inputs for specific triggers */}
       <input
         type="file"
         ref={fileInputRef}
@@ -354,10 +350,9 @@ const AiScan = () => {
         accept="image/*"
       />
 
-      {/* MOBILE SOURCE SELECT MODAL - Hidden on Laptop (lg) */}
       <AnimatePresence>
         {showSourceSelect && (
-          <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center p-4 lg:hidden">
+          <div className="fixed inset-0 z-100 flex items-end justify-center sm:items-center p-4 lg:hidden">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -430,7 +425,7 @@ const AiScan = () => {
               {imagePreviews.length === 0 ? (
                 <div
                   onClick={handleTriggerUpload}
-                  className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer transition-all duration-500 hover:bg-emerald-500/[0.02]"
+                  className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer transition-all duration-500 hover:bg-emerald-500/2"
                 >
                   <div className="relative w-24 h-24 flex items-center justify-center mb-6 group">
                     <div className="absolute inset-0 bg-emerald-500/20 rounded-[2rem] rotate-45 scale-0 group-hover:scale-100 group-hover:rotate-90 transition-all duration-700 opacity-0 group-hover:opacity-100" />
@@ -474,7 +469,7 @@ const AiScan = () => {
                           repeat: Infinity,
                           ease: "linear",
                         }}
-                        className="absolute left-0 right-0 h-[2px] bg-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.8)]"
+                        className="absolute left-0 right-0 h-0.5 bg-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.8)]"
                       />
                       <div className="absolute inset-0 bg-emerald-950/10 backdrop-contrast-125" />
                     </div>
@@ -559,7 +554,7 @@ const AiScan = () => {
 
             <div className="flex-1 overflow-y-auto lg:p-8 p-2 lg:space-y-8 space-y-4 no-scrollbar min-h-0">
               {loadingAI ? (
-                <div className="h-full flex flex-col items-center justify-center space-y-8 min-h-[400px]">
+                <div className="h-full flex flex-col items-center justify-center space-y-8 min-h-100">
                   <Loader2
                     size={40}
                     className="animate-spin text-emerald-500"
@@ -569,7 +564,7 @@ const AiScan = () => {
                   </p>
                 </div>
               ) : formData.confidence === null ? (
-                <div className="h-full flex flex-col items-center justify-center opacity-40 dark:opacity-20 text-center space-y-6 min-h-[200px]">
+                <div className="h-full flex flex-col items-center justify-center opacity-40 dark:opacity-20 text-center space-y-6 min-h-50">
                   <div className="p-8 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-[3rem]">
                     <Radar
                       size={64}
@@ -598,11 +593,10 @@ const AiScan = () => {
                             Confidence Score
                           </span>
                         </div>
-                        
-                          <span className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
-                            {formData.confidence}%
-                          </span>
-                      
+
+                        <span className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
+                          {formData.confidence}%
+                        </span>
                       </div>
                       <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-900 rounded-full overflow-hidden">
                         <motion.div
@@ -821,7 +815,6 @@ const AiScan = () => {
         }}
       />
     </div>
-
   );
 };
 

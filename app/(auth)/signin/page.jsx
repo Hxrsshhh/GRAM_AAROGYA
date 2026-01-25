@@ -163,11 +163,11 @@ export default function SignInPage() {
             </form>
 
             <div className="flex items-center my-10">
-              <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+              <div className="grow border-t border-slate-200 dark:border-slate-800"></div>
               <span className="mx-4 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">
                 O-Auth
               </span>
-              <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+              <div className="grow border-t border-slate-200 dark:border-slate-800"></div>
             </div>
 
             <button

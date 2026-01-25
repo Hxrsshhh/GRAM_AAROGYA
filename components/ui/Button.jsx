@@ -11,7 +11,7 @@ const Button = ({
   className = "",
   isLoading = false,
   disabled,
-  leftIcon, // 1. Destructure leftIcon here
+  leftIcon,
   rightIcon,
   ...props
 }) => {
@@ -41,7 +41,7 @@ const Button = ({
       whileTap={!isLoading && !disabled ? { scale: 0.98 } : undefined}
       disabled={isLoading || disabled}
       className={cn(
-        "relative inline-flex items-center justify-center font-black tracking-tight transition-all duration-300 rounded-[1.25rem] focus:outline-none overflow-hidden group",
+        "relative inline-flex items-center justify-center font-black tracking-tight transition-all duration-300 rounded-4xl focus:outline-none overflow-hidden group",
         variants[variant],
         sizes[size],
         (isLoading || disabled) && "opacity-60 cursor-not-allowed",
@@ -49,11 +49,7 @@ const Button = ({
       )}
     >
       <span className="relative z-10 flex items-center gap-2">
-        {isLoading ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : (
-          leftIcon // 4. Render the icon here
-        )}
+        {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : leftIcon}
         {children}
         {!isLoading && rightIcon}
       </span>

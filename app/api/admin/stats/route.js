@@ -1,4 +1,4 @@
-// app/api/admin/dashboard-stats/route.js
+
 import connectDB from "@/lib/db";
 import User from "@/models/User";
 import Issues from "@/models/Issues";
@@ -13,20 +13,17 @@ export async function GET() {
 
   await connectDB();
 
-  // ---------------- USERS ----------------
   const [totalUsers, activeUsers, blockedUsers] = await Promise.all([
     User.countDocuments(),
     User.countDocuments({ isBlocked: false }),
     User.countDocuments({ isBlocked: true }),
   ]);
 
-  // ---------------- IssuesS ----------------
   const [totalReports, resolvedReports] = await Promise.all([
     Issues.countDocuments(),
     Issues.countDocuments({ status: "resolved" }),
   ]);
 
-  // ---------------- MONTHLY CHART ----------------
   const monthlyRaw = await Issues.aggregate([
     {
       $group: {
@@ -48,7 +45,6 @@ export async function GET() {
     resolved: m.resolved,
   }));
 
-  // ---------------- CATEGORY PIE ----------------
   const categories = await Issues.aggregate([
     {
       $group: {
@@ -65,14 +61,12 @@ export async function GET() {
     },
   ]);
 
-  // ---------------- RECENT 5 IssuesS ----------------
   const recentIssuess = await Issues.find()
     .sort({ createdAt: -1 })
     .limit(5)
     .select("title category status priority createdAt")
     .lean();
 
-  // ---------------- RESPONSE ----------------
   return Response.json({
     stats: {
       totalUsers,

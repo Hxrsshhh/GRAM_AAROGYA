@@ -18,24 +18,6 @@ export const authOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
 
-    FacebookProvider({
-      clientId: process.env.FACEBOOK_CLIENT_ID,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-      authorization: {
-        params: {
-          scope: "email public_profile",
-        },
-      },
-      profile(profile) {
-        return {
-          id: profile.id,
-          name: profile.name,
-          email: profile.email,
-          image: profile.picture?.data?.url ?? null,
-        };
-      },
-    }),
-
     // ---------------- CREDENTIALS ----------------
     CredentialsProvider({
       name: "Credentials",
@@ -74,18 +56,15 @@ export const authOptions = {
     async signIn({ user, account }) {
       await connectDB();
 
-      // 1. For credentials, you should handle the block check in your Authorize function,
-      // but we can add a safety check here too if needed.
       if (account.provider === "credentials") {
         if (user.status === "blocked") {
           return `/auth/error?error=ACCESS_DENIED_BLOCKED`;
         }
 
-        // If deleted, send to custom error page
         if (user.status === "deleted") {
           return `/auth/error?error=USER_DELETED`;
         }
-         console.log("I am in credential provider ");
+        console.log("I am in credential provider ");
         return true;
       }
 
@@ -95,14 +74,14 @@ export const authOptions = {
       let dbUser = await User.findOne({ email });
 
       if (!dbUser) {
-        // New User Creation
+      
         dbUser = await User.create({
           name: user.name || "New User",
           email,
           avatar: user.image,
           emailVerified: true,
           role: "citizen",
-          status: "active", // Default status
+          status: "active",
           authProviders: [
             {
               provider: account.provider,
@@ -112,15 +91,14 @@ export const authOptions = {
           lastLoginAt: new Date(),
         });
       } else {
-        // --- BLOCK/DELETE CHECK START ---
-        // If the user exists, check if they are blocked or deleted
+       
         if (dbUser.status === "blocked") {
-          throw new Error("ACCESS_DENIED_BLOCKED"); // This stops the sign-in
+          throw new Error("ACCESS_DENIED_BLOCKED"); 
         }
         if (dbUser.status === "deleted") {
-          throw new Error("ACCESS_DENIED_DELETED"); // This stops the sign-in
+          throw new Error("ACCESS_DENIED_DELETED"); 
         }
-        // --- BLOCK/DELETE CHECK END ---
+      
 
         const isLinked = dbUser.authProviders.some(
           (p) =>
@@ -141,7 +119,7 @@ export const authOptions = {
 
       user.id = dbUser._id.toString();
       user.role = dbUser.role;
-      user.status = dbUser.status; // Add status to the user object
+      user.status = dbUser.status; 
 
       return true;
     },
@@ -155,19 +133,29 @@ export const authOptions = {
       if (token?.id) {
         await connectDB();
         const dbUser = await User.findById(token.id).select("onboardingStatus");
+        if (
+          !dbUser ||
+          dbUser.status === "blocked" ||
+          dbUser.status === "deleted"
+        ) {
+          return null; 
+        }
         token.onboardingStatus = dbUser?.onboardingStatus || "pending";
+        token.status = dbUser?.status;
       }
       return token;
     },
 
     async session({ session, token }) {
+      if (!token) return null;
+
       session.user.id = token.id;
       session.user.role = token.role;
       session.user.onboardingStatus = token.onboardingStatus;
       session.user.status = token.status;
 
       if (token.status === "blocked") {
-        return null; // This destroys the session on the next request
+        return null; 
       }
 
       return session;

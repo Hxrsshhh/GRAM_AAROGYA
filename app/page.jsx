@@ -24,6 +24,8 @@ import {
   X,
   Sun,
   Moon,
+  UserCheck,
+  Monitor,
 } from "lucide-react";
 
 import MouseGlow from "@/components/ui/MouseGlow";
@@ -140,7 +142,7 @@ export default function App() {
 
       {/* Navigation */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-100 transition-all duration-300 ${
           scrolled || isOpen
             ? "bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl py-4 border-b border-slate-200 dark:border-slate-800"
             : "bg-transparent py-4 md:py-8"
@@ -241,9 +243,9 @@ export default function App() {
 
       {/* Hero Section */}
       <section className="relative pt-28 md:pt-60 pb-20 md:pb-28 overflow-hidden bg-white dark:bg-slate-950 transition-colors duration-500">
-        {/* 1. Refined Ambient Lighting - Adjusted for both modes */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[450px] bg-emerald-500/10 dark:bg-emerald-500/10 blur-[120px] rounded-full opacity-60 pointer-events-none" />
-        <div className="absolute top-20 right-[10%] w-[300px] h-[300px] bg-cyan-500/10 dark:bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none" />
+       
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-112.5 bg-emerald-500/10 dark:bg-emerald-500/10 blur-[120px] rounded-full opacity-60 pointer-events-none" />
+        <div className="absolute top-20 right-[10%] w-75 h-75 bg-cyan-500/10 dark:bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <motion.div
@@ -284,7 +286,7 @@ export default function App() {
                 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-[0.95] md:leading-[0.9] tracking-tighter mb-8 text-slate-900 dark:text-white"
               >
                 Powering Transparent <br className="hidden sm:block" />
-                <span className="text-transparent bg-clip-text bg-gradient-to-br from-emerald-600 via-emerald-500 to-cyan-500 dark:from-emerald-500 dark:via-emerald-300 dark:to-cyan-400 drop-shadow-sm">
+                <span className="text-transparent bg-clip-text bg-linear-to-br from-emerald-600 via-emerald-500 to-cyan-500 dark:from-emerald-500 dark:via-emerald-300 dark:to-cyan-400 drop-shadow-sm">
                   City Governance.
                 </span>
               </motion.h1>
@@ -307,7 +309,7 @@ export default function App() {
                     Real change.
                   </span>
                 </p>
-                <div className="h-[1px] flex-grow bg-gradient-to-r from-emerald-500/30 via-emerald-500/5 to-transparent hidden md:block" />
+                <div className="h-px grow bg-linear-to-r from-emerald-500/30 via-emerald-500/5 to-transparent hidden md:block" />
               </motion.div>
 
               {/* 5. Supporting Description */}
@@ -454,6 +456,49 @@ export default function App() {
         </div>
       </section>
 
+       {/* NEW: Help Desk Teaser Section */}
+            <section className="py-24 px-6 border-y border-slate-100 dark:border-slate-900 bg-slate-50/50 dark:bg-slate-900/10">
+              <div className="max-w-7xl mx-auto">
+                <div className="bg-emerald-600 rounded-[3rem] p-8 md:p-16 flex flex-col lg:flex-row items-center justify-between gap-12 shadow-2xl shadow-emerald-600/20 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-12 opacity-10">
+                    <HelpCircle size={300} className="text-white" />
+                  </div>
+                  
+                  <div className="max-w-2xl relative z-10 text-center lg:text-left">
+                    <h2 className="text-white text-3xl md:text-5xl font-black tracking-tight mb-6">Need a hand finding <br /> your way around?</h2>
+                    <p className="text-emerald-50 text-lg md:text-xl font-medium opacity-90 leading-relaxed mb-8">
+                      Whether you&#39;re a first-time citizen user or a city administrator managing a large team, our Help Desk has comprehensive video guides to ensure you&#39;re getting the most out of CivicPulse.
+                    </p>
+                    <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
+                       <Link href='/helpdesk'>
+                       <Button 
+                        variant="secondary" 
+                        size="lg" 
+                        className="group"
+                       >
+                        Visit Help Desk 
+                        <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                       </Link>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-4 w-full max-w-xs relative z-10">
+                    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+                      <div className="flex items-center gap-4 text-white font-bold">
+                        <UserCheck size={24} /> User Guides
+                      </div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+                      <div className="flex items-center gap-4 text-white font-bold">
+                        <Monitor size={24} /> Admin Portals
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
       {/* Footer */}
       <footer className="pt-16 md:pt-32 pb-8 md:pb-16 px-4 sm:px-6 border-t border-slate-200 dark:border-slate-900 bg-white dark:bg-slate-950">
         <div className="max-w-7xl mx-auto">
@@ -468,7 +513,7 @@ export default function App() {
                   CivicPulse
                 </span>
               </div>
-              <p className="text-slate-500 dark:text-slate-400 font-medium leading-tight max-w-[250px] text-center lg:text-left text-[11px] md:text-sm">
+              <p className="text-slate-500 dark:text-slate-400 font-medium leading-tight max-w-62.5 text-center lg:text-left text-[11px] md:text-sm">
                 Building the digital trust layer for the physical world.
               </p>
             </div>

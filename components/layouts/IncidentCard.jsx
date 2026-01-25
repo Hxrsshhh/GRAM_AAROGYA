@@ -27,7 +27,7 @@ export const IncidentCard = forwardRef(
             />
           </div>
 
-          <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-slate-900 via-transparent to-black/20" />
+          <div className="absolute inset-0 bg-linear-to-t from-white dark:from-slate-900 via-transparent to-black/20" />
           <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
             <span className="font-mono text-[10px] font-black text-white bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10">
               {issue.id || issue._id}
@@ -107,8 +107,8 @@ export const IncidentCard = forwardRef(
 
               <button
                 onClick={(e) => {
-                  e.preventDefault(); 
-                  e.stopPropagation(); 
+                  e.preventDefault();
+                  e.stopPropagation();
                   onDelete();
                 }}
                 className="p-2.5 hover:bg-rose-500/10 hover:text-rose-500 rounded-2xl text-slate-400 transition-all"

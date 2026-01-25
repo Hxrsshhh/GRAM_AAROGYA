@@ -15,11 +15,7 @@ export async function GET(req) {
               $match: {
                 status: "resolved",
                 updatedAt: {
-                  $gte: new Date(
-                    new Date().getFullYear(),
-                    new Date().getMonth(),
-                    1
-                  ),
+                  $gte: new Date(new Date().setDate(1)), // Sets to the 1st of current month at current time
                 },
               },
             },

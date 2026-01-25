@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -164,9 +164,8 @@ export default function IssueDetail() {
 
   return (
     <div className="h-screen w-full flex flex-col bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 overflow-hidden font-['Plus_Jakarta_Sans',sans-serif]">
-      {/* --- HEADER / MOBILE BOTTOM DOCK --- */}
-      {/* Fixed to bottom on mobile, stays at top on desktop */}
-      <header className="fixed bottom-0 left-0 z-100 right-0 lg:relative lg:bottom-auto h-16 lg:h-14 flex-shrink-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t lg:border-t-0 lg:border-b border-slate-200 dark:border-slate-800  shadow-[0_-10px_25px_rgba(0,0,0,0.1)] lg:shadow-none">
+    
+      <header className="fixed bottom-0 left-0 z-100 right-0 lg:relative lg:bottom-auto h-16 lg:h-14 shrink-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t lg:border-t-0 lg:border-b border-slate-200 dark:border-slate-800  shadow-[0_-10px_25px_rgba(0,0,0,0.1)] lg:shadow-none">
         <div className="max-w-7xl mx-auto h-full px-4 md:px-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
@@ -335,8 +334,8 @@ export default function IssueDetail() {
           </div>
 
           {/* RIGHT ACTIVITY COLUMN */}
-          <aside className="w-full lg:w-[380px] flex flex-col gap-6 lg:overflow-hidden">
-            <section className="bg-emerald-600 rounded-[1.5rem] p-5 text-white grid grid-cols-2 gap-2 shadow-xl shadow-emerald-600/20 flex-shrink-0">
+          <aside className="w-full lg:w-95 flex flex-col gap-6 lg:overflow-hidden">
+            <section className="bg-emerald-600 rounded-[1.5rem] p-5 text-white grid grid-cols-2 gap-2 shadow-xl shadow-emerald-600/20 shrink-0">
               <Stat
                 icon={<ThumbsUp size={14} />}
                 label="Upvotes"
@@ -349,7 +348,6 @@ export default function IssueDetail() {
               />
             </section>
 
-            {/* CHAT/LOGS - Constrained height on mobile for 3-4 comments visibility */}
             <section className="h-105 lg:h-auto lg:flex-1 bg-white dark:bg-slate-900 rounded-[1.5rem] lg:rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col overflow-hidden">
               <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm shrink-0">
                 <div className="flex items-center gap-2">
@@ -372,7 +370,7 @@ export default function IssueDetail() {
                       key={idx}
                       className="flex gap-3"
                     >
-                      <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 border border-slate-200 dark:border-slate-700">
+                      <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
                         <User size={12} className="text-slate-400" />
                       </div>
                       <div className="flex-1">
@@ -396,13 +394,13 @@ export default function IssueDetail() {
                 </AnimatePresence>
               </div>
 
-              <div className="p-4 bg-slate-50 dark:bg-slate-950/50 border-t border-slate-100 dark:border-slate-800 flex-shrink-0">
+              <div className="p-4 bg-slate-50 dark:bg-slate-950/50 border-t border-slate-100 dark:border-slate-800 shrink-0">
                 <div className="relative">
                   <textarea
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
                     placeholder="Write a log entry..."
-                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 pr-10 text-[11px] font-bold outline-none focus:ring-4 ring-emerald-500/10 transition-all resize-none h-[50px]"
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 pr-10 text-[11px] font-bold outline-none focus:ring-4 ring-emerald-500/10 transition-all resize-none h-12.5"
                   />
                   <button
                     onClick={addComment}
@@ -416,7 +414,7 @@ export default function IssueDetail() {
             </section>
 
             {/* ACTION FOOTER */}
-            <section className="bg-white mb-20 dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 flex-shrink-0">
+            <section className="bg-white mb-20 dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shrink-0">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-8 h-8 bg-emerald-500/10 text-emerald-500 rounded-lg flex items-center justify-center">
                   <User size={16} />

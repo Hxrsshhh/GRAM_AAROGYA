@@ -17,6 +17,7 @@ import {
   Info,
   Zap,
   Map,
+  HomeIcon,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
@@ -82,6 +83,7 @@ const Navbar = () => {
     { label: "Dashboard", icon: Zap, path: "/dashboard" },
     { label: "Issues", icon: Globe, path: "/issues" },
     { label: "Report New Issue", icon: Info, path: "/issues/report" },
+    { label: "CommunityHub", icon: HomeIcon, path: "/communityhub" },
     { label: "Map", icon: Map, path: "/map" },
   ];
 
@@ -92,7 +94,7 @@ const Navbar = () => {
   ];
 
   const handleLogout = async () => {
-     sessionStorage.setItem("logoutSuccess", "true");
+    sessionStorage.setItem("logoutSuccess", "true");
     await signOut({
       redirect: false,
     });
@@ -106,7 +108,6 @@ const Navbar = () => {
         className={`fixed top-0 left-0 right-0 z-500 transition-all duration-300 ease-in-out bg-white/90 dark:bg-slate-950/90 backdrop-blur-md py-3 border-b border-slate-200 dark:border-slate-800 shadow-sm`}
       >
         <div className="max-w-344 mx-auto px-6 lg:px-12 flex items-center justify-between">
-         
           <div className="flex items-center gap-3 cursor-pointer group shrink-0 relative z-110">
             <Link href="/">
               <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-600/20">
@@ -194,7 +195,7 @@ const Navbar = () => {
 
       {/* Mobile Side Menu */}
       <div
-        className={`fixed inset-0 bg-white dark:bg-slate-950 z-[90] lg:hidden transition-transform duration-500 ease-in-out ${
+        className={`fixed inset-0 bg-white dark:bg-slate-950 z-90 lg:hidden transition-transform duration-500 ease-in-out ${
           isOpen ? "translate-y-0" : "-translate-y-full"
         }`}
       >

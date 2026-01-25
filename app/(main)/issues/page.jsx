@@ -19,15 +19,19 @@ import { getAllIssues } from "@/app/api/issues";
 import Image from "next/image";
 import { fireOneTimeToast } from "@/lib/oneTimeToast";
 import useSWR from "swr";
+import ErrorHandle from "@/components/layouts/ErrorHandle";
+import { useSession } from "next-auth/react";
+
 
 export default function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [showOnlyMine, setShowOnlyMine] = useState(false);
   const fetcher = () => getAllIssues();
 
   const { data, error, isLoading } = useSWR("/api/issues", fetcher, {
-    refreshInterval: 15000, // auto refresh every 15s
+    refreshInterval: 15000,
     revalidateOnFocus: true,
     shouldRetryOnError: false,
   });
@@ -37,6 +41,9 @@ export default function App() {
   }, []);
 
   const issues = data?.data || [];
+  console.log(data?.data);
+  const { data: session , status } = useSession();
+  const currentUserId = session?.user?.id;
 
   const filteredIssues = issues.filter((issue) => {
     const matchesSearch =
@@ -46,7 +53,12 @@ export default function App() {
       selectedStatus === "all" || issue.status === selectedStatus;
     const matchesCategory =
       selectedCategory === "all" || issue.category === selectedCategory;
-    return matchesSearch && matchesStatus && matchesCategory;
+    const matchesOwnership =
+  !showOnlyMine || issue.reportedBy?._id === currentUserId;
+
+    return (
+      matchesSearch && matchesStatus && matchesCategory && matchesOwnership
+    );
   });
 
   const statuses = ["all", "pending", "in-progress", "resolved", "rejected"];
@@ -124,16 +136,12 @@ export default function App() {
   }
 
   if (error) {
-    return (
-      <div className="pt-24 text-center text-red-500 font-bold">
-        Failed to load issues
-      </div>
-    );
+    return <ErrorHandle />;
   }
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans overflow-hidden">
-      <header className="hidden pt-16 md:block flex-shrink-0 z-50 w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-md ">
+      <header className="hidden pt-16 md:block shrink-0 z-50 w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-md ">
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
@@ -152,7 +160,7 @@ export default function App() {
             </div>
 
             <div className="flex gap-3">
-              <div className="flex-1 md:flex-none bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-5 py-2 text-center min-w-[100px]">
+              <div className="flex-1 md:flex-none bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-5 py-2 text-center min-w-25">
                 <p className="text-lg md:text-xl font-black text-emerald-600 leading-none mb-1">
                   {issues.length}
                 </p>
@@ -160,7 +168,7 @@ export default function App() {
                   Reports
                 </p>
               </div>
-              <div className="flex-1 md:flex-none bg-amber-500/10 border border-amber-500/20 rounded-xl px-5 py-2 text-center min-w-[100px]">
+              <div className="flex-1 md:flex-none bg-amber-500/10 border border-amber-500/20 rounded-xl px-5 py-2 text-center min-w-25">
                 <p className="text-lg md:text-xl font-black text-amber-600 leading-none mb-1">
                   {issues.filter((i) => i.status === "pending").length}
                 </p>
@@ -235,6 +243,35 @@ export default function App() {
                     </div>
                   </div>
 
+                  {/* Add this inside the "Refine Feed" sidebar, above the status buttons */}
+                  <div className="md:col-span-2 lg:col-span-1">
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">
+                      Privacy
+                    </label>
+                    <button
+                      onClick={() => setShowOnlyMine(!showOnlyMine)}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all duration-300 ${
+                        showOnlyMine
+                          ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-500/20"
+                          : "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
+                      }`}
+                    >
+                      <span className="text-xs font-black uppercase tracking-tight">
+                        {showOnlyMine
+                          ? "Showing My Reports"
+                          : "Show My Reports"}
+                      </span>
+                      <div
+                        className={`w-8 h-4 rounded-full relative transition-colors ${showOnlyMine ? "bg-white/20" : "bg-slate-300 dark:bg-slate-700"}`}
+                      >
+                        <motion.div
+                          animate={{ x: showOnlyMine ? 16 : 2 }}
+                          className={`absolute top-1 w-2 h-2 rounded-full ${showOnlyMine ? "bg-white" : "bg-slate-500"}`}
+                        />
+                      </div>
+                    </button>
+                  </div>
+
                   <div className="md:col-span-2 lg:col-span-1">
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">
                       Status
@@ -260,7 +297,7 @@ export default function App() {
             </Card>
           </aside>
 
-          <section className="lg:col-span-8 flex flex-col min-h-0 mt-8 md:mt-[-20px] ">
+          <section className="lg:col-span-8 flex flex-col min-h-0 mt-8 md:-mt-5 ">
             <div className="flex-1 lg:overflow-y-auto no-scrollbar lg:py-8">
               <div className="space-y-4 pb-24">
                 <AnimatePresence mode="popLayout">
@@ -280,7 +317,7 @@ export default function App() {
                             className="group overflow-hidden border-l-4 border-l-transparent hover:border-l-emerald-500 p-4 md:p-5 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800"
                           >
                             <div className="flex flex-col sm:flex-row gap-4 md:gap-6">
-                              <div className="relative w-full sm:w-32 h-44 sm:h-32 flex-shrink-0">
+                              <div className="relative w-full sm:w-32 h-44 sm:h-32 shrink-0">
                                 <div className="relative w-full h-full">
                                   <Image
                                     src={
@@ -348,9 +385,9 @@ export default function App() {
                       <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter mb-2">
                         No Signals Detected
                       </h3>
-                      <p className="text-slate-500 dark:text-slate-400 text-sm font-medium max-w-[280px] mx-auto leading-relaxed">
-                        We couldn't find any public issues matching your current
-                        filters or search criteria.
+                      <p className="text-slate-500 dark:text-slate-400 text-sm font-medium max-w-70 mx-auto leading-relaxed">
+                        We couldn&#39;t find any public issues matching your
+                        current filters or search criteria.
                       </p>
 
                       <button
