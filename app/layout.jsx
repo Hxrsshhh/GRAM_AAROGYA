@@ -15,11 +15,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Real-Time Civic Issue Reporting & Urban Intelligence Platform",
+  title: "Gram Aarogya | AI-Powered Rural Healthcare & Medical Assistance",
   description:
-    "CivicPulse is a modern civic engagement platform that enables citizens to report local issues and track them in real time through an interactive map interface.",
+    "Gram Aarogya empowers villages with AI-driven healthcare assistance, helping users find nearby doctors, report health concerns, and access essential medical services instantly.",
   icons: {
-    icon: "/logo2.png",
+    icon: "/gram.png",
   },
 };
 

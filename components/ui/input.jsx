@@ -11,53 +11,65 @@ export const Input = ({
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] mb-2 ml-1">
           {label}
         </label>
       )}
-      <div className="relative">
+      <div className="relative group">
         {leftIcon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-            {leftIcon}
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-blue-500 transition-colors">
+            {React.cloneElement(leftIcon, { size: 18 })}
           </div>
         )}
         <input
-          className={`input-field ${leftIcon ? "pl-10" : ""} ${
-            rightIcon ? "pr-10" : ""
-          } ${error ? "border-red-500 focus:ring-red-500" : ""} ${className}`}
+          className={`w-full bg-white/50 dark:bg-white/[0.03] backdrop-blur-md border border-neutral-200 dark:border-white/10 
+          focus:border-blue-500/50 focus:bg-white dark:focus:bg-black/40 rounded-2xl py-3 px-4 outline-none transition-all duration-300
+          text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 text-sm font-medium
+          ${leftIcon ? "pl-12" : ""} 
+          ${rightIcon ? "pr-12" : ""} 
+          ${error ? "border-red-500/50 ring-2 ring-red-500/10" : ""} 
+          ${className}`}
           {...props}
         />
         {rightIcon && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-            {rightIcon}
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-blue-500 transition-colors">
+            {React.cloneElement(rightIcon, { size: 18 })}
           </div>
         )}
       </div>
       {error && (
-        <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>
+        <p className="mt-2 text-[10px] font-bold text-red-500 uppercase tracking-wider ml-1">
+          {error}
+        </p>
       )}
     </div>
   );
 };
 
-export const InputField = ({ label, leftIcon, disabled, ...props }) => (
+export const InputField = ({ label, leftIcon, disabled, className = "", ...props }) => (
   <div className="w-full space-y-2">
     {label && (
-      <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+      <label className="block text-[10px] font-black text-neutral-400 dark:text-neutral-500 uppercase tracking-[0.2em] ml-1">
         {label}
       </label>
     )}
     <div className="relative group">
       {leftIcon && (
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 dark:group-focus-within:text-emerald-500 transition-colors">
+        <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-300
+          ${disabled ? "text-neutral-400" : "text-neutral-400 group-focus-within:text-blue-500"}
+        `}>
           {React.cloneElement(leftIcon, { size: 18 })}
         </div>
       )}
       <input
         disabled={disabled}
-        className={`w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 focus:border-slate-900 dark:focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-900 rounded-xl py-3 px-4 outline-none transition-all ${
-          leftIcon ? "pl-12" : ""
-        } ${disabled ? "cursor-not-allowed opacity-75" : ""}`}
+        className={`w-full text-sm font-medium transition-all duration-300 outline-none
+          bg-white/50 dark:bg-white/[0.02] backdrop-blur-xl border rounded-[1.25rem] py-3.5 px-4
+          ${leftIcon ? "pl-12" : "px-6"}
+          ${disabled 
+            ? "border-transparent cursor-not-allowed text-neutral-500 dark:text-neutral-400/60 bg-neutral-100/50 dark:bg-white/[0.01]" 
+            : "border-neutral-200 dark:border-white/10 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 dark:focus:bg-neutral-900/80 text-neutral-900 dark:text-white"
+          } ${className}`}
         {...props}
       />
     </div>

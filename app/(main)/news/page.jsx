@@ -14,7 +14,6 @@ import {
   Info,
   AlertCircle,
 } from "lucide-react";
-import Navbar from "@/components/navbar";
 
 // Translations mapping
 const translations = {
@@ -95,7 +94,6 @@ export default function Page() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-gray-100 font-sans selection:bg-blue-500/30 overflow-x-hidden">
 
-      <Navbar />
 
 
 
@@ -103,7 +101,7 @@ export default function Page() {
       <div className="fixed top-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-600/10 blur-[120px] rounded-full -z-10 animate-pulse" />
       <div className="fixed bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-indigo-600/10 blur-[120px] rounded-full -z-10" />
 
-      <div className="max-w-7xl mx-auto p-6 lg:pt-20">
+      <div className="max-w-7xl mx-auto p-6 lg:pt-26">
         {/* Header Section */}
         <header className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="space-y-4">

@@ -11,17 +11,16 @@ import {
   RefreshCcw,
   ExternalLink 
 } from "lucide-react";
-import Navbar from "@/components/navbar";
 
 
 export default function FindDoctorsPage() {
-  const [location, setLocation] = useState<LocationCoords | null>(null);
+  const [location, setLocation] = useState(null);
   const [places, setPlaces] = useState([]);
-  const [selectedPlace, setSelectedPlace] = useState<HealthCenter | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [selectedPlace, setSelectedPlace] = useState(null);
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   
-  const mapRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef(null);
 
   useEffect(() => {
     initLocation();
@@ -129,9 +128,8 @@ export default function FindDoctorsPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-gray-100 font-sans selection:bg-blue-500/30">
-      <Navbar />
 
-      <main className="max-w-7xl mx-auto p-6 lg:pt-10">
+      <main className="max-w-7xl mx-auto p-6 lg:pt-24">
         {/* Header section with refresh */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
@@ -157,7 +155,6 @@ export default function FindDoctorsPage() {
               <div className="relative h-[500px] w-full rounded-2xl overflow-hidden border border-white/10 bg-[#111]">
                 {location && (
                   <iframe
-                    key={selectedPlace?.name || 'default'}
                     title="Location Map"
                     width="100%"
                     height="100%"
@@ -211,7 +208,7 @@ export default function FindDoctorsPage() {
               </div>
             )}
 
-            <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+           <div className="flex-1 overflow-y-auto space-y-4 pr-2 no-scrollbar">
               {places.map((p, i) => {
                 const isSelected = selectedPlace?.name === p.name;
                 return (
@@ -269,6 +266,8 @@ export default function FindDoctorsPage() {
               })}
             </div>
           </div>
+
+
         </div>
       </main>
     </div>

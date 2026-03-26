@@ -17,11 +17,11 @@ const Button = ({
 }) => {
   const variants = {
     primary:
-      "bg-emerald-600 text-white hover:bg-emerald-500 shadow-[0_20px_40px_-15px_rgba(16,185,129,0.5)] dark:shadow-[0_20px_40px_-20px_rgba(16,185,129,0.3)]",
+      "bg-blue-600 text-white hover:bg-blue-500 shadow-[0_20px_40px_-15px_rgba(16,185,129,0.5)] dark:shadow-[0_20px_40px_-20px_rgba(16,185,129,0.3)]",
     secondary:
-      "bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 hover:border-emerald-500/50",
+      "bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 hover:border-blue-500/50",
     outline:
-      "border-2 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-500 hover:text-emerald-600 dark:hover:border-emerald-400 dark:hover:text-emerald-400 backdrop-blur-md",
+      "border-2 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-blue-500 hover:text-blue-600 dark:hover:border-blue-400 dark:hover:text-blue-400 backdrop-blur-md",
     glass:
       "bg-white/10 dark:bg-slate-900/40 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 text-slate-900 dark:text-white hover:bg-white/20 dark:hover:bg-slate-800/60",
     danger: "bg-red-600 text-white border border-red-500/50 hover:bg-red-700",
