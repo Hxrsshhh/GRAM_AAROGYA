@@ -1,286 +1,185 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useTheme } from "next-themes";
-import {
-  Menu,
-  X,
-  Sun,
-  Moon,
-  Activity,
-  ChevronRight,
-  User,
-  LogOut,
-  Settings,
-  LayoutDashboard,
-  Globe,
-  Info,
-  Zap,
-  Map,
-  HomeIcon,
-} from "lucide-react";
-import Button from "@/components/ui/Button";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { 
+  Menu, 
+  X, 
+  ChevronRight, 
+  Settings, 
+  UserCircle, 
+  Activity,
+  LayoutDashboard
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
-import { signOut, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+const navLinks = [
+  { name: "Mitra AI", href: "/ai-mitra" },
+  { name: "Connect", href: "/nearby-doctors" },
+  { name: "AarogyaMap", href: "/arogya-map" },
+  { name: "Pulse", href: "/news" },
+];
 
-function getInitials(name) {
-  if (!name) return "";
+const greetings = [
+  "Hello",
+  "नमस्ते",
+  "নমস্কার",
+  "வணக்கம்",
+  "नमस्कार",
+];
 
-  const parts = name.trim().split(/\s+/);
-
-  if (parts.length === 1) {
-    return parts[0][0].toUpperCase();
-  }
-
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
-const Navbar = () => {
-  const { resolvedTheme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+export default function Navbar() {
+  const [greetingIndex, setGreetingIndex] = useState(0);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const profileMenuRef = useRef(null);
-  const router = useRouter();
-
-  const { data: session } = useSession();
 
   useEffect(() => {
-    setMounted(true);
-    const onScroll = () => {
-      if (!isOpen) setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", onScroll);
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
 
-    const handleClickOutside = (e) => {
-      if (
-        profileMenuRef.current &&
-        !profileMenuRef.current.contains(e.target)
-      ) {
-        setShowProfileMenu(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
+    const interval = setInterval(() => {
+      setGreetingIndex((prev) => (prev + 1) % greetings.length);
+    }, 4000);
 
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll);
+      clearInterval(interval);
     };
-  }, [isOpen]);
-
-  useEffect(() => {
-    document.body.style.overflow = isOpen ? "hidden" : "unset";
-  }, [isOpen]);
-
-  if (!mounted) return null;
-
-  const isDark = resolvedTheme === "dark";
-
-  const navLinks = [
-    { label: "Dashboard", icon: Zap, path: "/dashboard" },
-    { label: "Issues", icon: Globe, path: "/issues" },
-    { label: "Report New Issue", icon: Info, path: "/issues/report" },
-    { label: "CommunityHub", icon: HomeIcon, path: "/communityhub" },
-    { label: "Map", icon: Map, path: "/map" },
-  ];
-
-  const userMenuItems = [
-    { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-    { label: "Profile", icon: User, path: "/profile" },
-    { label: "Settings", icon: Settings, path: "/settings" },
-  ];
-
-  const handleLogout = async () => {
-    sessionStorage.setItem("logoutSuccess", "true");
-    await signOut({
-      redirect: false,
-    });
-
-    router.push("/");
-  };
+  }, []);
 
   return (
-    <>
-      <nav
-        className={`fixed top-0 left-0 right-0 z-500 transition-all duration-300 ease-in-out bg-white/90 dark:bg-slate-950/90 backdrop-blur-md py-3 border-b border-slate-200 dark:border-slate-800 shadow-sm`}
-      >
-        <div className="max-w-344 mx-auto px-6 lg:px-12 flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer group shrink-0 relative z-110">
-            <Link href="/">
-              <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-600/20">
-                <Activity className="text-white w-5 h-5" />
-              </div>
-            </Link>
-            <span className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-              Civic
-              <span className="text-emerald-600 dark:text-emerald-400">
-                Pulse
-              </span>
-            </span>
-          </div>
-
-          {/* Center: Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-1 bg-slate-100/50 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800/50 p-1 rounded-2xl">
-            {navLinks.map((link) => (
-              <Link href={`${link.path}`} key={link.label}>
-                <button className="px-5 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-xl hover:bg-white dark:hover:bg-slate-800 transition-all">
-                  {link.label}
-                </button>
-              </Link>
-            ))}
-          </div>
-
-          {/* Right: Actions */}
-          <div className="flex items-center gap-3 relative z-110">
-            <div className="hidden lg:flex items-center gap-3">
-              <button
-                onClick={() => setTheme(isDark ? "light" : "dark")}
-                className="w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-emerald-500 transition-colors shadow-sm"
-              >
-                {isDark ? <Sun size={18} /> : <Moon size={18} />}
-              </button>
-
-              <div className="relative" ref={profileMenuRef}>
-                <button
-                  onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className="flex items-center gap-2 p-1.5 pr-4 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-all active:scale-95"
-                >
-                  <div className="w-8 h-8 rounded-full flex bg-emerald-500 items-center justify-center text-white font-bold text-xs">
-                    {getInitials(`${session?.user.name}`)}
-                  </div>
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                    Account
-                  </span>
-                </button>
-
-                {showProfileMenu && (
-                  <div className="absolute right-0 mt-4 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl py-2 overflow-hidden">
-                    {userMenuItems.map((item) => (
-                      <Link
-                        href={`${item.path}`}
-                        key={item.label}
-                        onClick={() => setShowProfileMenu(false)}
-                      >
-                        <button className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-medium text-slate-700 dark:text-slate-300 transition-colors">
-                          <item.icon size={16} /> {item.label}
-                        </button>
-                      </Link>
-                    ))}
-                    <div className="border-t border-slate-100 dark:border-slate-800 mt-2 pt-2">
-                      <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 text-sm font-medium"
-                      >
-                        <LogOut size={16} /> Log Out
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <button
-              className="lg:hidden p-2 text-slate-600 dark:text-slate-300 transition-colors"
-              onClick={() => setIsOpen(!isOpen)}
-              aria-label="Toggle Menu"
-            >
-              {isOpen ? <X size={28} /> : <Menu size={28} />}
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      {/* Mobile Side Menu */}
-      <div
-        className={`fixed inset-0 bg-white dark:bg-slate-950 z-90 lg:hidden transition-transform duration-500 ease-in-out ${
-          isOpen ? "translate-y-0" : "-translate-y-full"
+    <header
+      className={`fixed top-0 z-50 w-full transition-all duration-500 ease-in-out px-4 sm:px-8 py-4 ${
+        scrolled
+          ? "sm:py-3"
+          : "sm:py-6"
+      }`}
+    >
+      <div 
+        className={`mx-auto max-w-7xl transition-all duration-500 rounded-[2rem] border flex items-center justify-between px-6 py-3 ${
+          scrolled 
+            ? "bg-white/80 dark:bg-[#030303]/70 backdrop-blur-2xl border-neutral-200 dark:border-white/10 shadow-2xl shadow-blue-500/10" 
+            : "bg-transparent border-transparent"
         }`}
       >
-        <div className="flex flex-col h-full pt-24 pb-8 px-6 overflow-y-auto">
-          <div className="space-y-8">
-            <div className="space-y-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-2">
-                Main Navigation
-              </p>
-              <div className="grid grid-cols-1 gap-2">
-                {navLinks.map((link) => (
-                  <Link
-                    href={`${link.path}`}
-                    key={link.label}
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <button className="w-full flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center text-emerald-500 shadow-sm">
-                          <link.icon size={20} />
-                        </div>
-                        <span className="font-bold text-slate-900 dark:text-white">
-                          {link.label}
-                        </span>
-                      </div>
-                      <ChevronRight size={18} className="text-slate-300" />
-                    </button>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-2">
-                Account
-              </p>
-              <div className="grid grid-cols-1 gap-2">
-                {userMenuItems.map((item) => (
-                  <Link
-                    href={`${item.path}`}
-                    key={item.label}
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <button className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
-                      <item.icon size={20} className="text-slate-400" />
-                      <span className="font-bold text-slate-700 dark:text-slate-300">
-                        {item.label}
-                      </span>
-                    </button>
-                  </Link>
-                ))}
-              </div>
-            </div>
+        {/* Logo Section */}
+        <Link href="/hero" className="group flex items-center gap-3">
+          <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-neutral-200/50 bg-white/50 backdrop-blur-md transition-all duration-500 group-hover:scale-110 dark:border-white/10 dark:bg-white/5 shadow-sm">
+            <Activity className="w-5 h-5 text-blue-500 transition-transform duration-500 group-hover:rotate-12" />
           </div>
 
-          <div className="mt-auto space-y-4">
-            <button
-              onClick={() => {
-                setTheme(isDark ? "light" : "dark");
-                setIsOpen(false);
-              }}
-              className="w-full flex items-center justify-between p-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400">
-                  {isDark ? <Sun size={20} /> : <Moon size={20} />}
-                </div>
-                <span className="font-bold text-slate-700 dark:text-slate-300">
-                  {isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                </span>
-              </div>
-            </button>
+          <div className="flex flex-col">
+            <div className="flex items-baseline gap-0.5">
+              <span className="text-lg font-bold tracking-tighter text-neutral-900 dark:text-white transition-colors duration-300">
+                Gram
+              </span>
+              <span className="text-lg font-light tracking-tighter text-neutral-500 dark:text-neutral-400 transition-all duration-300 group-hover:text-blue-500">
+                Aarogya
+              </span>
+            </div>
+            <div className="relative h-3 overflow-hidden">
+              <p className="text-[8px] font-bold uppercase tracking-[0.3em] text-neutral-400 transition-all duration-500 group-hover:-translate-y-full">
+                Rural Care
+              </p>
+              <p className="absolute top-0 text-[8px] font-bold uppercase tracking-[0.3em] text-blue-500 translate-y-full transition-all duration-500 group-hover:translate-y-0">
+                Precision
+              </p>
+            </div>
+          </div>
+        </Link>
 
-            <Button
-              onClick={handleLogout}
-              variant="danger"
-              className="w-full py-6 border-red-100 dark:border-red-900/30 text-red-500 bg-red-500/5 hover:bg-red-500/10 rounded-2xl font-bold"
+        {/* Desktop Navigation */}
+        <nav className="hidden lg:flex items-center gap-1 bg-neutral-100/50 dark:bg-white/5 p-1 rounded-2xl border border-neutral-200 dark:border-white/5">
+          {navLinks.map((link) => (
+            <Link
+              key={link.name}
+              href={link.href}
+              className="relative px-5 py-2 text-xs font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 transition-all hover:text-blue-500 dark:hover:text-white rounded-xl hover:bg-white dark:hover:bg-white/5 group"
             >
-              <LogOut className="w-5 h-5 mr-3" /> Log Out
-            </Button>
+              {link.name}
+              <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-blue-500 transition-all group-hover:w-4" />
+            </Link>
+          ))}
+        </nav>
+
+        {/* Action Buttons: Greeting, Settings, Profile */}
+        <div className="flex items-center gap-3">
+          {/* Animated Greeting */}
+          <div className="hidden md:flex items-center px-4 py-2 bg-blue-500/5 rounded-full border border-blue-500/10 h-9 overflow-hidden">
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={greetingIndex}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="text-[10px] font-black uppercase tracking-widest text-blue-500"
+              >
+                {greetings[greetingIndex]}
+              </motion.span>
+            </AnimatePresence>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Link href="/settings">
+              <button className="p-2.5 rounded-xl border border-neutral-200 dark:border-white/10 text-neutral-500 hover:text-blue-500 hover:bg-blue-500/5 transition-all">
+                <Settings size={18} />
+              </button>
+            </Link>
+            <Link href="/profile">
+              <button className="flex items-center gap-2 p-1 pr-3 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 transition-all">
+                <div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center text-white">
+                  <UserCircle size={18} />
+                </div>
+                <span className="text-xs font-bold uppercase tracking-tighter">Profile</span>
+              </button>
+            </Link>
+
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-neutral-900 dark:text-white lg:hidden"
+            >
+              {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
           </div>
         </div>
       </div>
-    </>
-  );
-};
 
-export default Navbar;
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="absolute top-full left-0 w-full px-4 mt-2 lg:hidden"
+          >
+            <div className="bg-white dark:bg-[#0a0a0a] backdrop-blur-3xl border border-neutral-200 dark:border-white/10 rounded-[2rem] p-4 shadow-2xl overflow-hidden">
+              <div className="flex flex-col gap-2">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center justify-between p-4 rounded-2xl bg-neutral-50 dark:bg-white/5 text-neutral-600 dark:text-neutral-300 hover:text-blue-500 transition-all border border-transparent hover:border-blue-500/20"
+                  >
+                    <span className="text-sm font-bold uppercase tracking-widest">{link.name}</span>
+                    <ChevronRight size={16} />
+                  </Link>
+                ))}
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2 mt-4">
+                <Link href="/settings" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-neutral-100 dark:bg-white/5 text-xs font-bold uppercase tracking-widest">
+                  <Settings size={14} /> Settings
+                </Link>
+                <Link href="/profile" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-blue-500 text-white text-xs font-bold uppercase tracking-widest">
+                  <UserCircle size={14} /> Profile
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </header>
+  );
+}

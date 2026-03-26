@@ -19,7 +19,7 @@ export async function proxy(request) {
     return NextResponse.next();
   }
 
-  const publicPaths = ["/", "/signin", "/signup", "/auth/error","/helpdesk"];
+  const publicPaths = ["/", "/signin", "/signup", "/auth/error","/helpdesk","/ai-mitra","/nearby-doctors","/home","/settings","/profile"];
   const isPublicPath = publicPaths.some(
     (path) => pathname === path || pathname.startsWith(path + "/")
   );
