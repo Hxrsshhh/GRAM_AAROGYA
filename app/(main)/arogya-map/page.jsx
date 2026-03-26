@@ -1,17 +1,17 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { 
-  MapPin, 
-  Navigation, 
-  Phone, 
-  Info, 
-  Loader2, 
-  CheckCircle2, 
+import {
+  MapPin,
+  Navigation,
+  Phone,
+  Info,
+  Loader2,
+  CheckCircle2,
   RefreshCcw,
-  ExternalLink 
+  ExternalLink,
+  Compass,
 } from "lucide-react";
-
 
 export default function FindDoctorsPage() {
   const [location, setLocation] = useState(null);
@@ -19,7 +19,7 @@ export default function FindDoctorsPage() {
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+
   const mapRef = useRef(null);
 
   useEffect(() => {
@@ -41,14 +41,14 @@ export default function FindDoctorsPage() {
         setLoading(false);
       },
       async () => {
-        handleFallback("Using default location (enable GPS for better results)");
+        handleFallback("Using default location (enable GPS for accuracy)");
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
   const handleFallback = async (msg) => {
-    const fallback = { lat: 26.7271, lng: 88.3953 }; // Siliguri Default
+    const fallback = { lat: 26.7271, lng: 88.3953 }; 
     setLocation(fallback);
     setError(msg);
     await fetchPlaces(fallback.lat, fallback.lng);
@@ -73,10 +73,12 @@ export default function FindDoctorsPage() {
       const formatted = data.nearest_health_centers.map((p) => ({
         ...p,
         distance: getDistance(lat, lng, p.latitude, p.longitude),
-        mapsLink: `https://www.google.com/maps/dir/?api=1&destination=${p.latitude},${p.longitude}`,
+        mapsLink: `https://www.google.com/maps/search/?api=1&query=${p.latitude},${p.longitude}`,
       }));
 
-      setPlaces(formatted.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance)));
+      setPlaces(
+        formatted.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance))
+      );
     } catch {
       setError("Unable to connect to the healthcare database.");
     }
@@ -96,180 +98,162 @@ export default function FindDoctorsPage() {
 
   const handleSelectPlace = (place) => {
     setSelectedPlace(place);
-    if (window.innerWidth < 1024) {
-      mapRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
   };
 
- if (loading) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0a] text-white">
-        <div className="relative flex items-center justify-center">
-          {/* Animated rings for that high-end feel */}
-          <div className="absolute w-20 h-20 border-2 border-blue-500/10 rounded-full animate-[ping_2s_linear_infinite]"></div>
-          <div className="absolute w-16 h-16 border-4 border-blue-500/20 rounded-full animate-pulse"></div>
-          <Loader2 className="animate-spin w-10 h-10 text-blue-500 relative z-10" />
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 dark:bg-[#0a0a0a]">
+        <div className="relative">
+          <div className="absolute inset-0 bg-blue-500/20 blur-3xl animate-pulse rounded-full"></div>
+          <Loader2 className="animate-spin w-12 h-12 text-blue-600 dark:text-blue-400 relative z-10" />
         </div>
-        <div className="mt-6 text-center">
-          <p className="text-xl font-semibold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-            Scanning for Facilities
-          </p>
-          <p className="text-gray-500 text-sm mt-1 animate-pulse tracking-wide uppercase font-bold">
-            Locating Nearby Medical Help...
-          </p>
-        </div>
+        <p className="mt-6 text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent animate-pulse">
+          Syncing Satellite Data...
+        </p>
       </div>
     );
   }
 
   const mapCenterLat = selectedPlace?.latitude || location?.lat;
   const mapCenterLng = selectedPlace?.longitude || location?.lng;
-  const offset = selectedPlace ? 0.005 : 0.03; 
+  const offset = selectedPlace ? 0.005 : 0.03;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-gray-100 font-sans selection:bg-blue-500/30">
-
-      <main className="max-w-7xl mx-auto p-6 lg:pt-24">
-        {/* Header section with refresh */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">
-              Nearby <span className="text-blue-500">Medical Centers</span>
+    <div className="h-screen w-full bg-slate-50 dark:bg-[#0a0a0a] text-slate-900 dark:text-gray-100 flex flex-col overflow-hidden transition-colors duration-500">
+      {/* 1. Fixed Header Area (No Scroll) */}
+      <header className="flex-none pt-24 pb-6 px-6 md:px-12 max-w-7xl mx-auto w-full">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] font-black uppercase tracking-widest border border-blue-500/20">
+              <Compass className="w-3 h-3" /> Real-time Radar
+            </div>
+            <h1 className="text-4xl font-black tracking-tight">
+              Medical <span className="text-blue-600 dark:text-blue-500">Locator</span>
             </h1>
-            <p className="text-gray-400 text-sm mt-1">Based on your current location in Siliguri</p>
           </div>
-          <button 
+          
+          <button
             onClick={initLocation}
-            className="w-fit flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all text-sm font-medium"
+            className="group flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl hover:bg-slate-50 dark:hover:bg-white/10 transition-all font-bold text-xs"
           >
-            <RefreshCcw className="w-4 h-4" />
-            Refresh List
+            <RefreshCcw className="w-4 h-4 group-active:rotate-180 transition-transform duration-500" />
+            Recalibrate
           </button>
         </div>
+      </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Column: Map View */}
-          <div className="lg:col-span-7 space-y-6" ref={mapRef}>
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-1000"></div>
-              <div className="relative h-[500px] w-full rounded-2xl overflow-hidden border border-white/10 bg-[#111]">
-                {location && (
-                  <iframe
-                    title="Location Map"
-                    width="100%"
-                    height="100%"
-                    className=" opacity-100"
-                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${
-                      (mapCenterLng || 0) - offset
-                    }%2C${(mapCenterLat || 0) - offset}%2C${
-                      (mapCenterLng || 0) + offset
-                    }%2C${(mapCenterLat || 0) + offset}&layer=mapnik&marker=${
-                      mapCenterLat
-                    }%2C${mapCenterLng}`}
-                  />
-                )}
-              </div>
-            </div>
-
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex items-start gap-4">
-              <div className="p-3 bg-blue-500/10 rounded-xl shrink-0">
-                <Info className="w-5 h-5 text-blue-500" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-blue-400 mb-1">Interactive Guidance</h3>
-                <p className="text-sm text-gray-400 leading-relaxed">
-                  Select a facility from the list to update the map view. Use the Directions button to open Google Maps for real-time navigation.
-                </p>
-                {selectedPlace && (
-                  <button onClick={() => setSelectedPlace(null)} className="mt-2 text-sm text-blue-500 hover:underline flex items-center gap-1">
-                    <RefreshCcw className="w-3 h-3" /> Reset to my location
-                  </button>
-                )}
-              </div>
+      {/* 2. Main Content Area (Flexible & Non-Scrolling) */}
+      <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-8 pt-0 grid grid-cols-1 lg:grid-cols-12 gap-8 min-h-0">
+        
+        {/* Left Column: Map (Takes full height of flex container) */}
+        <div className="lg:col-span-7 flex flex-col min-h-0 space-y-4">
+          <div className="relative flex-1 group">
+            <div className="absolute -inset-1 bg-gradient-to-tr from-blue-600 to-cyan-400 rounded-[2.5rem] blur opacity-20 transition duration-1000"></div>
+            <div className="relative h-full w-full rounded-[2rem] overflow-hidden border border-white/20 shadow-2xl bg-white dark:bg-slate-900">
+              <iframe
+                title="Map View"
+                width="100%"
+                height="100%"
+                className="grayscale-[20%] contrast-[1.1] dark:invert-[90%] dark:hue-rotate-180"
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${(mapCenterLng || 0) - offset}%2C${(mapCenterLat || 0) - offset}%2C${(mapCenterLng || 0) + offset}%2C${(mapCenterLat || 0) + offset}&layer=mapnik&marker=${mapCenterLat}%2C${mapCenterLng}`}
+              />
             </div>
           </div>
 
-          {/* Right Column: List View */}
-          <div className="lg:col-span-5 flex flex-col space-y-4 h-[700px]">
-            <div className="flex items-center justify-between px-2">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-blue-500" />
-                Available Facilities
-              </h2>
-              <span className="text-xs text-blue-400 bg-blue-500/10 px-2 py-1 rounded-lg border border-blue-500/20 font-mono">
-                {places.length} FOUND
-              </span>
+          <div className="flex-none bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-3xl p-4 flex items-center gap-4">
+            <div className="p-3 bg-blue-600 rounded-xl shadow-lg">
+              <Navigation className="w-5 h-5 text-white" />
             </div>
+            <p className="text-xs text-slate-500 dark:text-gray-400 leading-tight">
+              <strong>Pro Tip:</strong> Select a facility from the list to update the satellite view instantly.
+            </p>
+          </div>
+        </div>
 
+        {/* Right Column: List (Internal Scroll only) */}
+        <div className="lg:col-span-5 flex flex-col min-h-0">
+          <div className="flex-none flex items-center justify-between mb-4 px-2">
+            <h2 className="text-lg font-bold flex items-center gap-2 text-blue-600 dark:text-blue-400">
+              <MapPin className="w-5 h-5" />
+              Available Centers
+            </h2>
+            <span className="text-[10px] font-black bg-slate-900 dark:bg-blue-600 text-white px-3 py-1 rounded-full uppercase">
+              {places.length} Total
+            </span>
+          </div>
+
+          {/* This is the only scrollable area */}
+          <div className="flex-1 overflow-y-auto space-y-4 pr-3 custom-scrollbar pb-8">
             {error && (
-              <div className="bg-blue-500/5 border border-blue-500/20 text-blue-400 p-4 rounded-xl text-sm flex items-center gap-3">
-                <Info className="w-4 h-4 shrink-0" />
+              <div className="bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 p-4 rounded-2xl text-xs font-bold uppercase tracking-wider">
                 {error}
               </div>
             )}
 
-           <div className="flex-1 overflow-y-auto space-y-4 pr-2 no-scrollbar">
-              {places.map((p, i) => {
-                const isSelected = selectedPlace?.name === p.name;
-                return (
-                  <div 
-                    key={i} 
-                    onClick={() => handleSelectPlace(p)}
-                    className={`group cursor-pointer bg-[#161616] transition-all duration-300 p-5 rounded-2xl relative overflow-hidden border-2 
-                      ${isSelected ? 'border-blue-500 bg-[#1c1c1c] translate-x-1' : 'border-transparent hover:border-white/10'}`}
-                  >
-                    <div className="relative z-10">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-2">
-                          <h3 className={`font-bold text-lg transition-colors ${isSelected ? 'text-blue-400' : 'group-hover:text-blue-400'}`}>
-                            {p.name}
-                          </h3>
-                          {isSelected && <CheckCircle2 className="w-4 h-4 text-blue-500" />}
-                        </div>
-                        <span className="text-xs font-mono bg-white/5 px-2 py-1 rounded text-gray-400">
-                          {p.distance} km
-                        </span>
-                      </div>
-                      
-                      <p className="text-sm text-gray-400 flex items-start gap-2 mb-5 line-clamp-2">
-                        <MapPin className="w-4 h-4 mt-0.5 text-gray-600 shrink-0" />
-                        {p.address}
-                      </p>
-
-                      <div className="flex gap-3">
-                        <a
-                          href={p.mapsLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold py-2.5 rounded-xl transition-all active:scale-95 shadow-lg shadow-blue-600/20"
-                        >
-                          <Navigation className="w-4 h-4" />
-                          Directions
-                        </a>
-                        {p.phone && (
-                          <a 
-                            href={`tel:${p.phone}`} 
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex items-center justify-center px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all group"
-                          >
-                            <Phone className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" />
-                          </a>
-                        )}
+            {places.map((p, i) => {
+              const isSelected = selectedPlace?.name === p.name;
+              return (
+                <div
+                  key={i}
+                  onClick={() => handleSelectPlace(p)}
+                  className={`group cursor-pointer transition-all duration-300 p-5 rounded-[1.8rem] border-2 relative 
+                    ${isSelected 
+                      ? "border-blue-500 bg-white dark:bg-[#151515] shadow-xl scale-[0.98]" 
+                      : "border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white/5 hover:border-blue-400/30"}`}
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="space-y-0.5">
+                      <h3 className={`font-black text-base leading-tight ${isSelected ? "text-blue-600 dark:text-blue-400" : ""}`}>
+                        {p.name}
+                      </h3>
+                      <div className="flex items-center gap-1 text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                        <Navigation className="w-3 h-3" />
+                        {p.distance} km
                       </div>
                     </div>
-                    {isSelected && (
-                      <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-600/10 blur-3xl rounded-full" />
+                    {isSelected && <CheckCircle2 className="w-5 h-5 text-blue-500" />}
+                  </div>
+
+                  <p className="text-xs text-slate-500 dark:text-gray-400 mb-4 line-clamp-1 italic">
+                    {p.address}
+                  </p>
+
+                  <div className="flex gap-2">
+                    <a
+                      href={p.mapsLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black uppercase py-2.5 rounded-xl transition-all shadow-md active:scale-95"
+                    >
+                      Nav <ExternalLink className="w-3 h-3" />
+                    </a>
+                    {p.phone && (
+                      <a
+                        href={`tel:${p.phone}`}
+                        className="flex items-center justify-center px-4 bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 rounded-xl transition-colors"
+                      >
+                        <Phone className="w-3.5 h-3.5 text-slate-600 dark:text-white" />
+                      </a>
                     )}
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
-
-
         </div>
       </main>
+
+      <style jsx global>{`
+        /* Prevent body scroll */
+        body { overflow: hidden; }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { 
+          background: #3b82f644; 
+          border-radius: 20px; 
+        }
+      `}</style>
     </div>
   );
 }

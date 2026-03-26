@@ -2,67 +2,114 @@
 "use client";
 
 import React, { useState } from "react";
-import { 
-  Search, MapPin, Stethoscope, ExternalLink, Clock, 
-  DollarSign, Sparkles, Loader2, AlertCircle, Navigation, 
-  Star, ShieldCheck, HeartPulse 
+import {
+  Search,
+  MapPin,
+  Stethoscope,
+  ExternalLink,
+  Clock,
+  DollarSign,
+  Sparkles,
+  Loader2,
+  AlertCircle,
+  Navigation,
+  Star,
+  ShieldCheck,
+  HeartPulse,
+  Zap,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const DoctorCard = ({ doctor, index }) => (
   <motion.div
     initial={{ opacity: 0, y: 30 }}
+    whileHover={{ y: -10 }}
     animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: index * 0.1 }}
-    className="group relative bg-white/[0.02] border border-white/10 rounded-[2.5rem] p-8 hover:bg-white/[0.05] hover:border-blue-500/50 transition-all duration-500 flex flex-col h-full shadow-xl"
+    transition={{ delay: index * 0.1, type: "spring", stiffness: 100 }}
+    className="group relative bg-white/50 dark:bg-white/[0.02] border border-black/5 dark:border-white/10 rounded-[2.5rem] p-8 hover:bg-white dark:hover:bg-white/[0.05] hover:border-blue-500/50 transition-all duration-500 flex flex-col h-full shadow-xl dark:shadow-2xl backdrop-blur-md"
   >
     <div className="flex justify-between items-start mb-6">
-      <div className="w-14 h-14 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+      <div className="w-14 h-14 rounded-2xl bg-slate-50 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-inner">
         <Stethoscope size={28} />
       </div>
-      <div className="flex items-center gap-1 px-3 py-1 bg-white/5 rounded-full border border-white/10">
-        <Star size={12} className="text-yellow-400 fill-yellow-400" />
-        <span className="text-[10px] font-black text-white">{doctor.rating || "4.9"}</span>
+      <div className="flex items-center gap-1 px-3 py-1 bg-black/5 dark:bg-white/5 rounded-full border border-black/5 dark:border-white/10">
+        <Star size={12} className="text-yellow-500 fill-yellow-500" />
+        <span className="text-[10px] font-black text-gray-800 dark:text-white">
+          {doctor.rating || "4.9"}
+        </span>
       </div>
     </div>
+
     <div className="flex-grow">
-      <h3 className="text-2xl font-bold text-white mb-2 leading-tight group-hover:text-blue-400 transition-colors">
+      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
         {doctor.name}
       </h3>
-      <p className="text-blue-400 text-xs font-black uppercase tracking-[0.2em] mb-8 opacity-80">
+      <p className="text-blue-600 dark:text-blue-400 text-xs font-black uppercase tracking-[0.2em] mb-8 opacity-80 flex items-center gap-2">
+        <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />{" "}
         {doctor.specialization}
       </p>
+
       <div className="space-y-4 mb-10 text-sm">
-        <div className="flex items-center gap-4 text-gray-300"><Clock size={18} className="text-blue-500" /> {doctor.experience}</div>
-        <div className="flex items-center gap-4 text-blue-100 font-medium"><DollarSign size={18} className="text-blue-500" /> {doctor.fee}</div>
-        <div className="flex items-start gap-4 text-gray-400"><MapPin size={18} className="text-blue-500 shrink-0" /> {doctor.address}</div>
+        <div className="flex items-center gap-4 text-gray-600 dark:text-gray-300">
+          <Clock size={18} className="text-blue-500" /> {doctor.experience}
+        </div>
+        <div className="flex items-center gap-4 text-gray-900 dark:text-blue-100 font-semibold">
+          <DollarSign size={18} className="text-blue-500" /> {doctor.fee}
+        </div>
+        <div className="flex items-start gap-4 text-gray-500 dark:text-gray-400 leading-relaxed">
+          <MapPin size={18} className="text-blue-500 shrink-0" />{" "}
+          {doctor.address}
+        </div>
       </div>
     </div>
-    <a href={doctor.mapsLink} target="_blank" className="w-full flex items-center justify-center gap-3 py-5 rounded-[1.5rem] bg-white text-black font-black text-sm hover:bg-blue-600 hover:text-white transition-all duration-300">
+
+    <a
+      href={doctor.mapsLink}
+      target="_blank"
+      className="w-full flex items-center justify-center gap-3 py-5 rounded-[1.5rem] bg-gray-900 dark:bg-white text-white dark:text-black font-black text-sm hover:bg-blue-600 dark:hover:bg-blue-600 dark:hover:text-white transition-all duration-300 active:scale-95 shadow-lg"
+    >
       BOOK APPOINTMENT <ExternalLink size={16} />
     </a>
   </motion.div>
 );
 
 const EmptyState = ({ error }) => (
-  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-32 bg-white/[0.01] border-2 border-dashed border-white/5 rounded-[4rem]">
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    className="text-center py-32 bg-gray-50 dark:bg-white/[0.01] border-2 border-dashed border-gray-200 dark:border-white/5 rounded-[4rem]"
+  >
     {error ? (
-      <div className="flex flex-col items-center p-6">
-        <AlertCircle size={40} className="text-red-500 mb-6" />
-        <h3 className="text-2xl font-bold text-red-400 mb-2 italic">Search Interrupted</h3>
-        <p className="text-gray-500">{error}</p>
+      <div className="flex flex-col items-center p-6 text-red-500">
+        <AlertCircle size={48} className="mb-6" />
+        <h3 className="text-2xl font-bold mb-2 uppercase tracking-tight">
+          Search Interrupted
+        </h3>
+        <p className="text-gray-500 dark:text-gray-400">{error}</p>
       </div>
     ) : (
       <div className="flex flex-col items-center p-6">
-        <Search size={40} className="text-gray-700 mb-8 animate-pulse" />
-        <h3 className="text-3xl font-black text-gray-400 mb-4 uppercase">System Standby</h3>
-        <p className="text-gray-600 max-w-sm mx-auto text-lg font-light">Initialize scan to connect with local specialists.</p>
+        <div className="relative mb-8">
+          <Search
+            size={48}
+            className="text-gray-300 dark:text-gray-700 animate-pulse"
+          />
+          <Zap
+            size={20}
+            className="absolute -top-2 -right-2 text-blue-500 animate-bounce"
+          />
+        </div>
+        <h3 className="text-3xl font-black text-gray-400 dark:text-gray-600 mb-4 uppercase tracking-tighter">
+          System Standby
+        </h3>
+        <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto text-lg font-light leading-relaxed">
+          Initialize neural scan to connect with elite local specialists.
+        </p>
       </div>
     )}
   </motion.div>
 );
 
-// --- Main Page ---
 export default function Page() {
   const [condition, setCondition] = useState("");
   const [location, setLocation] = useState("");
@@ -83,82 +130,169 @@ export default function Page() {
       const data = await res.json();
       setApiResponse(data);
     } catch (err) {
-      setApiResponse({ error: "System error. Please try again." });
+      setApiResponse({ error: "Network protocols failed. Check connection." });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white selection:bg-blue-500/30 overflow-x-hidden">
-      
-      {/* Visual background elements */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-10%] right-[-10%] w-[70%] h-[70%] bg-blue-600/10 blur-[140px] rounded-full" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-indigo-600/10 blur-[140px] rounded-full" />
+    <div className="min-h-screen bg-slate-50  dark:bg-[#050505] text-gray-900 dark:text-white selection:bg-blue-500/30 overflow-x-hidden transition-colors duration-500">
+      {/* Dynamic Background Mesh */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] right-[-10%] w-[70%] h-[70%] bg-blue-600/10 dark:bg-blue-600/15 blur-[140px] rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-indigo-600/10 dark:bg-indigo-600/15 blur-[140px] rounded-full" />
       </div>
 
-      <main className="relative z-10 container mx-auto px-6 py-12 lg:py-24 max-w-7xl">
-        <div className="text-center mt-14 mb-20">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold mb-6 tracking-widest uppercase">
-            <Navigation size={12} className="animate-pulse" /> AI-Powered Medical Locator
-          </div>
-          <h1 className="text-5xl md:text-8xl font-black tracking-tighter bg-gradient-to-b from-white to-white/30 bg-clip-text text-transparent leading-none mb-6">
-            Elite Care. <br /> On Demand.
-          </h1>
-          <p className="text-gray-400 text-xl max-w-2xl mx-auto font-light">
-            Access our verified network of specialists instantly with neural-search precision.
-          </p>
-        </div>
+      {/* Main Container with Top Padding for Navbar */}
+      <main className="relative z-10 container mx-auto px-6 pt-32 pb-24 lg:pt-44 lg:pb-32 max-w-7xl">
+       <div className="text-center mb-8 lg:mb-12 pt-4">
+  {/* Modern Badge Pill */}
+  <motion.div
+    initial={{ opacity: 0, y: -10 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/5 dark:bg-blue-400/10 border border-blue-500/10 dark:border-blue-400/20 text-blue-600 dark:text-blue-400 text-[9px] font-black mb-6 tracking-[0.3em] uppercase backdrop-blur-sm transition-all hover:tracking-[0.4em] cursor-default"
+  >
+    <div className="relative flex h-2 w-2">
+      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+    </div>
+    Precision Network
+  </motion.div>
 
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white/[0.02] border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-3xl shadow-2xl">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div className="relative group">
-                <Stethoscope className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400" size={22} />
-                <input 
-                  className="w-full pl-14 pr-6 py-6 rounded-3xl bg-white/[0.03] border border-white/5 outline-none focus:ring-2 focus:ring-blue-500/40 text-lg"
+  {/* Refined Heading */}
+  <h1 className="text-5xl md:text-[6.5rem] font-black tracking-tighter leading-[0.8] mb-6 bg-gradient-to-b from-gray-900 via-gray-700 to-gray-500 dark:from-white dark:via-white dark:to-white/30 bg-clip-text text-transparent drop-shadow-sm">
+    Expert Care. <br /> 
+    <span className="relative inline-block italic">
+      In Seconds.
+      <motion.div 
+        initial={{ width: 0 }}
+        animate={{ width: "100%" }}
+        transition={{ delay: 0.5, duration: 0.8 }}
+        className="absolute -bottom-1 left-0 h-[3px] bg-blue-500/30 rounded-full"
+      />
+    </span>
+  </h1>
+
+  {/* Compact Subtext */}
+  <motion.p 
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    transition={{ delay: 0.2 }}
+    className="text-gray-500 dark:text-gray-400 text-base md:text-lg max-w-xl mx-auto font-light leading-snug"
+  >
+    Connect with the top 1% of specialists using our{" "}
+    <span className="relative inline-flex items-center text-blue-600 dark:text-blue-400 font-semibold group cursor-help">
+      neural-grid
+      <span className="absolute -bottom-0.5 left-0 w-full h-px bg-blue-400 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
+    </span>{" "}
+    precision engine. Verified. Immediate. Local.
+  </motion.p>
+</div>
+
+        {/* Search Console */}
+        {/* Optimized Search Console with Nested Glass UI */}
+        <div className="max-w-4xl mx-auto group relative bg-white/70 dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-[3rem] p-2 sm:p-3 backdrop-blur-3xl shadow-2xl transition-all hover:border-blue-500/30 mb-16">
+          <div className="bg-slate-50 dark:bg-black/40 rounded-[2.7rem] p-6 md:p-10 border border-slate-100 dark:border-white/5 relative overflow-hidden">
+            {/* Animated Accent Line */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-30" />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              {/* Specialty Input */}
+              <div className="relative group/input">
+                <div className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center gap-3 pointer-events-none">
+                  <Stethoscope
+                    className="text-slate-400 group-focus-within/input:text-blue-500 transition-colors"
+                    size={22}
+                  />
+                  <div className="h-4 w-[1px] bg-slate-200 dark:bg-white/10" />
+                </div>
+                <input
+                  className="w-full pl-20 pr-6 py-6 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 text-lg transition-all placeholder:text-slate-400 dark:placeholder:text-gray-600"
                   placeholder="Specialty (e.g. Cardiologist)"
                   value={condition}
                   onChange={(e) => setCondition(e.target.value)}
                 />
               </div>
-              <div className="relative group">
-                <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-indigo-400" size={22} />
-                <input 
-                  className="w-full pl-14 pr-6 py-6 rounded-3xl bg-white/[0.03] border border-white/5 outline-none focus:ring-2 focus:ring-indigo-500/40 text-lg"
+
+              {/* Location Input */}
+              <div className="relative group/input">
+                <div className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center gap-3 pointer-events-none">
+                  <MapPin
+                    className="text-slate-400 group-focus-within/input:text-indigo-500 transition-colors"
+                    size={22}
+                  />
+                  <div className="h-4 w-[1px] bg-slate-200 dark:bg-white/10" />
+                </div>
+                <input
+                  className="w-full pl-20 pr-6 py-6 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 text-lg transition-all placeholder:text-slate-400 dark:placeholder:text-gray-600"
                   placeholder="City or Zip Code"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                 />
               </div>
             </div>
-            <button 
-              onClick={handleFindDoctors}
-              disabled={loading || !condition || !location}
-              className="w-full h-20 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl font-black text-xl flex items-center justify-center gap-4 hover:opacity-90 disabled:opacity-50 transition-all"
-            >
-              {loading ? <Loader2 className="animate-spin" size={28} /> : <Search size={28} />}
-              {loading ? "INITIALIZING SCAN..." : "SEARCH SPECIALISTS"}
-            </button>
+
+            {/* Footer Section with Disclaimer and Button */}
+            <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-6 border-t border-slate-200 dark:border-white/5">
+              <div className="flex items-center gap-3 px-5 py-3 bg-amber-50 dark:bg-white/5 rounded-2xl border border-amber-100 dark:border-white/5 max-w-md">
+                <AlertCircle
+                  size={16}
+                  className="text-amber-600 dark:text-blue-500 shrink-0"
+                />
+                <p className="text-[10px] leading-tight text-slate-500 dark:text-gray-400 font-medium italic">
+                  Verify all medical information. In case of emergency, contact
+                  local authorities immediately.
+                </p>
+              </div>
+
+              <button
+                onClick={handleFindDoctors}
+                disabled={loading || !condition || !location}
+                className="w-full md:w-auto min-w-[240px] h-16 bg-slate-900 dark:bg-white text-white dark:text-black rounded-2xl font-black text-sm tracking-widest flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-95 disabled:opacity-30 transition-all shadow-2xl shadow-blue-500/20"
+              >
+                {loading ? (
+                  <Loader2 className="animate-spin" size={20} />
+                ) : (
+                  <Search size={20} />
+                )}
+                {loading ? "SCANNING..." : "EXECUTE SEARCH"}
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="mt-24">
+        {/* Results Section */}
+        <div className="mt-32">
           <AnimatePresence mode="wait">
             {apiResponse?.doctors ? (
-              <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <div className="flex justify-between items-end mb-12 px-4">
-                  <div>
-                    <h2 className="text-3xl font-bold flex gap-3"><Sparkles className="text-yellow-400" /> Matches Found</h2>
-                    <p className="text-gray-500">Results for {condition} in {location}</p>
+              <motion.div
+                key="results"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                <div className="flex flex-col md:flex-row justify-between items-center md:items-end mb-16 px-4 gap-4">
+                  <div className="text-center md:text-left">
+                    <h2 className="text-4xl font-bold flex items-center justify-center md:justify-start gap-3">
+                      <Sparkles className="text-yellow-500" /> Matches Found
+                    </h2>
+                    <p className="text-gray-500 mt-2">
+                      Showing specialists available in {location}
+                    </p>
+                  </div>
+                  <div className="text-[10px] font-black bg-blue-500 text-white px-4 py-2 rounded-full tracking-tighter">
+                    {apiResponse.doctors.length} RESULTS TOTAL
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  {apiResponse.doctors.map((doc, i) => <DoctorCard key={i} doctor={doc} index={i} />)}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                  {apiResponse.doctors.map((doc, i) => (
+                    <DoctorCard key={i} doctor={doc} index={i} />
+                  ))}
                 </div>
               </motion.div>
-            ) : <EmptyState error={apiResponse?.error} />}
+            ) : (
+              <EmptyState error={apiResponse?.error} />
+            )}
           </AnimatePresence>
         </div>
       </main>

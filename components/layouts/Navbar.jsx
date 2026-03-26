@@ -2,31 +2,27 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { 
-  Menu, 
-  X, 
-  ChevronRight, 
-  Settings, 
-  UserCircle, 
+import {
+  Menu,
+  X,
+  ChevronRight,
+  Settings,
+  UserCircle,
   Activity,
-  LayoutDashboard
+  LogOut, 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+ import { signOut } from "next-auth/react";
 
 const navLinks = [
+  { name: "Home", href: "/home" },
   { name: "Mitra AI", href: "/ai-mitra" },
-  { name: "Connect", href: "/nearby-doctors" },
+  { name: "Mitra Connect", href: "/nearby-doctors" },
   { name: "AarogyaMap", href: "/arogya-map" },
-  { name: "Pulse", href: "/news" },
+  { name: "Mitra Pulse", href: "/news" },
 ];
 
-const greetings = [
-  "Hello",
-  "नमस्ते",
-  "নমস্কার",
-  "வணக்கம்",
-  "नमस्कार",
-];
+const greetings = ["Hello", "नमस्ते", "নমস্কার", "வணக்கம்", "नमस्कार"];
 
 export default function Navbar() {
   const [greetingIndex, setGreetingIndex] = useState(0);
@@ -47,18 +43,20 @@ export default function Navbar() {
     };
   }, []);
 
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: "/" });
+  };
+
   return (
     <header
       className={`fixed top-0 z-50 w-full transition-all duration-500 ease-in-out px-4 sm:px-8 py-4 ${
-        scrolled
-          ? "sm:py-3"
-          : "sm:py-6"
+        scrolled ? "sm:py-3" : "sm:py-6"
       }`}
     >
-      <div 
+      <div
         className={`mx-auto max-w-7xl transition-all duration-500 rounded-[2rem] border flex items-center justify-between px-6 py-3 ${
-          scrolled 
-            ? "bg-white/80 dark:bg-[#030303]/70 backdrop-blur-2xl border-neutral-200 dark:border-white/10 shadow-2xl shadow-blue-500/10" 
+          scrolled
+            ? "bg-white/80 dark:bg-[#030303]/70 backdrop-blur-2xl border-neutral-200 dark:border-white/10 shadow-2xl shadow-blue-500/10"
             : "bg-transparent border-transparent"
         }`}
       >
@@ -102,7 +100,7 @@ export default function Navbar() {
           ))}
         </nav>
 
-        {/* Action Buttons: Greeting, Settings, Profile */}
+        {/* Action Buttons: Greeting, Settings, Profile, Logout */}
         <div className="flex items-center gap-3">
           {/* Animated Greeting */}
           <div className="hidden md:flex items-center px-4 py-2 bg-blue-500/5 rounded-full border border-blue-500/10 h-9 overflow-hidden">
@@ -120,19 +118,31 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Link href="/settings">
+            <Link href="/settings" className="hidden sm:block">
               <button className="p-2.5 rounded-xl border border-neutral-200 dark:border-white/10 text-neutral-500 hover:text-blue-500 hover:bg-blue-500/5 transition-all">
                 <Settings size={18} />
               </button>
             </Link>
+
             <Link href="/profile">
               <button className="flex items-center gap-2 p-1 pr-3 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 transition-all">
                 <div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center text-white">
                   <UserCircle size={18} />
                 </div>
-                <span className="text-xs font-bold uppercase tracking-tighter">Profile</span>
+                <span className="text-xs font-bold uppercase tracking-tighter">
+                  Profile
+                </span>
               </button>
             </Link>
+
+            {/* Desktop Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="hidden md:flex p-2.5 rounded-xl border border-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300"
+              title="Logout"
+            >
+              <LogOut size={18} />
+            </button>
 
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -162,20 +172,38 @@ export default function Navbar() {
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center justify-between p-4 rounded-2xl bg-neutral-50 dark:bg-white/5 text-neutral-600 dark:text-neutral-300 hover:text-blue-500 transition-all border border-transparent hover:border-blue-500/20"
                   >
-                    <span className="text-sm font-bold uppercase tracking-widest">{link.name}</span>
+                    <span className="text-sm font-bold uppercase tracking-widest">
+                      {link.name}
+                    </span>
                     <ChevronRight size={16} />
                   </Link>
                 ))}
               </div>
-              
+
               <div className="grid grid-cols-2 gap-2 mt-4">
-                <Link href="/settings" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-neutral-100 dark:bg-white/5 text-xs font-bold uppercase tracking-widest">
+                <Link
+                  href="/settings"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-neutral-100 dark:bg-white/5 text-xs font-bold uppercase tracking-widest"
+                >
                   <Settings size={14} /> Settings
                 </Link>
-                <Link href="/profile" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-blue-500 text-white text-xs font-bold uppercase tracking-widest">
+                <Link
+                  href="/profile"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-blue-500 text-white text-xs font-bold uppercase tracking-widest"
+                >
                   <UserCircle size={14} /> Profile
                 </Link>
               </div>
+
+              {/* Mobile Logout Button */}
+              <button
+                onClick={handleLogout}
+                className="w-full mt-2 flex items-center justify-center gap-2 p-4 rounded-2xl bg-red-500/10 text-red-500 text-xs font-bold uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all"
+              >
+                <LogOut size={14} /> Logout
+              </button>
             </div>
           </motion.div>
         )}

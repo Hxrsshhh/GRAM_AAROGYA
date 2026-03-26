@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const UserSchema = new mongoose.Schema(
   {
+    // 👤 Basic Info
     username: {
       type: String,
       trim: true,
@@ -22,14 +23,12 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: "/avatar.jpg",
     },
-    phone: {
-      type: String,
-      default: null,
-    },
     bio: {
       type: String,
       default: null,
     },
+
+    // 🔐 Auth
     password: {
       type: String,
       select: false,
@@ -40,19 +39,80 @@ const UserSchema = new mongoose.Schema(
         providerId: String,
       },
     ],
-    status: {
+
+    // 📞 Contact
+    phone: {
       type: String,
-      enum: ["active", "blocked", "deleted"],
-      default: "active",
+      default: null,
     },
-    providerId: {
+    emergencyContact: {
       type: String,
+      default: null,
     },
+
+    // 📍 Location
+    location: {
+      city: String,
+      state: String,
+      pincode: String,
+      country: {
+        type: String,
+        default: "India",
+      },
+      coordinates: {
+        lat: Number,
+        lng: Number,
+      },
+    },
+
+    // 🩺 Health Profile (🔥 NEW CORE FEATURE)
+    healthProfile: {
+      age: Number,
+      gender: {
+        type: String,
+        enum: ["Male", "Female", "Other"],
+      },
+      conditions: [String], // Diabetes, BP, etc.
+      allergies: String,
+    },
+
+    // ⚙️ Preferences
+    preferences: {
+      interests: [String], // Fitness, Mental Health, etc.
+      doctorPreference: {
+        type: String,
+        enum: ["General", "Specialist"],
+        default: "General",
+      },
+    },
+
+    // 🛡️ Safety
+    consent: {
+      type: Boolean,
+      default: false,
+    },
+
+    // 📊 System
     role: {
       type: String,
       enum: ["citizen", "admin"],
       default: "citizen",
     },
+    status: {
+      type: String,
+      enum: ["active", "blocked", "deleted"],
+      default: "active",
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
+
+    // 📈 Engagement
     reputation: {
       type: Number,
       default: 0,
@@ -65,27 +125,15 @@ const UserSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    location: {
-      city: String,
-      state: String,
-      country: {
-        type: String,
-        default: "India",
-      },
-    },
-    isVerified: {
-      type: Boolean,
-      default: false,
-    },
-    isBlocked: {
-      type: Boolean,
-      default: false,
-    },
+
+    // 🚀 Onboarding
     onboardingStatus: {
       type: String,
       enum: ["pending", "skipped", "completed"],
       default: "pending",
     },
+
+    // ⏱️ Activity
     lastLoginAt: Date,
   },
   {

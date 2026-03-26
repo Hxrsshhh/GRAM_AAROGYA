@@ -19,7 +19,7 @@ export async function proxy(request) {
     return NextResponse.next();
   }
 
-  const publicPaths = ["/", "/signin", "/signup", "/auth/error","/helpdesk","/ai-mitra","/nearby-doctors","/home","/settings","/profile"];
+  const publicPaths = ["/", "/signin", "/signup", "/auth/error","/helpdesk"];
   const isPublicPath = publicPaths.some(
     (path) => pathname === path || pathname.startsWith(path + "/")
   );
@@ -91,7 +91,7 @@ export async function proxy(request) {
 
   // Logged in -> Auth pages (signin/signup)
   if (token && (pathname === "/signin" || pathname === "/signup")) {
-    const roleRedirect = token.role === "admin" ? "/admin" : "/dashboard";
+    const roleRedirect = token.role === "admin" ? "/admin" : "/";
     return NextResponse.redirect(new URL(roleRedirect, request.url));
   }
 
