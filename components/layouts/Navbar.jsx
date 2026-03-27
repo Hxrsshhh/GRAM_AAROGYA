@@ -61,7 +61,7 @@ export default function Navbar() {
         }`}
       >
         {/* Logo Section */}
-        <Link href="/hero" className="group flex items-center gap-3">
+        <Link href="/" className="group flex items-center gap-3">
           <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-neutral-200/50 bg-white/50 backdrop-blur-md transition-all duration-500 group-hover:scale-110 dark:border-white/10 dark:bg-white/5 shadow-sm">
             <Activity className="w-5 h-5 text-blue-500 transition-transform duration-500 group-hover:rotate-12" />
           </div>
