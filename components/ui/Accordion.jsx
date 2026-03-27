@@ -17,7 +17,7 @@ const AccordionItem = ({
       initial={false}
       className={`mb-4 overflow-hidden rounded-[2rem] border transition-all duration-500 ${
         isOpen
-          ? "bg-white dark:bg-slate-900 border-emerald-500 shadow-2xl"
+          ? "bg-white dark:bg-slate-900 border-blue-500 shadow-2xl"
           : "bg-slate-50 dark:bg-slate-900/40 border-slate-200/50 dark:border-slate-800/50"
       }`}
     >
@@ -30,7 +30,7 @@ const AccordionItem = ({
             layout
             className={`flex h-12 w-12 items-center justify-center rounded-xl transition-colors duration-500 ${
               isOpen
-                ? "bg-emerald-600 text-white"
+                ? "bg-blue-600 text-white"
                 : "bg-white dark:bg-slate-800 text-slate-400"
             }`}
           >
@@ -50,7 +50,7 @@ const AccordionItem = ({
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ type: "spring", stiffness: 200, damping: 15 }}
-          className={isOpen ? "text-emerald-500" : "text-slate-400"}
+          className={isOpen ? "text-blue-500" : "text-slate-400"}
         >
           <ChevronDown className="h-6 w-6" />
         </motion.div>
@@ -69,7 +69,7 @@ const AccordionItem = ({
                 {content}
               </p>
               <div className="mt-6 flex gap-4">
-                <button className="text-sm font-black uppercase tracking-widest text-emerald-500 hover:underline flex items-center gap-2">
+                <button className="text-sm font-black uppercase tracking-widest text-blue-500 hover:underline flex items-center gap-2">
                   Read Documentation <ArrowUpRight className="h-4 w-4" />
                 </button>
               </div>

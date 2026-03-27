@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import  Button  from "@/components/ui/Button";
+import Button from "@/components/ui/Button";
 import { ArrowRight, Activity, ShieldCheck } from "lucide-react";
 
 const translations = [
@@ -27,10 +27,11 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="relative flex min-h-[calc(100vh-4rem)] w-full flex-col items-center justify-center overflow-hidden bg-white dark:bg-[#030303] px-6 py-24 text-center selection:bg-blue-500/30">
+    <section className="relative flex min-h-[calc(100vh-4rem)] w-full flex-col items-center justify-center overflow-hidden bg-white dark:bg-[#030303]/1 px-6 py-24 text-center selection:bg-blue-500/30">
       {/* 1. Subtle Background Elements for Theme Consistency */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-500/5 dark:bg-blue-600/10 blur-[120px] rounded-full" />
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] right-[-10%] w-[70%] h-[70%] bg-blue-600/10 dark:bg-blue-600/15 blur-[140px] rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-indigo-600/10 dark:bg-indigo-600/15 blur-[140px] rounded-full" />
       </div>
 
       <div className="relative z-10 max-w-5xl mx-auto space-y-12">

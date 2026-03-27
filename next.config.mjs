@@ -5,18 +5,22 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "lh3.googleusercontent.com",
+        pathname: "/**",
       },
       {
         protocol: "https",
         hostname: "avatars.githubusercontent.com",
+        pathname: "/**",
       },
       {
         protocol: "https",
         hostname: "res.cloudinary.com",
+        pathname: "/**",
       },
       {
         protocol: "https",
-        hostname: "api.dicebear.com", // ✅ ADD THIS
+        hostname: "api.dicebear.com",
+        pathname: "/**",
       },
       {
         protocol: "https",
@@ -26,6 +30,7 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "api.maptiler.com",
+        pathname: "/**",
       },
     ],
   },

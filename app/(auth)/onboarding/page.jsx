@@ -105,38 +105,39 @@ const MitraOnboarding = () => {
   };
 
   const handleSkip = async () => {
-  try {
-    await fetch("/api/user/onboarding", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "skipped" }),
-    });
+    try {
+      await fetch("/api/user/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "skipped" }),
+      });
 
-    router.replace("/home");
-  } catch (err) {
-    console.error(err);
-  }
-};
+      router.refresh(); // 🔥 FORCE session re-fetch
+      router.replace("/home");
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-const handleComplete = async () => {
-  setIsSubmitting(true);
+  const handleComplete = async () => {
+    setIsSubmitting(true);
 
-  try {
-    const res = await fetch("/api/user/onboarding", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "completed", profile: formData }),
-    });
+    try {
+      const res = await fetch("/api/user/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "completed", profile: formData }),
+      });
 
-    if (!res.ok) throw new Error("Failed");
+      if (!res.ok) throw new Error("Failed");
 
-    router.replace("/home"); // ✅ AFTER update
-  } catch (err) {
-    console.error(err);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+      router.replace("/home"); // ✅ AFTER update
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -162,6 +163,11 @@ const handleComplete = async () => {
 
   return (
     <div className="relative min-h-screen w-full flex flex-col overflow-hidden bg-white dark:bg-[#030303] selection:bg-blue-500/30 font-sans transition-colors duration-500">
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] right-[-10%] w-[70%] h-[70%] bg-blue-600/10 dark:bg-blue-600/15 blur-[140px] rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-indigo-600/10 dark:bg-indigo-600/15 blur-[140px] rounded-full" />
+      </div>
+
       <MouseGlow />
 
       {/* 2. Nav */}

@@ -7,17 +7,38 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
-    if (!id) return NextResponse.json({ status: "active" });
-
-    await connectDB();
-    const user = await User.findById(id).select("status");
-
-    if (!user) {
-      return NextResponse.json({ status: "deleted" });
+    if (!id) {
+      return NextResponse.json({
+        status: "active",
+        onboardingStatus: "pending",
+      });
     }
 
-    return NextResponse.json({ status: user.status });
+    await connectDB();
+
+    const user = await User.findById(id).select(
+      "status onboardingStatus"
+    );
+
+    if (!user) {
+      return NextResponse.json({
+        status: "deleted",
+        onboardingStatus: "pending",
+      });
+    }
+
+    return NextResponse.json({
+      status: user.status || "active",
+      onboardingStatus: user.onboardingStatus || "pending",
+    });
+
   } catch (error) {
-    return NextResponse.json({ status: "active" }, { status: 500 });
+    return NextResponse.json(
+      {
+        status: "active",
+        onboardingStatus: "pending",
+      },
+      { status: 500 }
+    );
   }
 }

@@ -19,7 +19,7 @@ export const metadata = {
   description:
     "Gram Aarogya empowers villages with AI-driven healthcare assistance, helping users find nearby doctors, report health concerns, and access essential medical services instantly.",
   icons: {
-    icon: "/gram.png",
+    icon: "/logo.png",
   },
 };
 

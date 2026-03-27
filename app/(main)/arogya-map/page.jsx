@@ -43,12 +43,12 @@ export default function FindDoctorsPage() {
       async () => {
         handleFallback("Using default location (enable GPS for accuracy)");
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 10000 },
     );
   };
 
   const handleFallback = async (msg) => {
-    const fallback = { lat: 26.7271, lng: 88.3953 }; 
+    const fallback = { lat: 26.7271, lng: 88.3953 };
     setLocation(fallback);
     setError(msg);
     await fetchPlaces(fallback.lat, fallback.lng);
@@ -77,7 +77,9 @@ export default function FindDoctorsPage() {
       }));
 
       setPlaces(
-        formatted.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance))
+        formatted.sort(
+          (a, b) => parseFloat(a.distance) - parseFloat(b.distance),
+        ),
       );
     } catch {
       setError("Unable to connect to the healthcare database.");
@@ -103,6 +105,11 @@ export default function FindDoctorsPage() {
   if (loading) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 dark:bg-[#0a0a0a]">
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-[-10%] right-[-10%] w-[70%] h-[70%] bg-blue-600/10 dark:bg-blue-600/15 blur-[140px] rounded-full" />
+          <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-indigo-600/10 dark:bg-indigo-600/15 blur-[140px] rounded-full" />
+        </div>
+
         <div className="relative">
           <div className="absolute inset-0 bg-blue-500/20 blur-3xl animate-pulse rounded-full"></div>
           <Loader2 className="animate-spin w-12 h-12 text-blue-600 dark:text-blue-400 relative z-10" />
@@ -120,6 +127,11 @@ export default function FindDoctorsPage() {
 
   return (
     <div className="h-screen w-full bg-slate-50 dark:bg-[#0a0a0a] text-slate-900 dark:text-gray-100 flex flex-col overflow-hidden transition-colors duration-500">
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] right-[-10%] w-[70%] h-[70%] bg-blue-600/10 dark:bg-blue-600/15 blur-[140px] rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-indigo-600/10 dark:bg-indigo-600/15 blur-[140px] rounded-full" />
+      </div>
+
       {/* 1. Fixed Header Area (No Scroll) */}
       <header className="flex-none pt-24 pb-6 px-6 md:px-12 max-w-7xl mx-auto w-full">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -128,10 +140,11 @@ export default function FindDoctorsPage() {
               <Compass className="w-3 h-3" /> Real-time Radar
             </div>
             <h1 className="text-4xl font-black tracking-tight">
-              Medical <span className="text-blue-600 dark:text-blue-500">Locator</span>
+              Medical{" "}
+              <span className="text-blue-600 dark:text-blue-500">Locator</span>
             </h1>
           </div>
-          
+
           <button
             onClick={initLocation}
             className="group flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl hover:bg-slate-50 dark:hover:bg-white/10 transition-all font-bold text-xs"
@@ -144,7 +157,6 @@ export default function FindDoctorsPage() {
 
       {/* 2. Main Content Area (Flexible & Non-Scrolling) */}
       <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-8 pt-0 grid grid-cols-1 lg:grid-cols-12 gap-8 min-h-0">
-        
         {/* Left Column: Map (Takes full height of flex container) */}
         <div className="lg:col-span-7 flex flex-col min-h-0 space-y-4">
           <div className="relative flex-1 group">
@@ -165,7 +177,8 @@ export default function FindDoctorsPage() {
               <Navigation className="w-5 h-5 text-white" />
             </div>
             <p className="text-xs text-slate-500 dark:text-gray-400 leading-tight">
-              <strong>Pro Tip:</strong> Select a facility from the list to update the satellite view instantly.
+              <strong>Pro Tip:</strong> Select a facility from the list to
+              update the satellite view instantly.
             </p>
           </div>
         </div>
@@ -197,13 +210,17 @@ export default function FindDoctorsPage() {
                   key={i}
                   onClick={() => handleSelectPlace(p)}
                   className={`group cursor-pointer transition-all duration-300 p-5 rounded-[1.8rem] border-2 relative 
-                    ${isSelected 
-                      ? "border-blue-500 bg-white dark:bg-[#151515] shadow-xl scale-[0.98]" 
-                      : "border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white/5 hover:border-blue-400/30"}`}
+                    ${
+                      isSelected
+                        ? "border-blue-500 bg-white dark:bg-[#151515] shadow-xl scale-[0.98]"
+                        : "border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white/5 hover:border-blue-400/30"
+                    }`}
                 >
                   <div className="flex justify-between items-start mb-3">
                     <div className="space-y-0.5">
-                      <h3 className={`font-black text-base leading-tight ${isSelected ? "text-blue-600 dark:text-blue-400" : ""}`}>
+                      <h3
+                        className={`font-black text-base leading-tight ${isSelected ? "text-blue-600 dark:text-blue-400" : ""}`}
+                      >
                         {p.name}
                       </h3>
                       <div className="flex items-center gap-1 text-slate-400 text-[10px] font-bold uppercase tracking-wider">
@@ -211,7 +228,9 @@ export default function FindDoctorsPage() {
                         {p.distance} km
                       </div>
                     </div>
-                    {isSelected && <CheckCircle2 className="w-5 h-5 text-blue-500" />}
+                    {isSelected && (
+                      <CheckCircle2 className="w-5 h-5 text-blue-500" />
+                    )}
                   </div>
 
                   <p className="text-xs text-slate-500 dark:text-gray-400 mb-4 line-clamp-1 italic">
@@ -245,13 +264,19 @@ export default function FindDoctorsPage() {
 
       <style jsx global>{`
         /* Prevent body scroll */
-        body { overflow: hidden; }
-        
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { 
-          background: #3b82f644; 
-          border-radius: 20px; 
+        body {
+          overflow: hidden;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #3b82f644;
+          border-radius: 20px;
         }
       `}</style>
     </div>

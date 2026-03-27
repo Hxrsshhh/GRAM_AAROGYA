@@ -17,6 +17,7 @@ import {
   AlertCircle,
   Stethoscope,
   Fingerprint,
+  HeartPulse,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -45,10 +46,14 @@ export default function Profile() {
     return res.json();
   };
 
-  const { data: profile, error, isLoading } = useSWR(
+  const {
+    data: profile,
+    error,
+    isLoading,
+  } = useSWR(
     status === "authenticated" ? "/api/user/profile" : null,
     fetchProfile,
-    { revalidateOnFocus: false, dedupingInterval: 5 * 60_000 }
+    { revalidateOnFocus: false, dedupingInterval: 5 * 60_000 },
   );
 
   useEffect(() => {
@@ -93,174 +98,198 @@ export default function Profile() {
   if (error) return <ErrorHandle />;
 
   return (
+    <div className="h-screen w-full bg-slate-50 dark:bg-[#030303] text-slate-900 dark:text-white selection:bg-blue-500/30 transition-colors duration-500 overflow-hidden flex flex-col">
+      {/* Ambient Background Glows */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] right-[-10%] w-[70%] h-[70%] bg-blue-600/10 dark:bg-blue-600/15 blur-[140px] rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-indigo-600/10 dark:bg-indigo-600/15 blur-[140px] rounded-full" />
+      </div>
 
-
-    <div className="relative min-h-screen bg-white dark:bg-[#030303] overflow-x-hidden">
-      <div className="h-24 md:h-28" />
-
-      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        {/* Header */}
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold text-[10px] uppercase tracking-[0.3em]">
-                <Fingerprint size={14} /> Encrypted Health Registry
+      {/* Main Content Area: Added pt-20 for navbar space and flex-1 with overflow-hidden */}
+      <main className="relative z-10 container mx-auto px-6 pt-24 pb-8 max-w-7xl flex-1 flex flex-col overflow-hidden">
+        {/* Header Section: Static height */}
+        <header className="mb-8 shrink-0">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6"
+          >
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-white/5 border border-blue-100 dark:border-white/10 text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-widest">
+                <Fingerprint size={12} className="animate-pulse" />
+                <span>Encrypted Health Registry</span>
               </div>
-              <h1 className="text-4xl md:text-5xl font-black text-neutral-900 dark:text-white tracking-tight">
-                User <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">Dossier</span>
+              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-b from-slate-900 via-slate-700 to-slate-500 dark:from-white dark:to-gray-500 bg-clip-text text-transparent">
+                User <span className="italic">Dossier</span>
               </h1>
             </div>
-            
+
             <div className="flex items-center gap-3 w-full sm:w-auto">
-              <Button 
-                variant="secondary" 
+              <button
                 onClick={() => setEditing(!editing)}
-                className="flex-1 sm:flex-none bg-neutral-100 dark:bg-white/5 border-neutral-200 dark:border-white/10"
+                className="flex-1 sm:flex-none px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 bg-slate-200/50 dark:bg-white/5 border border-slate-300/50 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:border-blue-400/50 flex items-center justify-center gap-2"
               >
-                {editing ? "Discard Changes" : <><Settings size={14} className="mr-2" /> Modify Parameters</>}
-              </Button>
+                {editing ? (
+                  "Discard Changes"
+                ) : (
+                  <>
+                    <Settings size={14} /> Modify Parameters
+                  </>
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </header>
+
+        {/* Dashboard Grid: Occupies remaining space, inner areas scroll if needed */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-1 overflow-hidden">
+          {/* LEFT: Identity Summary */}
+          <div className="lg:col-span-4 space-y-6 flex flex-col overflow-hidden">
+            <div className="group relative bg-white/70 dark:bg-white/2 border border-slate-200 dark:border-white/10 rounded-[2.5rem] p-2 backdrop-blur-3xl shadow-2xl transition-all hover:border-blue-500/30 overflow-hidden shrink-0">
+              <div className="bg-slate-50 dark:bg-black/40 rounded-[2.2rem] overflow-hidden border border-slate-100 dark:border-white/5">
+                <div className="h-24 bg-gradient-to-br from-blue-600 to-indigo-700 relative" />
+                <div className="pt-12 pb-8 px-8 text-center relative">
+                  <div className="absolute -top-12 left-1/2 -translate-x-1/2">
+                    <div className="w-24 h-24 rounded-[1.5rem] border-[4px] border-slate-50 dark:border-[#0d0d0d] shadow-2xl overflow-hidden bg-slate-200">
+                      <Image
+                        src={formData?.avatar || "/avatar.jpg"}
+                        alt="Profile"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                  <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                    {formData?.name}
+                  </h2>
+                  <div className="mt-2 inline-block px-4 py-1 rounded-full border border-blue-500/30 text-blue-600 dark:text-blue-400 uppercase text-[9px] tracking-[0.2em] font-black bg-blue-500/5">
+                    {formData?.role || "Citizen"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 bg-white/50 dark:bg-white/2 border border-slate-200 dark:border-white/10 rounded-[2rem] backdrop-blur-xl group hover:border-rose-500/30 transition-all shrink-0">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 group-hover:scale-110 transition-transform">
+                  <HeartPulse className="text-rose-500" size={24} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                    Vitality Index
+                  </p>
+                  <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                    Verified Health Profile
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
-          {/* LEFT: Identity Summary */}
-          <div className="lg:col-span-4 space-y-6">
-            <Card className="overflow-hidden bg-white/50 dark:bg-neutral-900/50 backdrop-blur-3xl border-neutral-200 dark:border-white/5 rounded-[2.5rem] shadow-2xl">
-              <div className="h-32 bg-gradient-to-br from-blue-600 to-cyan-700 relative">
-                <div className="absolute -bottom-14 left-1/2 -translate-x-1/2">
-                  <div className="relative group">
-                    <div className="w-32 h-32 rounded-[2.5rem] border-[6px] border-white dark:border-[#0d0d0d] shadow-2xl overflow-hidden bg-neutral-200">
-                      <Image src={formData?.avatar || "/avatar.jpg"} alt="Profile" fill className="object-cover" />
-                    </div>
-                    {editing && (
-                      <button className="absolute bottom-1 right-1 p-2.5 bg-blue-600 text-white rounded-2xl shadow-lg hover:bg-blue-500">
-                        <Camera size={16} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-16 pb-8 px-8 text-center">
-                <h2 className="text-2xl font-black text-neutral-900 dark:text-white tracking-tight">{formData?.name}</h2>
-                <Badge variant="outline" className="mt-2 border-blue-500/30 text-blue-500 uppercase text-[9px] tracking-widest font-bold">
-                  {formData?.role || "Citizen"}
-                </Badge>
-                
-                {/* <div className="grid grid-cols-2 gap-4 mt-8 pt-8 border-t border-neutral-100 dark:border-white/5">
-                  <div className="text-left">
-                    <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Reputation</p>
-                    <p className="text-2xl font-black text-neutral-900 dark:text-white">{formData?.reputation || 0}</p>
-                  </div>
-                  <div className="text-left">
-                    <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Reports</p>
-                    <p className="text-2xl font-black text-neutral-900 dark:text-white">{formData?.reportsCount || 0}</p>
-                  </div>
-                </div> */}
-
-              </div>
-            </Card>
-
-            {/* Health Status Quick View */}
-            <Card className="p-8 bg-gradient-to-br from-rose-500/5 via-transparent to-transparent border-rose-500/10 rounded-[2.5rem]">
-               <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20">
-                    <Heart className="text-rose-500" size={20} />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Vitality Index</p>
-                    <p className="text-sm font-bold text-neutral-700 dark:text-neutral-300">Verified Health Profile</p>
-                  </div>
-               </div>
-            </Card>
-          </div>
-
-          {/* RIGHT: Form Data */}
-          <div className="lg:col-span-8 space-y-8">
-            <Card className="bg-white/70 dark:bg-neutral-900/40 backdrop-blur-3xl border-neutral-200 dark:border-white/5 rounded-[2.5rem] overflow-hidden">
-              <div className="px-8 py-6 border-b border-neutral-100 dark:border-white/5 flex justify-between items-center">
-                <h2 className="text-lg font-bold text-neutral-800 dark:text-white flex items-center gap-3">
-                  <span className="w-1.5 h-6 bg-blue-600 rounded-full" />
-                  Core Parameters
-                </h2>
-                {editing && (
-                  <Button onClick={handleSave} isLoading={saving} className="bg-blue-600 hover:bg-blue-700 rounded-xl px-6 text-xs">
-                    Commit Sync
-                  </Button>
-                )}
-              </div>
-
-              <div className="p-8 space-y-10">
-                {/* Section 1: Basic & Contact */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <InputField label="Full Legal Name" value={formData.name || ""} onChange={(e) => setFormData({ ...formData, name: e.target.value })} disabled={!editing} leftIcon={<User size={16}/>} />
-                  <InputField label="Registered Email" value={formData.email || ""} disabled={true} leftIcon={<Mail size={16}/>} />
-                  <InputField label="Primary Contact" value={formData.phone || ""} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} disabled={!editing} leftIcon={<Phone size={16}/>} />
-                  <InputField label="Emergency Contact" value={formData.emergencyContact || ""} onChange={(e) => setFormData({ ...formData, emergencyContact: e.target.value })} disabled={!editing} leftIcon={<AlertCircle className="text-rose-500" size={16}/>} />
+          {/* RIGHT: Form Data - This section is scrollable internally */}
+          <div className="lg:col-span-8 flex flex-col overflow-hidden">
+            <div className="group relative flex-1 bg-white/70 dark:bg-white/2 border border-slate-200 dark:border-white/10 rounded-[3rem] p-2 backdrop-blur-3xl shadow-2xl transition-all flex flex-col overflow-hidden">
+              <div className="flex-1 bg-slate-50 dark:bg-black/40 rounded-[2.7rem] border border-slate-100 dark:border-white/5 flex flex-col overflow-hidden">
+                <div className="px-10 py-6 border-b border-slate-200 dark:border-white/5 flex justify-between items-center shrink-0">
+                  <h2 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-3">
+                    <span className="w-1.5 h-6 bg-blue-600 rounded-full animate-pulse" />
+                    Core Parameters
+                  </h2>
+                  {editing && (
+                    <button
+                      onClick={handleSave}
+                      className="bg-slate-900 dark:bg-white text-white dark:text-black px-6 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg"
+                    >
+                      Commit Sync
+                    </button>
+                  )}
                 </div>
 
-                {/* Section 2: Health Profile (New) */}
-                <div className="space-y-6 pt-6 border-t border-neutral-100 dark:border-white/5">
-                  <h3 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] flex items-center gap-2">
-                    <Stethoscope size={14} /> Medical Intelligence
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <InputField label="Age" type="number" value={formData.healthProfile?.age || ""} onChange={(e) => setFormData({ ...formData, healthProfile: { ...formData.healthProfile, age: e.target.value }})} disabled={!editing} />
-                    <div className="flex flex-col gap-2">
-                        <label className="text-[10px] font-black text-neutral-400 uppercase ml-2">Gender</label>
-                        <select 
+                {/* Scrollable Container for inputs */}
+                <div className="p-10 space-y-10 overflow-y-auto custom-scrollbar">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <InputField
+                      label="Full Legal Name"
+                      value={formData.name || ""}
+                      disabled={!editing}
+                      leftIcon={<User size={18} className="text-blue-500" />}
+                    />
+                    <InputField
+                      label="Primary Contact"
+                      value={formData.phone || ""}
+                      disabled={!editing}
+                      leftIcon={<Phone size={18} className="text-blue-500" />}
+                    />
+                  </div>
+
+                  <div className="space-y-8 pt-8 border-t border-slate-200 dark:border-white/5">
+                    <h3 className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-[0.3em] flex items-center gap-2">
+                      <Stethoscope size={14} /> Medical Intelligence
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <InputField
+                        label="Age"
+                        type="number"
+                        value={formData.healthProfile?.age || ""}
+                        disabled={!editing}
+                      />
+                      <div className="flex flex-col gap-3">
+                        <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase ml-2">
+                          Gender Selection
+                        </label>
+                        <select
                           disabled={!editing}
-                          value={formData.healthProfile?.gender || ""}
-                          onChange={(e) => setFormData({ ...formData, healthProfile: { ...formData.healthProfile, gender: e.target.value }})}
-                          className="bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-2xl p-3 text-sm outline-none focus:border-blue-500"
+                          className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-4 text-sm font-medium outline-none focus:ring-4 focus:ring-blue-500/10 transition-all appearance-none"
                         >
                           <option value="Male">Male</option>
                           <option value="Female">Female</option>
                           <option value="Other">Other</option>
                         </select>
+                      </div>
+                      <InputField
+                        label="City"
+                        value={formData.location?.city || ""}
+                        disabled={!editing}
+                        leftIcon={
+                          <MapPin size={18} className="text-blue-500" />
+                        }
+                      />
                     </div>
-                    <InputField label="City" value={formData.location?.city || ""} onChange={(e) => setFormData({ ...formData, location: { ...formData.location, city: e.target.value } })} disabled={!editing} leftIcon={<MapPin size={16}/>} />
                   </div>
-                  
-                  <InputField 
-                    label="Allergies & Critical Notes" 
-                    value={formData.healthProfile?.allergies || ""} 
-                    onChange={(e) => setFormData({ ...formData, healthProfile: { ...formData.healthProfile, allergies: e.target.value }})} 
-                    disabled={!editing} 
-                    placeholder="e.g. Penicillin, Peanuts..."
-                  />
+
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] ml-2">
+                      Professional Dossier
+                    </label>
+                    <textarea
+                      disabled={!editing}
+                      className={`w-full min-h-[120px] p-6 rounded-[2rem] border transition-all duration-500 outline-none leading-relaxed text-sm ${editing ? "bg-white dark:bg-white/5 border-blue-500/30" : "bg-slate-100/50 dark:bg-white/[0.02] border-transparent"}`}
+                      placeholder="Summarize professional background..."
+                      value={formData.bio}
+                    />
+                  </div>
                 </div>
 
-                {/* Section 3: Bio */}
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-2">Professional Dossier</label>
-                  <textarea
-                    value={formData.bio || ""}
-                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                    disabled={!editing}
-                    className={`w-full min-h-[120px] p-6 rounded-[2rem] border transition-all outline-none leading-relaxed text-sm ${editing ? "bg-white dark:bg-white/5 border-blue-500/20 focus:border-blue-500" : "bg-neutral-50 dark:bg-white/[0.02] border-transparent"}`}
-                  />
+                {/* Footer Status Bar: Static at bottom */}
+                <div className="px-10 py-5 bg-slate-100/50 dark:bg-white/[0.02] border-t border-slate-200 dark:border-white/5 flex flex-wrap gap-8 items-center text-slate-500 shrink-0">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck size={16} className="text-blue-500" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">
+                      {formData.isVerified ? "ID Verified" : "Pending Sync"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Lock size={16} className="text-slate-400" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">
+                      AES-256 Security
+                    </span>
+                  </div>
                 </div>
               </div>
-
-              <div className="px-8 py-6 bg-neutral-100/50 dark:bg-white/[0.02] border-t border-neutral-100 dark:border-white/5 flex flex-wrap gap-8 items-center text-neutral-400">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck size={14} className="text-green-500" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">{formData.isVerified ? "Identity Verified" : "Verification Pending"}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Lock size={14} />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">AES-256 Health Encryption</span>
-                </div>
-              </div>
-            </Card>
+            </div>
           </div>
         </div>
       </main>
     </div>
-
-    
   );
 }

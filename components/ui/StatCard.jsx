@@ -32,7 +32,7 @@ export const StatCard = ({
       </div>
       <div
         className={`flex items-center gap-1 text-xs font-black ${
-          isPositive ? "text-emerald-500" : "text-rose-500"
+          isPositive ? "text-blue-500" : "text-rose-500"
         }`}
       >
         {isPositive ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}

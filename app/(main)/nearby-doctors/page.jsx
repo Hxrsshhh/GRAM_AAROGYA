@@ -1,4 +1,4 @@
-// app/page.js
+
 "use client";
 
 import React, { useState } from "react";
@@ -12,11 +12,7 @@ import {
   Sparkles,
   Loader2,
   AlertCircle,
-  Navigation,
   Star,
-  ShieldCheck,
-  HeartPulse,
-  Zap,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -73,43 +69,6 @@ const DoctorCard = ({ doctor, index }) => (
   </motion.div>
 );
 
-const EmptyState = ({ error }) => (
-  <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    className="text-center py-32 bg-gray-50 dark:bg-white/[0.01] border-2 border-dashed border-gray-200 dark:border-white/5 rounded-[4rem]"
-  >
-    {error ? (
-      <div className="flex flex-col items-center p-6 text-red-500">
-        <AlertCircle size={48} className="mb-6" />
-        <h3 className="text-2xl font-bold mb-2 uppercase tracking-tight">
-          Search Interrupted
-        </h3>
-        <p className="text-gray-500 dark:text-gray-400">{error}</p>
-      </div>
-    ) : (
-      <div className="flex flex-col items-center p-6">
-        <div className="relative mb-8">
-          <Search
-            size={48}
-            className="text-gray-300 dark:text-gray-700 animate-pulse"
-          />
-          <Zap
-            size={20}
-            className="absolute -top-2 -right-2 text-blue-500 animate-bounce"
-          />
-        </div>
-        <h3 className="text-3xl font-black text-gray-400 dark:text-gray-600 mb-4 uppercase tracking-tighter">
-          System Standby
-        </h3>
-        <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto text-lg font-light leading-relaxed">
-          Initialize neural scan to connect with elite local specialists.
-        </p>
-      </div>
-    )}
-  </motion.div>
-);
-
 export default function Page() {
   const [condition, setCondition] = useState("");
   const [location, setLocation] = useState("");
@@ -130,102 +89,67 @@ export default function Page() {
       const data = await res.json();
       setApiResponse(data);
     } catch (err) {
-      setApiResponse({ error: "Network protocols failed. Check connection." });
+      setApiResponse({ error: "Network protocols failed." });
     } finally {
       setLoading(false);
     }
   };
 
+  const hasResults = apiResponse?.doctors && apiResponse.doctors.length > 0;
+
   return (
-    <div className="min-h-screen bg-slate-50  dark:bg-[#050505] text-gray-900 dark:text-white selection:bg-blue-500/30 overflow-x-hidden transition-colors duration-500">
+    <div className={`min-h-screen bg-slate-50 dark:bg-[#050505] text-gray-900 dark:text-white transition-colors duration-500 ${!hasResults ? 'h-screen overflow-hidden' : 'overflow-x-hidden'}`}>
+      
       {/* Dynamic Background Mesh */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-[-10%] right-[-10%] w-[70%] h-[70%] bg-blue-600/10 dark:bg-blue-600/15 blur-[140px] rounded-full" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-indigo-600/10 dark:bg-indigo-600/15 blur-[140px] rounded-full" />
       </div>
 
-      {/* Main Container with Top Padding for Navbar */}
-      <main className="relative z-10 container mx-auto px-6 pt-32 pb-24 lg:pt-44 lg:pb-32 max-w-7xl">
-       <div className="text-center mb-8 lg:mb-12 pt-4">
-  {/* Modern Badge Pill */}
-  <motion.div
-    initial={{ opacity: 0, y: -10 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/5 dark:bg-blue-400/10 border border-blue-500/10 dark:border-blue-400/20 text-blue-600 dark:text-blue-400 text-[9px] font-black mb-6 tracking-[0.3em] uppercase backdrop-blur-sm transition-all hover:tracking-[0.4em] cursor-default"
-  >
-    <div className="relative flex h-2 w-2">
-      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-    </div>
-    Precision Network
-  </motion.div>
+      <main className="relative z-10 container mx-auto px-6 pt-20 lg:pt-32 pb-24 max-w-7xl">
+        <div className="text-center mb-8 lg:mb-12">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/5 dark:bg-blue-400/10 border border-blue-500/10 dark:border-blue-400/20 text-blue-600 dark:text-blue-400 text-[9px] font-black mb-6 tracking-[0.3em] uppercase backdrop-blur-sm"
+          >
+            <div className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </div>
+            Precision Network
+          </motion.div>
 
-  {/* Refined Heading */}
-  <h1 className="text-5xl md:text-[6.5rem] font-black tracking-tighter leading-[0.8] mb-6 bg-gradient-to-b from-gray-900 via-gray-700 to-gray-500 dark:from-white dark:via-white dark:to-white/30 bg-clip-text text-transparent drop-shadow-sm">
-    Expert Care. <br /> 
-    <span className="relative inline-block italic">
-      In Seconds.
-      <motion.div 
-        initial={{ width: 0 }}
-        animate={{ width: "100%" }}
-        transition={{ delay: 0.5, duration: 0.8 }}
-        className="absolute -bottom-1 left-0 h-[3px] bg-blue-500/30 rounded-full"
-      />
-    </span>
-  </h1>
-
-  {/* Compact Subtext */}
-  <motion.p 
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    transition={{ delay: 0.2 }}
-    className="text-gray-500 dark:text-gray-400 text-base md:text-lg max-w-xl mx-auto font-light leading-snug"
-  >
-    Connect with the top 1% of specialists using our{" "}
-    <span className="relative inline-flex items-center text-blue-600 dark:text-blue-400 font-semibold group cursor-help">
-      neural-grid
-      <span className="absolute -bottom-0.5 left-0 w-full h-px bg-blue-400 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
-    </span>{" "}
-    precision engine. Verified. Immediate. Local.
-  </motion.p>
-</div>
+          <h1 className="text-5xl md:text-[5.5rem] font-black tracking-tighter leading-[0.9] mb-6 bg-gradient-to-b from-gray-900 via-gray-700 to-gray-500 dark:from-white dark:via-white dark:to-white/30 bg-clip-text text-transparent">
+            Expert Care. <br /> 
+            <span className="italic">In Seconds.</span>
+          </h1>
+        </div>
 
         {/* Search Console */}
-        {/* Optimized Search Console with Nested Glass UI */}
-        <div className="max-w-4xl mx-auto group relative bg-white/70 dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-[3rem] p-2 sm:p-3 backdrop-blur-3xl shadow-2xl transition-all hover:border-blue-500/30 mb-16">
+        <div className="max-w-4xl mx-auto group relative bg-white/70 dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-[3rem] p-2 sm:p-3 backdrop-blur-3xl shadow-2xl transition-all hover:border-blue-500/30">
           <div className="bg-slate-50 dark:bg-black/40 rounded-[2.7rem] p-6 md:p-10 border border-slate-100 dark:border-white/5 relative overflow-hidden">
-            {/* Animated Accent Line */}
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-30" />
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              {/* Specialty Input */}
               <div className="relative group/input">
                 <div className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center gap-3 pointer-events-none">
-                  <Stethoscope
-                    className="text-slate-400 group-focus-within/input:text-blue-500 transition-colors"
-                    size={22}
-                  />
+                  <Stethoscope className="text-slate-400 group-focus-within/input:text-blue-500 transition-colors" size={22} />
                   <div className="h-4 w-[1px] bg-slate-200 dark:bg-white/10" />
                 </div>
                 <input
-                  className="w-full pl-20 pr-6 py-6 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 text-lg transition-all placeholder:text-slate-400 dark:placeholder:text-gray-600"
+                  className="w-full pl-20 pr-6 py-6 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 text-lg transition-all"
                   placeholder="Specialty (e.g. Cardiologist)"
                   value={condition}
                   onChange={(e) => setCondition(e.target.value)}
                 />
               </div>
 
-              {/* Location Input */}
               <div className="relative group/input">
                 <div className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center gap-3 pointer-events-none">
-                  <MapPin
-                    className="text-slate-400 group-focus-within/input:text-indigo-500 transition-colors"
-                    size={22}
-                  />
+                  <MapPin className="text-slate-400 group-focus-within/input:text-indigo-500 transition-colors" size={22} />
                   <div className="h-4 w-[1px] bg-slate-200 dark:bg-white/10" />
                 </div>
                 <input
-                  className="w-full pl-20 pr-6 py-6 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 text-lg transition-all placeholder:text-slate-400 dark:placeholder:text-gray-600"
+                  className="w-full pl-20 pr-6 py-6 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 text-lg transition-all"
                   placeholder="City or Zip Code"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
@@ -233,68 +157,52 @@ export default function Page() {
               </div>
             </div>
 
-            {/* Footer Section with Disclaimer and Button */}
             <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-6 border-t border-slate-200 dark:border-white/5">
-              <div className="flex items-center gap-3 px-5 py-3 bg-amber-50 dark:bg-white/5 rounded-2xl border border-amber-100 dark:border-white/5 max-w-md">
-                <AlertCircle
-                  size={16}
-                  className="text-amber-600 dark:text-blue-500 shrink-0"
-                />
-                <p className="text-[10px] leading-tight text-slate-500 dark:text-gray-400 font-medium italic">
-                  Verify all medical information. In case of emergency, contact
-                  local authorities immediately.
-                </p>
+              <div className="flex items-center gap-2 text-amber-600 dark:text-blue-500">
+                <AlertCircle size={14} />
+                <p className="text-[10px] italic">Verify medical details with providers.</p>
               </div>
 
               <button
                 onClick={handleFindDoctors}
                 disabled={loading || !condition || !location}
-                className="w-full md:w-auto min-w-[240px] h-16 bg-slate-900 dark:bg-white text-white dark:text-black rounded-2xl font-black text-sm tracking-widest flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-95 disabled:opacity-30 transition-all shadow-2xl shadow-blue-500/20"
+                className="w-full md:w-auto min-w-[240px] h-16 bg-slate-900 dark:bg-white text-white dark:text-black rounded-2xl font-black text-sm tracking-widest flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-95 disabled:opacity-30 transition-all shadow-xl"
               >
-                {loading ? (
-                  <Loader2 className="animate-spin" size={20} />
-                ) : (
-                  <Search size={20} />
-                )}
+                {loading ? <Loader2 className="animate-spin" size={20} /> : <Search size={20} />}
                 {loading ? "SCANNING..." : "EXECUTE SEARCH"}
               </button>
             </div>
           </div>
         </div>
 
-        {/* Results Section */}
-        <div className="mt-32">
-          <AnimatePresence mode="wait">
-            {apiResponse?.doctors ? (
-              <motion.div
-                key="results"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                <div className="flex flex-col md:flex-row justify-between items-center md:items-end mb-16 px-4 gap-4">
-                  <div className="text-center md:text-left">
-                    <h2 className="text-4xl font-bold flex items-center justify-center md:justify-start gap-3">
-                      <Sparkles className="text-yellow-500" /> Matches Found
-                    </h2>
-                    <p className="text-gray-500 mt-2">
-                      Showing specialists available in {location}
-                    </p>
-                  </div>
-                  <div className="text-[10px] font-black bg-blue-500 text-white px-4 py-2 rounded-full tracking-tighter">
-                    {apiResponse.doctors.length} RESULTS TOTAL
-                  </div>
+        {/* Results Section - Only appears if data exists */}
+        <AnimatePresence>
+          {hasResults && (
+            <motion.div
+              key="results"
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="mt-24"
+            >
+              <div className="flex flex-col md:flex-row justify-between items-center md:items-end mb-12 px-4 gap-4">
+                <div className="text-center md:text-left">
+                  <h2 className="text-4xl font-bold flex items-center justify-center md:justify-start gap-3">
+                    <Sparkles className="text-yellow-500" /> Matches Found
+                  </h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                  {apiResponse.doctors.map((doc, i) => (
-                    <DoctorCard key={i} doctor={doc} index={i} />
-                  ))}
+                <div className="text-[10px] font-black bg-blue-500 text-white px-4 py-2 rounded-full">
+                  {apiResponse.doctors.length} RESULTS TOTAL
                 </div>
-              </motion.div>
-            ) : (
-              <EmptyState error={apiResponse?.error} />
-            )}
-          </AnimatePresence>
-        </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                {apiResponse.doctors.map((doc, i) => (
+                  <DoctorCard key={i} doctor={doc} index={i} />
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );

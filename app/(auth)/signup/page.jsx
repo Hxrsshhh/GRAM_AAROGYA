@@ -12,6 +12,7 @@ import {
   ArrowRight,
   Chrome,
   Sparkles,
+  Activity,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import Button from "@/components/ui/Button";
@@ -29,7 +30,12 @@ function FloatingPaths({ position }) {
 
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden w-full h-full opacity-40">
-      <svg className="w-full h-full" viewBox="0 0 696 316" preserveAspectRatio="xMidYMid slice" fill="none">
+      <svg
+        className="w-full h-full"
+        viewBox="0 0 696 316"
+        preserveAspectRatio="xMidYMid slice"
+        fill="none"
+      >
         {paths.map((path) => (
           <motion.path
             key={path.id}
@@ -38,8 +44,16 @@ function FloatingPaths({ position }) {
             strokeWidth={path.width}
             className="text-blue-500/20 dark:text-white/10"
             initial={{ pathLength: 0.3, opacity: 0.4 }}
-            animate={{ pathLength: 1, opacity: [0.2, 0.5, 0.2], pathOffset: [0, 1, 0] }}
-            transition={{ duration: 15 + path.id * 0.3, repeat: Infinity, ease: "linear" }}
+            animate={{
+              pathLength: 1,
+              opacity: [0.2, 0.5, 0.2],
+              pathOffset: [0, 1, 0],
+            }}
+            transition={{
+              duration: 15 + path.id * 0.3,
+              repeat: Infinity,
+              ease: "linear",
+            }}
           />
         ))}
       </svg>
@@ -68,7 +82,7 @@ export default function SignUp() {
       setError("Passwords do not match");
       return;
     }
-    
+
     setIsLoading(true);
     setError("");
 
@@ -91,7 +105,7 @@ export default function SignUp() {
       if (loginRes?.error) {
         router.push("/signin");
       } else {
-        router.push("/dashboard");
+        router.push("/home");
       }
     } catch (err) {
       setError(err.message);
@@ -103,10 +117,9 @@ export default function SignUp() {
   return (
     <main className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-white dark:bg-[#030303] selection:bg-blue-500/30 px-6 py-12">
       {/* 1. Atmospheric Background */}
-      <div className="absolute inset-0 z-0">
-        <FloatingPaths position={1} />
-        <FloatingPaths position={-1} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/10 dark:bg-blue-600/5 blur-[120px] rounded-full pointer-events-none" />
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] right-[-10%] w-[70%] h-[70%] bg-blue-600/10 dark:bg-blue-600/15 blur-[140px] rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-indigo-600/10 dark:bg-indigo-600/15 blur-[140px] rounded-full" />
       </div>
 
       <motion.div
@@ -117,13 +130,25 @@ export default function SignUp() {
       >
         {/* Brand Identity */}
         <div className="flex flex-col items-center mb-8 group">
-          <Link href="/">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="w-14 h-14 bg-white dark:bg-white/5 border border-neutral-200 dark:border-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center shadow-xl mb-6 cursor-pointer"
-            >
-              <HeartPulse className="text-blue-600 dark:text-blue-500 w-8 h-8" />
-            </motion.div>
+          {/* Logo Section */}
+          <Link href="/" className="group flex items-center gap-3 pl-2">
+            <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl border border-blue-500/20 bg-blue-500/10 transition-all duration-500 group-hover:bg-blue-500 group-hover:rotate-[10deg]">
+              <Activity className="w-5 h-5 text-blue-600 transition-colors duration-500 group-hover:text-white" />
+            </div>
+
+            <div className="flex flex-col">
+              <div className="flex items-baseline gap-0.5 leading-none">
+                <span className="text-lg font-black tracking-tight text-neutral-900 dark:text-white">
+                  Gram
+                </span>
+                <span className="text-lg font-medium tracking-tight text-blue-500">
+                  Aarogya
+                </span>
+              </div>
+              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-neutral-400 dark:text-neutral-500">
+                Rural Precision
+              </p>
+            </div>
           </Link>
           <h1 className="text-4xl font-bold tracking-tighter text-neutral-900 dark:text-white mb-2 text-center">
             Create Your{" "}
@@ -140,8 +165,8 @@ export default function SignUp() {
         <div className="bg-white/80 dark:bg-white/[0.02] backdrop-blur-2xl border border-neutral-200 dark:border-white/10 rounded-[2.5rem] p-8 md:p-10 shadow-2xl shadow-blue-500/5">
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <motion.div 
-                initial={{ opacity: 0, x: -10 }} 
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 className="p-3 bg-red-500/5 border border-red-500/20 rounded-xl text-red-500 text-xs font-bold flex items-center gap-2"
               >
@@ -198,7 +223,11 @@ export default function SignUp() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-blue-500 transition-colors"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -248,12 +277,22 @@ export default function SignUp() {
         {/* Footer Disclaimer */}
         <p className="mt-8 text-center text-[10px] uppercase tracking-widest font-bold text-neutral-400 dark:text-neutral-500 px-4 leading-relaxed">
           By joining, you agree to our{" "}
-          <Link href="/terms" className="text-neutral-900 dark:text-neutral-300 hover:text-blue-500">Terms</Link>
-          {" "}&{" "}
-          <Link href="/privacy" className="text-neutral-900 dark:text-neutral-300 hover:text-blue-500">Privacy Policy</Link>
+          <Link
+            href="/terms"
+            className="text-neutral-900 dark:text-neutral-300 hover:text-blue-500"
+          >
+            Terms
+          </Link>{" "}
+          &{" "}
+          <Link
+            href="/privacy"
+            className="text-neutral-900 dark:text-neutral-300 hover:text-blue-500"
+          >
+            Privacy Policy
+          </Link>
         </p>
       </motion.div>
-      
+
       {/* Bottom Fade */}
       <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white dark:from-[#030303] to-transparent pointer-events-none" />
     </main>

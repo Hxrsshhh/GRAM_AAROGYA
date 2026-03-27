@@ -1,7 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { HeartPulse, Languages, MapPin, Stethoscope, Sparkles } from "lucide-react";
+import {
+  HeartPulse,
+  Languages,
+  MapPin,
+  Stethoscope,
+  Sparkles,
+} from "lucide-react";
 
 const features = [
   {
@@ -49,10 +55,8 @@ const itemVariants = {
 
 export default function Features() {
   return (
-    <section className="relative  px-6 py-24 sm:py-32 overflow-hidden bg-white dark:bg-[#030303] w-screen">
-      
+    <section className="relative  px-6 py-24 sm:py-32 overflow-hidden bg-white dark:bg-[#030303]/1 w-screen">
       {/* Background Accent */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-blue-500/5 dark:bg-blue-600/5 blur-[120px] rounded-full pointer-events-none" />
 
       <div className="relative z-10 mx-auto max-w-[64rem] text-center mb-20">
         <motion.div
@@ -66,8 +70,8 @@ export default function Features() {
             Core Technologies
           </span>
         </motion.div>
-        
-        <motion.h2 
+
+        <motion.h2
           initial={{ opacity: 0, tracking: "-0.05em" }}
           whileInView={{ opacity: 1, tracking: "-0.02em" }}
           viewport={{ once: true }}
@@ -75,19 +79,20 @@ export default function Features() {
         >
           Revolutionizing Rural Healthcare
         </motion.h2>
-        
-        <motion.p 
+
+        <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ delay: 0.2 }}
           className="mt-6 text-neutral-500 dark:text-neutral-400 max-w-[42rem] mx-auto text-lg font-light leading-relaxed"
         >
-          Empowering communities with AI-driven medical solutions, multilingual accessibility, and instant specialist connectivity.
+          Empowering communities with AI-driven medical solutions, multilingual
+          accessibility, and instant specialist connectivity.
         </motion.p>
       </div>
 
-      <motion.div 
+      <motion.div
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
@@ -98,30 +103,57 @@ export default function Features() {
           <motion.div
             key={feature.name}
             variants={itemVariants}
-            whileHover={{ y: -5 }}
-            className="group relative overflow-hidden rounded-3xl border border-neutral-200 dark:border-white/10 bg-white/50 dark:bg-white/5 p-8 backdrop-blur-sm transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/10 dark:hover:bg-white/[0.08]"
+            whileHover={{ y: -8, scale: 1.02 }}
+            className="group relative overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-white/[0.03] p-1 backdrop-blur-3xl transition-all duration-500 hover:shadow-[0_32px_64px_-15px_rgba(59,130,246,0.2)]"
           >
-            {/* Hover Gradient Glow */}
-            <div className="absolute -inset-px bg-gradient-to-br from-blue-500/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            
-            <div className="relative z-10 flex flex-col gap-4">
-              <div className={`p-3 rounded-2xl bg-neutral-100 dark:bg-white/5 w-fit transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 ${feature.color}`}>
-                <feature.icon size={28} strokeWidth={1.5} />
+            {/* Inner Container to maintain padding and style consistency */}
+            <div className="relative h-full w-full rounded-[2.3rem] bg-slate-50 dark:bg-black/40 p-8 border border-slate-100 dark:border-white/5 overflow-hidden">
+              {/* Animated Radial Background Glow on Hover */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-[radial-gradient(circle_at_var(--mouse-x,50%)_var(--mouse-y,50%),rgba(59,130,246,0.15),transparent_70%)] pointer-events-none" />
+
+              {/* Top-Right Accent Light */}
+              <div className="absolute -top-12 -right-12 w-24 h-24 bg-blue-500/10 blur-3xl rounded-full group-hover:bg-blue-500/20 transition-colors" />
+
+              <div className="relative z-10 flex flex-col gap-6">
+                {/* Icon Wrapper with Glass Effect */}
+                <div
+                  className={`relative p-4 rounded-2xl w-fit transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm group-hover:shadow-blue-500/20 ${feature.color}`}
+                >
+                  <feature.icon
+                    size={28}
+                    strokeWidth={1.5}
+                    className="relative z-10"
+                  />
+                  {/* Subtle Icon Glow */}
+                  <div className="absolute inset-0 bg-blue-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+
+                <div className="space-y-3">
+                  {/* Indicator Pill */}
+                  <div className="flex items-center gap-2">
+                    <span className="w-1 h-1 rounded-full bg-blue-500 animate-pulse" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+                      Active Protocol
+                    </span>
+                  </div>
+
+                  <h3 className="font-extrabold text-2xl tracking-tight text-slate-900 dark:text-white">
+                    {feature.name}
+                  </h3>
+
+                  <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400 font-medium opacity-80 group-hover:opacity-100 transition-opacity">
+                    {feature.description}
+                  </p>
+                </div>
               </div>
-              
-              <div className="space-y-2">
-                <h3 className="font-bold text-xl tracking-tight text-neutral-900 dark:text-white">
-                  {feature.name}
-                </h3>
-                <p className="text-sm leading-relaxed text-neutral-500 dark:text-neutral-400 font-light">
-                  {feature.description}
-                </p>
+
+              {/* The Large Background Watermark Icon */}
+              <div className="absolute -bottom-6 -right-6 text-slate-200 dark:text-white/[0.02] transform -rotate-12 transition-all duration-700 group-hover:scale-125 group-hover:rotate-0 group-hover:text-blue-500/[0.05]">
+                <feature.icon size={140} strokeWidth={0.5} />
               </div>
-            </div>
-            
-            {/* Subtle corner accent */}
-            <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-20 transition-opacity">
-               <feature.icon size={64} strokeWidth={1} />
+
+              {/* Interactive Border Beam (Optional) */}
+              <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-gradient-to-r from-transparent via-blue-500 to-transparent group-hover:w-full transition-all duration-1000" />
             </div>
           </motion.div>
         ))}

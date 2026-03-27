@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import {
   Menu,
   X,
@@ -9,14 +10,16 @@ import {
   Settings,
   UserCircle,
   Activity,
-  LogOut, 
+  LogOut,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
- import { signOut } from "next-auth/react";
+import { signOut } from "next-auth/react";
 
 const navLinks = [
   { name: "Home", href: "/home" },
   { name: "Mitra AI", href: "/ai-mitra" },
+  { name: "Find Med", href: "/search-medicine" },
+  { name: "Med Scanner", href: "/scanner" },
   { name: "Mitra Connect", href: "/nearby-doctors" },
   { name: "AarogyaMap", href: "/arogya-map" },
   { name: "Mitra Pulse", href: "/news" },
@@ -28,6 +31,7 @@ export default function Navbar() {
   const [greetingIndex, setGreetingIndex] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -49,96 +53,103 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed top-0 z-50 w-full transition-all duration-500 ease-in-out px-4 sm:px-8 py-4 ${
-        scrolled ? "sm:py-3" : "sm:py-6"
+      className={`fixed top-0 z-50 w-full transition-all duration-500 ease-in-out px-4 sm:px-6 py-4 ${
+        scrolled ? "sm:py-3" : "sm:py-5"
       }`}
     >
       <div
-        className={`mx-auto max-w-7xl transition-all duration-500 rounded-[2rem] border flex items-center justify-between px-6 py-3 ${
+        className={`mx-auto max-w-7xl transition-all duration-500 rounded-[2.5rem] border flex items-center justify-between px-4 py-2 ${
           scrolled
-            ? "bg-white/80 dark:bg-[#030303]/70 backdrop-blur-2xl border-neutral-200 dark:border-white/10 shadow-2xl shadow-blue-500/10"
+            ? "bg-white/70 dark:bg-[#030303]/70 backdrop-blur-2xl border-neutral-200 dark:border-white/10 shadow-2xl shadow-blue-500/5"
             : "bg-transparent border-transparent"
         }`}
       >
         {/* Logo Section */}
-        <Link href="/" className="group flex items-center gap-3">
-          <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-neutral-200/50 bg-white/50 backdrop-blur-md transition-all duration-500 group-hover:scale-110 dark:border-white/10 dark:bg-white/5 shadow-sm">
-            <Activity className="w-5 h-5 text-blue-500 transition-transform duration-500 group-hover:rotate-12" />
+        <Link href="/" className="group flex items-center gap-3 pl-2">
+          <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl border border-blue-500/20 bg-blue-500/10 transition-all duration-500 group-hover:bg-blue-500 group-hover:rotate-[10deg]">
+            <Activity className="w-5 h-5 text-blue-600 transition-colors duration-500 group-hover:text-white" />
           </div>
 
           <div className="flex flex-col">
-            <div className="flex items-baseline gap-0.5">
-              <span className="text-lg font-bold tracking-tighter text-neutral-900 dark:text-white transition-colors duration-300">
+            <div className="flex items-baseline gap-0.5 leading-none">
+              <span className="text-lg font-black tracking-tight text-neutral-900 dark:text-white">
                 Gram
               </span>
-              <span className="text-lg font-light tracking-tighter text-neutral-500 dark:text-neutral-400 transition-all duration-300 group-hover:text-blue-500">
+              <span className="text-lg font-medium tracking-tight text-blue-500">
                 Aarogya
               </span>
             </div>
-            <div className="relative h-3 overflow-hidden">
-              <p className="text-[8px] font-bold uppercase tracking-[0.3em] text-neutral-400 transition-all duration-500 group-hover:-translate-y-full">
-                Rural Care
-              </p>
-              <p className="absolute top-0 text-[8px] font-bold uppercase tracking-[0.3em] text-blue-500 translate-y-full transition-all duration-500 group-hover:translate-y-0">
-                Precision
-              </p>
-            </div>
+            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-neutral-400 dark:text-neutral-500">
+              Rural Precision
+            </p>
           </div>
         </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-1 bg-neutral-100/50 dark:bg-white/5 p-1 rounded-2xl border border-neutral-200 dark:border-white/5">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              href={link.href}
-              className="relative px-5 py-2 text-xs font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 transition-all hover:text-blue-500 dark:hover:text-white rounded-xl hover:bg-white dark:hover:bg-white/5 group"
-            >
-              {link.name}
-              <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-blue-500 transition-all group-hover:w-4" />
-            </Link>
-          ))}
+        {/* Enhanced Desktop Navigation */}
+        <nav className="hidden xl:flex items-center bg-neutral-100/80 dark:bg-white/5 p-1.5 rounded-full border border-neutral-200/50 dark:border-white/5">
+          {navLinks.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <Link
+                key={link.name}
+                href={link.href}
+                className={`relative px-4 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors duration-300 rounded-full ${
+                  isActive
+                    ? "text-blue-600 dark:text-white"
+                    : "text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200"
+                }`}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="activeNav"
+                    className="absolute inset-0 bg-white dark:bg-blue-600 shadow-sm rounded-full"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                <span className="relative z-10">{link.name}</span>
+              </Link>
+            );
+          })}
         </nav>
 
-        {/* Action Buttons: Greeting, Settings, Profile, Logout */}
-        <div className="flex items-center gap-3">
-          {/* Animated Greeting */}
-          <div className="hidden md:flex items-center px-4 py-2 bg-blue-500/5 rounded-full border border-blue-500/10 h-9 overflow-hidden">
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
+          {/* Animated Greeting - Cleaner look */}
+          <div className="hidden lg:flex items-center px-4 py-2 bg-neutral-100/50 dark:bg-white/5 rounded-full border border-neutral-200/50 dark:border-white/5 h-10 overflow-hidden">
             <AnimatePresence mode="wait">
               <motion.span
                 key={greetingIndex}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="text-[10px] font-black uppercase tracking-widest text-blue-500"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.1 }}
+                className="text-[10px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400"
               >
                 {greetings[greetingIndex]}
               </motion.span>
             </AnimatePresence>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <Link href="/settings" className="hidden sm:block">
-              <button className="p-2.5 rounded-xl border border-neutral-200 dark:border-white/10 text-neutral-500 hover:text-blue-500 hover:bg-blue-500/5 transition-all">
+              <button className="p-2.5 rounded-2xl border border-neutral-200 dark:border-white/10 text-neutral-500 hover:bg-white dark:hover:bg-white/5 transition-all">
                 <Settings size={18} />
               </button>
             </Link>
 
             <Link href="/profile">
-              <button className="flex items-center gap-2 p-1 pr-3 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 transition-all">
-                <div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center text-white">
-                  <UserCircle size={18} />
+              <button className="flex items-center gap-2.5 p-1 pr-4 rounded-2xl border border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 transition-all">
+                <div className="w-8 h-8 rounded-xl bg-blue-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+                  <UserCircle size={20} />
                 </div>
-                <span className="text-xs font-bold uppercase tracking-tighter">
+                <span className="text-[11px] font-bold uppercase tracking-wider hidden md:block">
                   Profile
                 </span>
               </button>
             </Link>
 
-            {/* Desktop Logout Button */}
             <button
               onClick={handleLogout}
-              className="hidden md:flex p-2.5 rounded-xl border border-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300"
+              className="hidden md:flex p-2.5 rounded-2xl border border-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300"
               title="Logout"
             >
               <LogOut size={18} />
@@ -146,7 +157,7 @@ export default function Navbar() {
 
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-neutral-900 dark:text-white lg:hidden"
+              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-neutral-900 dark:text-white xl:hidden"
             >
               {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -154,56 +165,47 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu - Improved Spacing & Icons */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            className="absolute top-full left-0 w-full px-4 mt-2 lg:hidden"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="absolute top-full left-0 w-full px-4 mt-3 xl:hidden"
           >
-            <div className="bg-white dark:bg-[#0a0a0a] backdrop-blur-3xl border border-neutral-200 dark:border-white/10 rounded-[2rem] p-4 shadow-2xl overflow-hidden">
-              <div className="flex flex-col gap-2">
+            <div className="bg-white dark:bg-[#0a0a0a] backdrop-blur-3xl border border-neutral-200 dark:border-white/10 rounded-[2.5rem] p-3 shadow-2xl">
+              <div className="grid grid-cols-1 gap-1.5">
                 {navLinks.map((link) => (
                   <Link
                     key={link.name}
                     href={link.href}
                     onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center justify-between p-4 rounded-2xl bg-neutral-50 dark:bg-white/5 text-neutral-600 dark:text-neutral-300 hover:text-blue-500 transition-all border border-transparent hover:border-blue-500/20"
+                    className="flex items-center justify-between p-4 rounded-[1.5rem] bg-neutral-50 dark:bg-white/5 text-neutral-600 dark:text-neutral-300 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-600 transition-all"
                   >
-                    <span className="text-sm font-bold uppercase tracking-widest">
+                    <span className="text-xs font-bold uppercase tracking-widest">
                       {link.name}
                     </span>
-                    <ChevronRight size={16} />
+                    <ChevronRight size={16} className="opacity-50" />
                   </Link>
                 ))}
               </div>
 
-              <div className="grid grid-cols-2 gap-2 mt-4">
+              <div className="grid grid-cols-2 gap-2 mt-3">
                 <Link
                   href="/settings"
                   onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-neutral-100 dark:bg-white/5 text-xs font-bold uppercase tracking-widest"
+                  className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-neutral-100 dark:bg-white/5 text-[10px] font-bold uppercase tracking-widest"
                 >
                   <Settings size={14} /> Settings
                 </Link>
-                <Link
-                  href="/profile"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-blue-500 text-white text-xs font-bold uppercase tracking-widest"
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-red-500/10 text-red-600 text-[10px] font-bold uppercase tracking-widest"
                 >
-                  <UserCircle size={14} /> Profile
-                </Link>
+                  <LogOut size={14} /> Logout
+                </button>
               </div>
-
-              {/* Mobile Logout Button */}
-              <button
-                onClick={handleLogout}
-                className="w-full mt-2 flex items-center justify-center gap-2 p-4 rounded-2xl bg-red-500/10 text-red-500 text-xs font-bold uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all"
-              >
-                <LogOut size={14} /> Logout
-              </button>
             </div>
           </motion.div>
         )}

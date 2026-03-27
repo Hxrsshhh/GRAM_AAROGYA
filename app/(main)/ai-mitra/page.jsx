@@ -58,12 +58,6 @@ const translations = [
   },
 ];
 
-const loadingMessages = [
-  "Analyzing symptoms...",
-  "Consulting medical database...",
-  "Formatting advice...",
-];
-
 export default function HealthCheck() {
   const [input, setInput] = useState("");
   const [data, setData] = useState(null);
@@ -206,8 +200,8 @@ export default function HealthCheck() {
     <div className="min-h-screen bg-slate-50 dark:bg-[#030303] text-slate-900 dark:text-white selection:bg-blue-500/30 transition-colors duration-500">
       {/* Ambient Background Glows */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/20 dark:bg-blue-500/10 blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-500/10 dark:bg-emerald-500/5 blur-[120px] rounded-full" />
+        <div className="absolute top-[-10%] right-[-10%] w-[70%] h-[70%] bg-blue-600/10 dark:bg-blue-600/15 blur-[140px] rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-indigo-600/10 dark:bg-indigo-600/15 blur-[140px] rounded-full" />
       </div>
 
       <main className="relative z-10 container mx-auto px-6 py-18 lg:py-20 max-w-7xl">
@@ -245,13 +239,13 @@ export default function HealthCheck() {
             <Sparkles size={12} className="animate-pulse" />
             <span>Neural Analysis Engine • {translations[langIndex].lang}</span>
           </motion.div>
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-b from-slate-900 via-slate-700 to-slate-500 dark:from-white dark:to-gray-500 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight bg-linear-to-b from-slate-900 via-slate-700 to-slate-500 dark:from-white dark:to-gray-500 bg-clip-text text-transparent">
             {translations[langIndex].heading}
           </h1>
         </header>
 
         {/* Input Console Container */}
-        <div className="group relative bg-white/70 dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-[2rem] p-2 sm:p-3 backdrop-blur-3xl shadow-2xl transition-all hover:border-blue-500/30 mb-16">
+        <div className="group relative bg-white/70 dark:bg-white/2 border border-slate-200 dark:border-white/10 rounded-[2rem] p-2 sm:p-3 backdrop-blur-3xl shadow-2xl transition-all hover:border-blue-500/30 mb-16">
           <div className="bg-slate-50 dark:bg-black/40 rounded-[1.7rem] p-6 border border-slate-100 dark:border-white/5 relative overflow-hidden">
             {/* Visual Wave Overlay for Voice Input */}
             <AnimatePresence>
@@ -429,7 +423,7 @@ export default function HealthCheck() {
                       {data.response?.map((point, i) => (
                         <div
                           key={i}
-                          className="p-4 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 group hover:border-blue-400 transition-all"
+                          className="p-4 rounded-2xl bg-white dark:bg-white/3 border border-slate-200 dark:border-white/10 group hover:border-blue-400 transition-all"
                         >
                           <span className="text-[10px] font-bold text-blue-500 mb-1 block">
                             INSIGHT 0{i + 1}
@@ -443,7 +437,7 @@ export default function HealthCheck() {
                   </div>
                 </aside>
 
-                <section className="lg:col-span-3 bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 p-6 md:p-12 rounded-[2.5rem] shadow-sm relative overflow-hidden">
+                <section className="lg:col-span-3 bg-white dark:bg-white/2 border border-slate-200 dark:border-white/10 p-6 md:p-12 rounded-[2.5rem] shadow-sm relative overflow-hidden">
                   <div className="absolute -top-24 -right-24 opacity-[0.02] dark:opacity-[0.03] pointer-events-none rotate-12">
                     <Stethoscope size={400} />
                   </div>
@@ -480,7 +474,7 @@ export default function HealthCheck() {
                   </div>
 
                   <div className="mt-12 pt-8 border-t border-slate-100 dark:border-white/5">
-                    <div className="bg-slate-50 dark:bg-blue-600/[0.03] p-6 rounded-2xl border border-slate-200 dark:border-blue-500/10">
+                    <div className="bg-slate-50 dark:bg-blue-600/3 p-6 rounded-2xl border border-slate-200 dark:border-blue-500/10">
                       <h4 className="text-[10px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-2">
                         Technical Abstract
                       </h4>
@@ -494,24 +488,6 @@ export default function HealthCheck() {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Action Footer */}
-        <footer className="flex flex-col sm:flex-row gap-4 mt-20 justify-center items-center pb-12">
-          <Button
-            variant="ghost"
-            onClick={() => router.push("/")}
-            className="text-slate-500 hover:text-slate-900 dark:hover:text-white text-xs font-bold gap-2"
-          >
-            <ChevronLeft size={16} /> Return to Home
-          </Button>
-          <Button
-            onClick={() => router.push("/find-doctor")}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-8 h-12 rounded-xl text-xs font-bold shadow-lg shadow-blue-500/20 group"
-          >
-            <MapPin size={16} className="mr-2 group-hover:animate-bounce" />
-            Locate Nearby Specialist
-          </Button>
-        </footer>
       </main>
     </div>
   );

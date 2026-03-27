@@ -6,11 +6,11 @@ export const CustomInput = ({ label, icon: Icon, rightElement, ...props }) => (
       {label}
     </label>
     <div className="relative group">
-      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors">
+      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
         <Icon size={18} />
       </div>
       <input
-        className="w-full bg-slate-50 dark:bg-slate-900/50 border-2 border-slate-200 dark:border-slate-800 rounded-xl py-3 pl-11 pr-12 text-slate-900 dark:text-white font-semibold outline-none focus:border-emerald-500 transition-all text-sm"
+        className="w-full bg-slate-50 dark:bg-slate-900/50 border-2 border-slate-200 dark:border-slate-800 rounded-xl py-3 pl-11 pr-12 text-slate-900 dark:text-white font-semibold outline-none focus:border-blue-500 transition-all text-sm"
         {...props}
       />
       {rightElement && (

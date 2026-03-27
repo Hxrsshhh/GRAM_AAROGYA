@@ -90,9 +90,10 @@ export default function Settings() {
   return (
     <div className="relative min-h-screen bg-white dark:bg-[#030303] py-12 selection:bg-blue-500/30 overflow-hidde ">
       {/* Background Decor */}
-      <div className="absolute inset-0 z-0">
-        <FloatingPaths position={1} />
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none" />
+
+       <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] right-[-10%] w-[70%] h-[70%] bg-blue-600/10 dark:bg-blue-600/15 blur-[140px] rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-indigo-600/10 dark:bg-indigo-600/15 blur-[140px] rounded-full" />
       </div>
 
       <div className="relative z-10  max-w-4xl mx-auto px-6">

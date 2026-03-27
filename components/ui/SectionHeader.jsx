@@ -4,7 +4,7 @@ export const SectionHeader = ({
   icon: Icon,
   title,
   description,
-  colorClass = "text-blue-600 dark:text-emerald-500",
+  colorClass = "text-blue-600 dark:text-blue-500",
 }) => (
   <div className="flex items-center gap-4 mb-8">
     <div
